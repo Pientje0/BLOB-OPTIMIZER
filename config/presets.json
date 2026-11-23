@@ -1,0 +1,93 @@
+{
+  "format": 1,
+  "presets": [
+    {
+      "name": "MINIMAL",
+      "description": "Only low-risk settings: clearer File Explorer, fewer ads and prompts, faster menus.",
+      "warning": "",
+      "tweaks": [
+        "perf.menudelay",
+        "game.gamemode",
+        "tw.fileext",
+        "tw.thispc",
+        "tw.searchicon",
+        "tw.settingsads",
+        "pv.adid",
+        "pv.tailored",
+        "pv.lockscreen",
+        "pv.feedback",
+        "pv.apptracking"
+      ]
+    },
+    {
+      "name": "STANDARD",
+      "description": "Recommended everyday optimizations: MINIMAL plus background apps, visual effects, Game DVR, taskbar and privacy cleanup.",
+      "warning": "",
+      "tweaks": [
+        "perf.menudelay",
+        "game.gamemode",
+        "tw.fileext",
+        "tw.thispc",
+        "tw.searchicon",
+        "tw.settingsads",
+        "pv.adid",
+        "pv.tailored",
+        "pv.lockscreen",
+        "pv.feedback",
+        "pv.apptracking",
+        "perf.startupdelay",
+        "perf.bgapps",
+        "perf.visualfx",
+        "game.dvr",
+        "game.stickykeys",
+        "tw.recent",
+        "tw.taskview",
+        "tw.widgets",
+        "tw.startrecs",
+        "tw.websearch",
+        "pv.suggestions",
+        "pv.diag",
+        "pv.inking",
+        "pv.activity"
+      ]
+    },
+    {
+      "name": "ADVANCED",
+      "description": "STANDARD plus scheduler, GPU and telemetry-service changes. For experienced users.",
+      "warning": "ADVANCED changes can behave differently per system (GPU scheduling, fullscreen optimizations, DiagTrack service). Read each item, create a restore point, and undo anything that does not suit you.",
+      "tweaks": [
+        "perf.menudelay",
+        "game.gamemode",
+        "tw.fileext",
+        "tw.thispc",
+        "tw.searchicon",
+        "tw.settingsads",
+        "pv.adid",
+        "pv.tailored",
+        "pv.lockscreen",
+        "pv.feedback",
+        "pv.apptracking",
+        "perf.startupdelay",
+        "perf.bgapps",
+        "perf.visualfx",
+        "game.dvr",
+        "game.stickykeys",
+        "tw.recent",
+        "tw.taskview",
+        "tw.widgets",
+        "tw.startrecs",
+        "tw.websearch",
+        "pv.suggestions",
+        "pv.diag",
+        "pv.inking",
+        "pv.activity",
+        "perf.sysresp",
+        "game.hags",
+        "game.fso",
+        "game.mmcss",
+        "tw.longpaths",
+        "pv.diagtrack"
+      ]
+    }
+  ]
+}
