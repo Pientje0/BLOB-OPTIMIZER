@@ -105,11 +105,20 @@ function Invoke-BlobTweakSet {
         if (-not (Confirm-BlobAction -Crumb $Crumb -Question $q -Lines (Get-BlobTweakPreview $Tweaks) -Danger:$danger)) { return }
     }
     Start-BlobWork $Crumb
+    $outcome = Invoke-BlobTweakCore -Tweaks $Tweaks -Tag $Tag -Log { param($m) Write-BlobWork $m }
+    Complete-BlobWork $outcome.Summary
+    if ($outcome.NeedsExplorer) { Request-BlobExplorerRestart $Crumb }
+}
+
+# UI-agnostic apply loop shared by the terminal UI and the window UI.
+# -Log receives one colour-tagged line at a time.
+function Invoke-BlobTweakCore {
+    param([array]$Tweaks, [string]$Tag = 'tweaks', [scriptblock]$Log = { param($m) })
     $snap = Backup-BlobRegistryKeys -Paths @($Tweaks | ForEach-Object { $_.Registry } | ForEach-Object { $_.Path }) -Tag $Tag
-    if ($snap) { Write-BlobWork "{DarkGray}Registry snapshot saved to $snap" }
+    if ($snap) { & $Log "{DarkGray}Registry snapshot saved to $snap" }
     $count = @{ ok = 0; same = 0; skip = 0; fail = 0; dry = 0 }
     foreach ($t in $Tweaks) {
-        Write-BlobWork "{Cyan}$($Blob.Ch.On) {White}$($t.Name)"
+        & $Log "{Cyan}$($Blob.Ch.On) {White}$($t.Name)"
         $results = @()
         foreach ($op in $t.Registry) {
             if ($op.Delete) { $results += Set-BlobRegValue -Path $op.Path -Name $op.Name -Delete -Source $t.Id -Label $t.Name }
@@ -117,15 +126,23 @@ function Invoke-BlobTweakSet {
         }
         foreach ($sv in $t.Services) { $results += Set-BlobServiceStartup -Name $sv.Name -StartupType $sv.Startup -Source $t.Id -Label $t.Name }
         foreach ($r in $results) {
-            Write-BlobWork ('   ' + (Format-BlobResult $r))
+            & $Log ('   ' + (Format-BlobResult $r))
             switch ($r.Status) { 'Applied' { $count.ok++ } 'Unchanged' { $count.same++ } 'Skipped' { $count.skip++ } 'DryRun' { $count.dry++ } default { $count.fail++ } }
         }
     }
     $summary = "Done: {0} changed, {1} already set, {2} skipped, {3} failed." -f $count.ok, $count.same, $count.skip, $count.fail
     if ($Blob.DryRun) { $summary = "Dry run: {0} setting(s) would change. Nothing was modified." -f $count.dry }
-    if ($count.ok -gt 0) { Write-BlobWork '{Gray}Some settings apply after Explorer restarts, you sign out, or the PC restarts.' }
-    Complete-BlobWork $summary
-    if ($count.ok -gt 0 -and @($Tweaks | Where-Object { $_.RestartExplorer }).Count -gt 0) { Request-BlobExplorerRestart $Crumb }
+    if ($count.ok -gt 0) { & $Log '{Gray}Some settings apply after Explorer restarts, you sign out, or the PC restarts.' }
+    return @{ Count = $count; Summary = $summary
+              NeedsExplorer = ($count.ok -gt 0 -and @($Tweaks | Where-Object { $_.RestartExplorer }).Count -gt 0) }
+}
+
+function Restart-BlobExplorer {
+    if ($Blob.DryRun) { return }
+    Get-Process -Name explorer -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Milliseconds 1500
+    if (-not (Get-Process -Name explorer -ErrorAction SilentlyContinue)) { Start-Process explorer.exe }
+    Write-BlobLog 'Explorer restarted by user request.'
 }
 
 function Request-BlobExplorerRestart {
@@ -133,20 +150,15 @@ function Request-BlobExplorerRestart {
     $ok = Confirm-BlobAction -Crumb $Crumb -Question 'Restart Windows Explorer now so the changes appear?' -Lines @(
         '{Gray}The taskbar and open File Explorer windows will close and reopen.',
         '{Gray}Nothing else is affected. Press N to restart later (or sign out).')
-    if ($ok -and -not $Blob.DryRun) {
-        Get-Process -Name explorer -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-        Start-Sleep -Milliseconds 1500
-        if (-not (Get-Process -Name explorer -ErrorAction SilentlyContinue)) { Start-Process explorer.exe }
-        Write-BlobLog 'Explorer restarted by user request.'
-    }
+    if ($ok) { Restart-BlobExplorer }
 }
 
-function Undo-BlobTweakSet {
-    param([array]$Tweaks, [string]$Crumb)
-    $Tweaks = @($Tweaks | Where-Object { $_ })
+# Lists what undoing the given tweaks would restore. UI-agnostic.
+function Get-BlobUndoPlan {
+    param([array]$Tweaks)
     $plan = New-Object System.Collections.ArrayList
     $lines = New-Object System.Collections.ArrayList
-    foreach ($t in $Tweaks) {
+    foreach ($t in @($Tweaks | Where-Object { $_ })) {
         $recs = @(Get-BlobAppliedChanges -Source $t.Id)
         [void]$lines.Add("{Cyan}$($Blob.Ch.On) {White}$($t.Name)")
         if ($recs.Count -eq 0) {
@@ -160,22 +172,35 @@ function Undo-BlobTweakSet {
             [void]$plan.Add($r)
         }
     }
-    if ($plan.Count -eq 0) { Show-BlobNotice -Crumb $Crumb -Kind Warning -Title 'Nothing to restore' -Lines $lines.ToArray(); return }
-    if (-not (Confirm-BlobAction -Crumb $Crumb -Question 'Restore these original values?' -Lines $lines.ToArray())) { return }
-    Invoke-BlobRestoreRecords -Records $plan.ToArray() -Crumb $Crumb
+    return @{ Records = $plan.ToArray(); Lines = $lines.ToArray() }
 }
 
-# Restores records newest-first so repeated changes unwind in order.
-function Invoke-BlobRestoreRecords {
-    param([array]$Records, [string]$Crumb)
-    Start-BlobWork $Crumb
+# Restores records newest-first. UI-agnostic; returns @(ok, failed).
+function Invoke-BlobRestoreCore {
+    param([array]$Records, [scriptblock]$Log = { param($m) })
     $ordered = @($Records | Sort-Object { $Blob.Changes.IndexOf($_) } -Descending)
     $ok = 0; $bad = 0
     foreach ($r in $ordered) {
         $res = Restore-BlobChange $r
-        Write-BlobWork (Format-BlobResult $res)
+        & $Log (Format-BlobResult $res)
         if ($res.Status -in @('Restored', 'DryRun')) { $ok++ } else { $bad++ }
     }
+    return @($ok, $bad)
+}
+
+function Undo-BlobTweakSet {
+    param([array]$Tweaks, [string]$Crumb)
+    $undo = Get-BlobUndoPlan $Tweaks
+    if ($undo.Records.Count -eq 0) { Show-BlobNotice -Crumb $Crumb -Kind Warning -Title 'Nothing to restore' -Lines $undo.Lines; return }
+    if (-not (Confirm-BlobAction -Crumb $Crumb -Question 'Restore these original values?' -Lines $undo.Lines)) { return }
+    Invoke-BlobRestoreRecords -Records $undo.Records -Crumb $Crumb
+}
+
+# Terminal wrapper around Invoke-BlobRestoreCore.
+function Invoke-BlobRestoreRecords {
+    param([array]$Records, [string]$Crumb)
+    Start-BlobWork $Crumb
+    $ok, $bad = Invoke-BlobRestoreCore -Records $Records -Log { param($m) Write-BlobWork $m }
     Complete-BlobWork ("Restore finished: {0} restored, {1} not restored." -f $ok, $bad)
 }
 

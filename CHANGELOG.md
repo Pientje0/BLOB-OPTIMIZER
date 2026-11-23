@@ -2,6 +2,17 @@
 
 All notable changes to BLOB OPTIMIZER are documented here. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-11-23
+
+### Added
+- Window interface (WPF, built into Windows) is now the default: dark theme, sidebar navigation, a dashboard with system cards, presets, checkbox tweak lists with risk and state badges, tables for services, startup programs and change history, a cleanup size preview, DNS and power controls, and a live activity log.
+- A confirmation dialog for every change that lists exact registry paths and current → new values. ADVANCED items get a red danger style.
+- `-Tui` switch (or `$env:BLOB_TUI = '1'`) to use the terminal interface. If WPF is unavailable, the tool falls back to the terminal interface automatically.
+- The self-test now parses all window markup and builds every page. `tests/Render-Gui.ps1` renders every page to PNG.
+
+### Changed
+- Apply, undo, restore, Explorer restart and network diagnostics logic moved into UI-agnostic functions shared by both interfaces.
+
 ## [1.0.0] - 2026-11-23
 
 ### Added

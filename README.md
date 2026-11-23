@@ -1,7 +1,7 @@
 # BLOB OPTIMIZER
 
-A portable Windows optimization utility with a full terminal interface.
-There is no installer, no EXE, no GUI and nothing to uninstall. It runs inside one PowerShell session and stops completely when you close it.
+A portable Windows optimization utility with a modern window interface, plus a full terminal interface.
+There is no installer, no EXE and nothing to uninstall. It runs inside one PowerShell session and stops completely when you close it.
 
 ```
  #####   ##        #####   #####
@@ -15,19 +15,25 @@ There is no installer, no EXE, no GUI and nothing to uninstall. It runs inside o
 ## Launch
 
 1. Right-click **Windows Terminal** (or PowerShell) and choose **Run as administrator**.
-2. Paste the command and press Enter:
+2. Paste the command and press Enter. The BLOB OPTIMIZER window opens:
 
 ```powershell
-irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.0.0/BLOB.ps1 | iex
+irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.1.0/BLOB.ps1 | iex
+```
+
+**Terminal-only interface** (keyboard UI inside PowerShell):
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.1.0/BLOB.ps1))) -Tui
 ```
 
 **Dry run** shows every change it would make without modifying anything:
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.0.0/BLOB.ps1))) -DryRun
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.1.0/BLOB.ps1))) -DryRun
 ```
 
-> Pinning a version tag (`v1.0.0`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
+> Pinning a version tag (`v1.1.0`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
 
 Without administrator rights, BLOB OPTIMIZER still starts in read-only mode: you can browse system info, settings, services, startup entries and cleanup sizes, and apply per-user settings. Anything machine-wide explains why it needs elevation. The tool never elevates itself.
 
@@ -36,7 +42,14 @@ Without administrator rights, BLOB OPTIMIZER still starts in read-only mode: you
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\BLOB.ps1          # normal
 powershell -NoProfile -ExecutionPolicy Bypass -File .\BLOB.ps1 -DryRun  # dry run
+powershell -NoProfile -ExecutionPolicy Bypass -File .\BLOB.ps1 -Tui     # terminal interface
 ```
+
+## Interfaces
+
+**Window (default).** A dark WPF window with sidebar navigation, checkbox lists, sortable tables, a live activity log, and a confirmation dialog that lists every exact change before anything is applied. WPF is part of Windows, so nothing is downloaded or installed. The PowerShell console stays open behind the window, and closing the window ends the tool. If WPF is unavailable (Server Core, or a non-STA session), BLOB OPTIMIZER falls back to the terminal interface automatically.
+
+**Terminal (`-Tui`).** The full keyboard-driven terminal UI. It has the same features and uses the same engine and the same backup journal.
 
 ## What it does
 
@@ -54,7 +67,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\BLOB.ps1 -DryRun  # dry ru
 | **Restore** | Change history, restore individual changes or a whole session, `.reg` snapshots, System Restore points, JSON config export/import |
 | **Presets** | **MINIMAL**, **STANDARD**, **ADVANCED**. Each one lists every setting it will change (current value → new value) and waits for you to press `Y` |
 
-### Keys
+### Terminal keys
 
 `↑ ↓ ← →` navigate · `Enter` select · `Space` toggle · `Tab` next group · `Esc` back · letter keys shown in the footer (`A` apply, `U` undo, and so on). `Ctrl+C` behaves like `Esc`, so the console is always restored. The layout adapts when you resize the window (minimum 64 × 20).
 
@@ -117,10 +130,15 @@ BLOB-OPTIMIZER/
 │   ├── Performance.ps1  Gaming.ps1  Tweaks.ps1  Privacy.ps1
 │   ├── Services.ps1  Startup.ps1  Cleanup.ps1  Network.ps1  Power.ps1
 │   ├── Restore.ps1          history, snapshots, restore points, export/import
-│   └── Main.ps1             entry point, self-test
+│   ├── GuiXaml.ps1          window markup and dark theme (WPF XAML)
+│   ├── Gui.ps1              window shell, navigation, dialogs, activity log
+│   ├── GuiPages.ps1         dashboard, presets, tweak sections, system info
+│   ├── GuiSystem.ps1        services, startup, cleanup, network, power, restore
+│   └── Main.ps1             entry point, interface choice, self-test
 ├── config/presets.json      preset definitions (embedded at build time)
 ├── build/Build-Release.ps1  concatenates src/ into BLOB.ps1
 ├── tests/Test-Engine.ps1    apply → journal → restore round-trip test
+├── tests/Render-Gui.ps1     renders every window page to PNG (dry run)
 └── docs/TESTING.md          release testing checklist
 ```
 
@@ -134,7 +152,7 @@ The build wraps every module in one script block, so no functions or variables l
 
 Add a tweak by calling `Register-BlobTweak` in the section file with an `Id`, a `Risk` level and its `Registry` or `Services` operations. State detection, preview, backup, undo and presets work for it automatically.
 
-Requirements: Windows 10/11 and Windows PowerShell 5.1 or PowerShell 7+. No modules, packages or external tools are needed. It only uses built-in commands such as `reg.exe`, `sc.exe`, `powercfg.exe`, `netsh.exe` and `ipconfig.exe`.
+Requirements: Windows 10/11 and Windows PowerShell 5.1 or PowerShell 7+. The window interface uses WPF, which is built into Windows. No modules, packages or external tools are needed. It only uses built-in commands such as `reg.exe`, `sc.exe`, `powercfg.exe`, `netsh.exe` and `ipconfig.exe`.
 
 ## Disclaimer
 

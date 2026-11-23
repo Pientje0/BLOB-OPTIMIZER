@@ -23,7 +23,8 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Path $PSScriptRoot -Parent
 $src = Join-Path $root 'src'
 $order = @('Core', 'UI', 'Engine', 'Performance', 'Gaming', 'Tweaks', 'Privacy', 'Services',
-           'Startup', 'Cleanup', 'Network', 'Power', 'Restore', 'Dashboard', 'Main')
+           'Startup', 'Cleanup', 'Network', 'Power', 'Restore', 'Dashboard',
+           'GuiXaml', 'Gui', 'GuiPages', 'GuiSystem', 'Main')
 
 $core = Get-Content -LiteralPath (Join-Path $src 'Core.ps1') -Raw
 if ($core -notmatch "Version\s*=\s*'([^']+)'") { throw 'Could not read the version from src\Core.ps1' }
@@ -38,10 +39,13 @@ $nl = "`r`n"
 [void]$sb.Append(@"
 <#
     BLOB OPTIMIZER $version
-    Portable Windows optimization utility - terminal UI, no installation.
+    Portable Windows optimization utility - window and terminal UI, no installation.
 
     Launch (Windows Terminal / PowerShell as Administrator):
         irm https://raw.githubusercontent.com/$Repository/v$version/BLOB.ps1 | iex
+
+    Opens the BLOB OPTIMIZER window. Terminal-only interface:
+        & ([scriptblock]::Create((irm https://raw.githubusercontent.com/$Repository/v$version/BLOB.ps1))) -Tui
 
     Dry run (shows what would change, modifies nothing):
         & ([scriptblock]::Create((irm https://raw.githubusercontent.com/$Repository/v$version/BLOB.ps1))) -DryRun
@@ -51,10 +55,10 @@ $nl = "`r`n"
     nothing, installs nothing and leaves nothing running when closed.
     Built: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm')) UTC
 #>
-param([switch]`$DryRun)
+param([switch]`$DryRun, [switch]`$Tui)
 
 & {
-param([bool]`$BlobDryRun)
+param([bool]`$BlobDryRun, [bool]`$BlobTui)
 Set-StrictMode -Off
 
 "@)
@@ -71,7 +75,7 @@ foreach ($name in $order) {
         [void]$sb.Append("$nl'@$nl")
     }
 }
-[void]$sb.Append("${nl}Start-BlobOptimizer -DryRun `$BlobDryRun${nl}} ([bool]`$DryRun)${nl}")
+[void]$sb.Append("${nl}Start-BlobOptimizer -DryRun `$BlobDryRun -Tui `$BlobTui${nl}} ([bool]`$DryRun) ([bool]`$Tui)${nl}")
 
 $text = ($sb.ToString() -replace "`r?`n", "`r`n")
 

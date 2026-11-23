@@ -47,7 +47,7 @@ function Get-BlobSystemSummary {
         $s.RAM = '{0:N1} GB' -f ($cs.TotalPhysicalMemory / 1GB)
         $s.Model = "$($cs.Manufacturer) $($cs.Model)"
     } catch { }
-    try { $s.GPU = (@(Get-CimInstance Win32_VideoController -ErrorAction Stop | ForEach-Object { $_.Name }) -join ', ') } catch { }
+    try { $s.GPU = (@(Get-CimInstance Win32_VideoController -ErrorAction Stop | ForEach-Object { $_.Name } | Select-Object -Unique) -join ', ') } catch { }
     return $s
 }
 

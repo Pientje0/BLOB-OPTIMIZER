@@ -52,20 +52,12 @@ function Get-BlobNetworkInfo {
     return $lines
 }
 
-function Invoke-BlobNetworkDiagnostics {
-    $crumb = 'Network > Diagnostics'
-    $ok = Confirm-BlobAction -Crumb $crumb -Question 'Run network diagnostics?' -Lines @(
-        '{Gray}The following network checks will be made:',
-        '{White}  1. Ping your default gateway (router)',
-        '{White}  2. Ping 1.1.1.1 (Cloudflare) to test internet reachability',
-        '{White}  3. Resolve www.microsoft.com through your configured DNS',
-        '', '{DarkGray}No data other than standard ping / DNS queries is sent.')
-    if (-not $ok) { return }
-    Start-BlobWork $crumb
+function Invoke-BlobNetworkDiagnosticsCore {
+    param([scriptblock]$Log = { param($m) })
     $gw = $null
     try { $gw = (Get-NetIPConfiguration -ErrorAction Stop | Where-Object { $_.IPv4DefaultGateway } | Select-Object -First 1).IPv4DefaultGateway.NextHop } catch { }
     $tests = @()
-    if ($gw) { $tests += @{ Name = "Gateway $gw"; Host = $gw } } else { Write-BlobWork '{Yellow}No default gateway found - you may be offline.' }
+    if ($gw) { $tests += @{ Name = "Gateway $gw"; Host = $gw } } else { & $Log '{Yellow}No default gateway found - you may be offline.' }
     $tests += @{ Name = 'Internet 1.1.1.1'; Host = '1.1.1.1' }
     foreach ($t in $tests) {
         $p = New-Object System.Net.NetworkInformation.Ping
@@ -76,14 +68,27 @@ function Invoke-BlobNetworkDiagnostics {
         $p.Dispose()
         if ($times.Count -gt 0) {
             $avg = ($times | Measure-Object -Average).Average
-            Write-BlobWork ("{{Green}} OK   {{White}}{0,-24} {{Gray}}avg {1:N0} ms  min {2} / max {3}  loss {4}/4" -f $t.Name, $avg, ($times | Measure-Object -Minimum).Minimum, ($times | Measure-Object -Maximum).Maximum, $lost)
-        } else { Write-BlobWork ("{{Red}} FAIL {{White}}{0,-24} {{Gray}}no replies (4/4 lost)" -f $t.Name) }
+            & $Log ("{{Green}} OK   {{White}}{0,-24} {{Gray}}avg {1:N0} ms  min {2} / max {3}  loss {4}/4" -f $t.Name, $avg, ($times | Measure-Object -Minimum).Minimum, ($times | Measure-Object -Maximum).Maximum, $lost)
+        } else { & $Log ("{{Red}} FAIL {{White}}{0,-24} {{Gray}}no replies (4/4 lost)" -f $t.Name) }
     }
     $sw = [Diagnostics.Stopwatch]::StartNew()
     try {
         $addr = [System.Net.Dns]::GetHostAddresses('www.microsoft.com') | Select-Object -First 1
-        Write-BlobWork ("{{Green}} OK   {{White}}{0,-24} {{Gray}}{1} in {2} ms" -f 'DNS www.microsoft.com', $addr, $sw.ElapsedMilliseconds)
-    } catch { Write-BlobWork ("{{Red}} FAIL {{White}}{0,-24} {{Gray}}{1}" -f 'DNS www.microsoft.com', $_.Exception.Message) }
+        & $Log ("{{Green}} OK   {{White}}{0,-24} {{Gray}}{1} in {2} ms" -f 'DNS www.microsoft.com', $addr, $sw.ElapsedMilliseconds)
+    } catch { & $Log ("{{Red}} FAIL {{White}}{0,-24} {{Gray}}{1}" -f 'DNS www.microsoft.com', $_.Exception.Message) }
+}
+
+function Invoke-BlobNetworkDiagnostics {
+    $crumb = 'Network > Diagnostics'
+    $ok = Confirm-BlobAction -Crumb $crumb -Question 'Run network diagnostics?' -Lines @(
+        '{Gray}The following network checks will be made:',
+        '{White}  1. Ping your default gateway (router)',
+        '{White}  2. Ping 1.1.1.1 (Cloudflare) to test internet reachability',
+        '{White}  3. Resolve www.microsoft.com through your configured DNS',
+        '', '{DarkGray}No data other than standard ping / DNS queries is sent.')
+    if (-not $ok) { return }
+    Start-BlobWork $crumb
+    Invoke-BlobNetworkDiagnosticsCore -Log { param($m) Write-BlobWork $m }
     Complete-BlobWork 'Diagnostics finished.'
 }
 

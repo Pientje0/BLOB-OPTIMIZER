@@ -8,6 +8,8 @@ Run this on a test VM or a spare PC before tagging a release. Test **Windows Pow
 - [ ] `powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\Test-Engine.ps1` prints **All engine tests passed**
 - [ ] Self-test passes in PS 5.1: `$env:BLOB_SELFTEST='1'; Get-Content -Raw .\BLOB.ps1 | iex`
 - [ ] Self-test passes in PS 7: `$env:BLOB_SELFTEST='1'; pwsh -NoProfile -Command "Get-Content -Raw .\BLOB.ps1 | iex"`
+- [ ] The self-test line `Window UI - XAML ok, 13/13 pages built` appears
+- [ ] `powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\Render-Gui.ps1 -OutDir .\screens` prints **All pages rendered**. Review the PNGs
 - [ ] After the run, `Get-Command *-Blob*` returns nothing and `$Blob` is undefined, so nothing leaked into the session
 - [ ] `%LOCALAPPDATA%\BLOB-OPTIMIZER` was **not** created by the self-test or a dry run
 
@@ -19,7 +21,19 @@ Run this on a test VM or a spare PC before tagging a release. Test **Windows Pow
 - [ ] Windows PowerShell ISE shows a clear "use a console" message instead of breaking
 - [ ] Classic conhost (`powershell.exe` window) renders the borders correctly
 
-## 3. Terminal UI
+## 3. Window UI
+
+- [ ] The launch command opens the window. The console prints "window is open" and returns to the prompt after the window closes
+- [ ] Title bar drag, minimize, maximize/restore (no content cut off at the screen edges), close and resize all work
+- [ ] Each sidebar page loads. Badges show ADMINISTRATOR or STANDARD USER, plus DRY RUN when active
+- [ ] Tweak pages: tick items, then **Review and apply** shows a dialog with current → new values. **Cancel** changes nothing
+- [ ] After applying, badges switch to APPLIED and the activity log shows OK / SAME / SKIP lines. **Undo selected** restores
+- [ ] Services and Startup tables support multi-select (Ctrl/Shift). Protected services are refused
+- [ ] Cleanup totals update as boxes are ticked. Clean shows the permanent-deletion warning
+- [ ] Restore: double-click a row for details. Restore selected, Undo session, Export/Import (file dialogs) and snapshot import all work
+- [ ] `-Tui` opens the terminal UI instead
+
+## 4. Terminal UI
 
 - [ ] Arrow keys, Enter, Esc, Space, Tab, PgUp/PgDn, Home/End work in menus
 - [ ] Number keys 1–9, 10, 11, P and 0 work on the dashboard
@@ -28,7 +42,7 @@ Run this on a test VM or a spare PC before tagging a release. Test **Windows Pow
 - [ ] `Ctrl+C` acts as Esc. Exiting restores colours, cursor, title and scrollback
 - [ ] Nothing remains in Task Manager after exit
 
-## 4. Apply → verify → restore (per section)
+## 5. Apply → verify → restore (per section)
 
 For each section, apply one tweak with **A**. Confirm the preview shows current → new values, then confirm the state changes to **APPLIED**:
 
@@ -38,7 +52,7 @@ For each section, apply one tweak with **A**. Confirm the preview shows current 
 - [ ] Restore → Undo a whole session restores everything from that run
 - [ ] A `.reg` snapshot exists under `registry-backups` for each batch
 
-## 5. Presets
+## 6. Presets
 
 - [ ] Each preset shows the full list of settings before anything happens. **N** cancels without changes
 - [ ] ADVANCED shows the red warning banner
@@ -46,7 +60,7 @@ For each section, apply one tweak with **A**. Confirm the preview shows current 
 - [ ] Re-applying a preset reports **SAME** for settings that are already applied
 - [ ] As a standard user, machine-wide items are **SKIP**ped with a reason
 
-## 6. Services / Startup / Power / Network / Cleanup
+## 7. Services / Startup / Power / Network / Cleanup
 
 - [ ] Protected services (WinDefend, mpssvc, wuauserv, etc.) cannot be changed
 - [ ] Changing a curated service's startup type records the original, and restoring brings it back
@@ -57,13 +71,13 @@ For each section, apply one tweak with **A**. Confirm the preview shows current 
 - [ ] Diagnostics lists the hosts and only runs after **Y**
 - [ ] Cleanup shows sizes before deleting, warns that the action is permanent, skips locked files, and records a non-reversible action
 
-## 7. Config export / import
+## 8. Config export / import
 
 - [ ] Export writes JSON with no hostname or user name
 - [ ] Import on a second PC previews every setting before applying. Unknown IDs are listed and ignored
 - [ ] An invalid or foreign JSON file gives a clear error
 
-## 8. Transparency
+## 9. Transparency
 
 - [ ] The release contains no `-EncodedCommand`, Base64 payloads, `Add-MpPreference` or Defender/Firewall changes
 - [ ] There are no network requests except user-started diagnostics (check with Resource Monitor)
