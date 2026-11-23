@@ -47,7 +47,7 @@ Register-BlobTweak @{
     Registry = @(@{ Path = $advKey; Name = 'ShowTaskViewButton'; Value = 0 })
 }
 Register-BlobTweak @{
-    Id = 'tw.widgets'; Section = 'Tweaks'; Group = 'Essential - Taskbar'; Risk = 'Standard'
+    Id = 'tw.widgets'; Category = 'Performance'; Section = 'Tweaks'; Group = 'Essential - Taskbar'; Risk = 'Standard'
     Name = 'Disable Widgets (news and interests)'
     Description = 'Turns off the Widgets board and its taskbar button via the documented Windows policy.'
     Registry = @(@{ Path = 'HKLM:\SOFTWARE\Policies\Microsoft\Dsh'; Name = 'AllowNewsAndInterests'; Value = 0 })
@@ -76,7 +76,7 @@ Register-BlobTweak @{
         @{ Path = $advKey; Name = 'Start_IrisRecommendations'; Value = 0 })
 }
 Register-BlobTweak @{
-    Id = 'tw.websearch'; Section = 'Tweaks'; Group = 'Essential - Start menu'; Risk = 'Standard'
+    Id = 'tw.websearch'; Category = 'Privacy & Security'; Section = 'Tweaks'; Group = 'Essential - Start menu'; Risk = 'Standard'
     Name = 'Disable web results in Start search'
     Description = 'Start search shows only local apps, files and settings - no Bing web suggestions.'
     Registry = @(@{ Path = 'HKCU:\Software\Policies\Microsoft\Windows\Explorer'; Name = 'DisableSearchBoxSuggestions'; Value = 1 })

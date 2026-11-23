@@ -380,36 +380,54 @@ function Set-BlobGuiPageActions {
 }
 
 function Show-BlobGuiPage {
-    param([string]$Key)
+    param([string]$Key, [switch]$KeepScroll)
     $page = $Blob.Gui.Pages | Where-Object { $_.Key -eq $Key } | Select-Object -First 1
     if (-not $page) { return }
     $Blob.Gui.Current = $Key
     foreach ($p in $Blob.Gui.Pages) {
         $btn = $Blob.Gui.Nav[$p.Key]
-        if ($p.Key -eq $Key) { $btn.Background = Get-BlobBrush '#132230'; $btn.Foreground = Get-BlobBrush 'Cyan' }
-        else { $btn.Background = [Windows.Media.Brushes]::Transparent; $btn.Foreground = Get-BlobBrush '#94A3B8' }
+        if ($p.Key -eq $Key) { $btn.Foreground = Get-BlobBrush 'Cyan'; $btn.BorderBrush = Get-BlobBrush 'Cyan' }
+        else { $btn.Foreground = Get-BlobBrush '#94A3B8'; $btn.BorderBrush = [Windows.Media.Brushes]::Transparent }
     }
     $Blob.Gui.PageTitle.Text = $page.Label
     $Blob.Gui.PageSubtitle.Text = $page.Subtitle
     Set-BlobGuiPageActions @()
     Set-BlobGuiStatus "Loading $($page.Label)..."
+    $Blob.Gui.CardGrid = $null
     $Blob.Gui.Window.Cursor = [Windows.Input.Cursors]::Wait
     try {
         $content = & $page.Build
         $Blob.Gui.PageHost.Content = $content
-        $Blob.Gui.PageScroll.ScrollToTop()
+        Update-BlobGuiCardColumns
+        if (-not $KeepScroll) { $Blob.Gui.PageScroll.ScrollToTop() }
     } catch {
         $Blob.Gui.PageHost.Content = New-BlobInfoCard @("{Red}This page could not be loaded: $($_.Exception.Message -replace '[{}]', '')")
         Write-BlobLog "GUI page '$Key' failed: $($_.Exception.Message) $($_.InvocationInfo.PositionMessage)" 'ERROR'
     } finally { $Blob.Gui.Window.Cursor = $null; Set-BlobGuiStatus 'Ready' }
 }
 
-function Update-BlobGuiPage { Show-BlobGuiPage $Blob.Gui.Current }
+# Re-renders the current page after a change, keeping the scroll position.
+function Update-BlobGuiPage {
+    $offset = $Blob.Gui.PageScroll.VerticalOffset
+    Show-BlobGuiPage $Blob.Gui.Current -KeepScroll
+    $Blob.Gui.PageScroll.UpdateLayout()
+    $Blob.Gui.PageScroll.ScrollToVerticalOffset($offset)
+}
+
+# Card grids use as many columns as fit (about 300 px per card).
+function Update-BlobGuiCardColumns {
+    $g = $Blob.Gui.CardGrid
+    if (-not $g) { return }
+    $w = $Blob.Gui.PageScroll.ViewportWidth
+    if (-not $w -or $w -le 0) { $w = $Blob.Gui.Window.ActualWidth - 60 }
+    if (-not $w -or $w -le 0) { $w = $Blob.Gui.Window.Width - 60 }
+    $g.Columns = [Math]::Max(1, [int][Math]::Floor($w / 300))
+}
 
 function Initialize-BlobGuiWindow {
     $w = New-BlobGuiWindow $Blob.GuiXaml
     $Blob.Gui = @{ Window = $w; Busy = $false; Current = $null; Nav = @{}; LogVisible = $true }
-    foreach ($n in @('TitleVersion', 'AdminBadge', 'AdminBadgeText', 'DryRunBadge', 'BtnMin', 'BtnMax', 'BtnClose', 'SideHost', 'NavPanel',
+    foreach ($n in @('TitleVersion', 'AdminBadge', 'AdminBadgeText', 'DryRunBadge', 'BtnMin', 'BtnMax', 'BtnClose', 'NavPanel',
                      'PageActions', 'PageTitle', 'PageSubtitle', 'PageScroll', 'PageHost', 'BtnToggleLog', 'BtnClearLog',
                      'LogScroll', 'LogPanel', 'StatusText', 'StatusRight', 'RootBorder')) {
         $Blob.Gui[$n] = $w.FindName($n)
@@ -428,8 +446,7 @@ function Initialize-BlobGuiWindow {
         $Blob.Gui.AdminBadge.Background = Get-BlobBrush '#3A2E05'; $Blob.Gui.AdminBadgeText.Text = 'STANDARD USER - READ ONLY FOR SYSTEM SETTINGS'; $Blob.Gui.AdminBadgeText.Foreground = Get-BlobBrush 'Yellow'
     }
     if ($Blob.DryRun) { $Blob.Gui.DryRunBadge.Visibility = 'Visible' }
-    $Blob.Gui.SideHost.Text = "$($Blob.SysInfo.Host)  -  PowerShell $($PSVersionTable.PSVersion.Major).$($PSVersionTable.PSVersion.Minor)"
-    $Blob.Gui.StatusRight.Text = "Backups and logs: $($Blob.DataRoot)"
+    $Blob.Gui.StatusRight.Text = "$($Blob.SysInfo.Host)  -  PowerShell $($PSVersionTable.PSVersion.Major).$($PSVersionTable.PSVersion.Minor)  -  No installation, nothing left running  -  Backups: $($Blob.DataRoot)"
 
     $Blob.Gui.BtnMin.Add_Click({ $Blob.Gui.Window.WindowState = 'Minimized' })
     $Blob.Gui.BtnMax.Add_Click({ $win = $Blob.Gui.Window; if ($win.WindowState -eq 'Maximized') { $win.WindowState = 'Normal' } else { $win.WindowState = 'Maximized' } })
@@ -450,12 +467,12 @@ function Initialize-BlobGuiWindow {
     $Blob.Gui.Pages = Get-BlobGuiPages
     foreach ($p in $Blob.Gui.Pages) {
         $btn = New-Object Windows.Controls.Button
-        $btn.Style = $w.FindResource('NavButton')
+        $btn.Style = $w.FindResource('TabButton')
         $sp = New-BlobStack 'Horizontal'
         $icon = New-Object Windows.Controls.TextBlock
         $icon.Text = [string][char]$p.Icon
         $icon.FontFamily = New-Object Windows.Media.FontFamily 'Segoe MDL2 Assets'
-        $icon.FontSize = 15; $icon.Width = 30; $icon.VerticalAlignment = 'Center'
+        $icon.FontSize = 13; $icon.Margin = '0,1,8,0'; $icon.VerticalAlignment = 'Center'
         $icon.SetBinding([Windows.Controls.TextBlock]::ForegroundProperty, (New-Object Windows.Data.Binding 'Foreground' -Property @{ Source = $btn })) | Out-Null
         $label = New-Object Windows.Controls.TextBlock
         $label.Text = $p.Label; $label.VerticalAlignment = 'Center'
@@ -464,10 +481,12 @@ function Initialize-BlobGuiWindow {
         $btn.Content = $sp
         $btn.Tag = $p.Key
         $btn.Add_Click({ param($s, $e) if (-not $Blob.Gui.Busy) { Show-BlobGuiPage $s.Tag } })
-        if ($p.Gap) { $btn.Margin = '0,8,0,0' }
         [void]$Blob.Gui.NavPanel.Children.Add($btn)
         $Blob.Gui.Nav[$p.Key] = $btn
     }
+    $Blob.Gui.PageScroll.Add_SizeChanged({ Update-BlobGuiCardColumns })
+    $Blob.Gui.Selected = @{}
+    if (-not $Blob.Gui.OptFilter) { $Blob.Gui.OptFilter = 'All' }
 
     $w.Add_ContentRendered({
             Add-BlobGuiLog "{Cyan}BLOB OPTIMIZER $($Blob.Version) {Gray}started. Every change is previewed first and can be undone from Restore."

@@ -14,6 +14,9 @@ function Register-BlobTweak {
     param([hashtable]$Tweak)
     foreach ($k in @('Group', 'Note', 'Warning')) { if (-not $Tweak.ContainsKey($k)) { $Tweak[$k] = '' } }
     if (-not $Tweak.Risk)     { $Tweak.Risk = 'Standard' }
+    if (-not $Tweak.Category) {
+        $Tweak.Category = switch ($Tweak.Section) { 'Performance' { 'Performance' } 'Gaming' { 'FPS & Latency' } 'Privacy' { 'Privacy & Security' } default { 'Quality of Life' } }
+    }
     if (-not $Tweak.Registry) { $Tweak.Registry = @() }
     if (-not $Tweak.Services) { $Tweak.Services = @() }
     foreach ($op in $Tweak.Registry) { if (-not $op.Type) { $op.Type = 'DWord' } }

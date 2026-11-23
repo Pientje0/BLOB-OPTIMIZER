@@ -31,7 +31,13 @@ Run this on a test VM or a spare PC before tagging a release. Test **Windows Pow
 - [ ] Services and Startup tables support multi-select (Ctrl/Shift). Protected services are refused
 - [ ] Cleanup totals update as boxes are ticked. Clean shows the permanent-deletion warning
 - [ ] Restore: double-click a row for details. Restore selected, Undo session, Export/Import (file dialogs) and snapshot import all work
-- [ ] Every setting shows a risk label, and the legend appears at the top of each tweak page
+- [ ] Tabs across the top switch pages. The selected tab is underlined in cyan
+- [ ] Optimizations: the category chips filter the cards, search filters as you type, and the count line updates
+- [ ] Flipping a card switch on shows the preview dialog. Cancel puts the switch back. Apply turns it on and the label changes to Deactivate
+- [ ] Flipping an active switch off restores the original. A setting with no saved original explains why it cannot be restored
+- [ ] **+** selects cards (cyan border). *Apply selected (n)* and *Undo selected* work on the selection
+- [ ] Admin-only cards show a lock icon, and their switch is disabled for standard users
+- [ ] Every setting shows a risk label (card corner and legend)
 - [ ] Hovering **?** on a setting, cleanup location or preset shows the detailed tooltip with exact changes
 - [ ] The apply dialog shows *Create a System Restore point first*: ticked as admin, disabled for standard users and in dry run
 - [ ] With the box ticked, the log shows the restore point as OK, or as SKIP (24 h limit) with an explanation

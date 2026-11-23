@@ -6,34 +6,17 @@
 
 function Get-BlobGuiPages {
     @(
-        @{ Key = 'dashboard'; Label = 'Dashboard'; Icon = 0xE80F; Subtitle = 'System overview and quick actions'; Build = { New-BlobGuiDashboard } }
+        @{ Key = 'dashboard'; Label = 'Home'; Icon = 0xE80F; Subtitle = 'System overview and quick actions'; Build = { New-BlobGuiDashboard } }
         @{ Key = 'presets'; Label = 'Presets'; Icon = 0xE734; Subtitle = 'MINIMAL, STANDARD or ADVANCED - every change is listed before it is applied'; Build = { New-BlobGuiPresets } }
-        @{ Key = 'performance'; Label = 'Performance'; Icon = 0xEC4A; Gap = $true; Subtitle = 'Responsiveness, background apps and visual effects'
-           Build = { New-BlobGuiTweakPage 'Performance' @(
-                   @{ Label = 'Memory and resources'; Action = { Show-BlobGuiMessage -Title 'Memory and resources' -Lines (Get-BlobMemoryInfo) } },
-                   @{ Label = 'Current performance settings'; Action = { Show-BlobGuiMessage -Title 'Performance settings' -Lines (Get-BlobPerfSettingsInfo) } },
-                   @{ Label = 'Windows Performance Options'; Action = { Start-Process 'SystemPropertiesPerformance.exe' -ErrorAction SilentlyContinue } }) } }
-        @{ Key = 'gaming'; Label = 'Gaming'; Icon = 0xE7FC; Subtitle = 'Less background interference while gaming. No FPS gains are promised.'
-           Build = { New-BlobGuiTweakPage 'Gaming' @(
-                   @{ Label = 'Gaming status'; Action = { Show-BlobGuiMessage -Title 'Gaming status' -Lines (Get-BlobGamingStatus) } },
-                   @{ Label = 'Power plans'; Action = { Show-BlobGuiPage 'power' } }) } }
-        @{ Key = 'tweaks'; Label = 'Tweaks'; Icon = 0xE713; Subtitle = 'File Explorer, taskbar, Start menu and Windows behaviour'
-           Build = { New-BlobGuiTweakPage 'Tweaks' @(
-                   @{ Label = 'Restart Windows Explorer'; Action = {
-                           if (Confirm-BlobGui -Title 'Restart Windows Explorer?' -OkText 'Restart Explorer' -Lines @('{Gray}The taskbar and open Explorer windows close and reopen. Nothing else is affected.')) {
-                               Restart-BlobExplorer; Add-BlobGuiLog '{Green}Explorer restarted.' } } }) } }
-        @{ Key = 'privacy'; Label = 'Privacy'; Icon = 0xE72E; Subtitle = 'Advertising, suggestions and optional data collection. Security protections stay on.'
-           Build = { New-BlobGuiTweakPage 'Privacy' @(
-                   @{ Label = 'Privacy overview'; Action = { Show-BlobGuiMessage -Title 'Privacy overview' -Lines (Get-BlobPrivacyOverview) } },
-                   @{ Label = 'Windows privacy settings'; Action = { Start-Process 'ms-settings:privacy' -ErrorAction SilentlyContinue } }) } }
+        @{ Key = 'optimize'; Label = 'Optimizations'; Icon = 0xEC4A; Subtitle = 'Every setting as a card. Flip the switch to activate (with a full preview) or deactivate (restores the original).'; Build = { New-BlobGuiOptimizations } }
         @{ Key = 'services'; Label = 'Services'; Icon = 0xE912; Gap = $true; Subtitle = 'Startup types only - services are never deleted, critical ones are protected'; Build = { New-BlobGuiServices } }
         @{ Key = 'startup'; Label = 'Startup'; Icon = 0xE7B5; Subtitle = 'Programs that launch at sign-in. Disabled the same way Task Manager does it.'; Build = { New-BlobGuiStartup } }
         @{ Key = 'cleanup'; Label = 'Cleanup'; Icon = 0xE74D; Subtitle = 'Temporary files and caches with a size preview. Deleted files cannot be restored.'; Build = { New-BlobGuiCleanup } }
         @{ Key = 'network'; Label = 'Network'; Icon = 0xE968; Subtitle = 'Information, diagnostics, DNS and optional resets'; Build = { New-BlobGuiNetwork } }
         @{ Key = 'power'; Label = 'Power'; Icon = 0xE945; Subtitle = 'Power plans, display and sleep timeouts, hibernation'; Build = { New-BlobGuiPower } }
         @{ Key = 'restore'; Label = 'Restore'; Icon = 0xE81C; Gap = $true; Subtitle = 'Undo changes, registry snapshots, restore points and configuration files'; Build = { New-BlobGuiRestore } }
-        @{ Key = 'tools'; Label = 'External Tools'; Icon = 0xE8A7; Subtitle = 'Launch well-known third-party tools: Chris Titus Tech WinUtil and O&O ShutUp10++'; Build = { New-BlobGuiTools } }
-        @{ Key = 'sysinfo'; Label = 'System Info'; Icon = 0xE946; Subtitle = 'Hardware and Windows details (read-only)'; Build = { New-BlobGuiSysInfo } }
+        @{ Key = 'tools'; Label = 'Tools'; Icon = 0xE8A7; Subtitle = 'Launch well-known third-party tools: Chris Titus Tech WinUtil and O&O ShutUp10++'; Build = { New-BlobGuiTools } }
+        @{ Key = 'sysinfo'; Label = 'Info'; Icon = 0xE946; Subtitle = 'Hardware and Windows details (read-only)'; Build = { New-BlobGuiSysInfo } }
     )
 }
 
@@ -43,7 +26,7 @@ function Get-BlobGuiPages {
 function Invoke-BlobGuiApply {
     param([array]$Tweaks, [string]$Tag = 'gui', [string[]]$ExtraLines = @(), [string]$Title, [switch]$ForceDanger)
     $Tweaks = @($Tweaks | Where-Object { $_ })
-    if ($Tweaks.Count -eq 0) { Show-BlobGuiMessage -Title 'Nothing selected' -Lines @('{Gray}Tick one or more items first.'); return $false }
+    if ($Tweaks.Count -eq 0) { Show-BlobGuiMessage -Title 'Nothing selected' -Lines @('{Gray}Select one or more settings first (+ on a card).'); return $false }
     if (-not $Title) { $Title = "Apply {0} optimization(s)?" -f $Tweaks.Count }
     $danger = $ForceDanger -or (@($Tweaks | Where-Object { $_.Risk -eq 'Advanced' }).Count -gt 0)
     $canRp = $Blob.IsAdmin -and -not $Blob.DryRun
@@ -89,14 +72,18 @@ function New-BlobTweakTooltip {
 function Invoke-BlobGuiUndo {
     param([array]$Tweaks)
     $Tweaks = @($Tweaks | Where-Object { $_ })
-    if ($Tweaks.Count -eq 0) { Show-BlobGuiMessage -Title 'Nothing selected' -Lines @('{Gray}Tick the items you want to restore first.'); return }
+    if ($Tweaks.Count -eq 0) { Show-BlobGuiMessage -Title 'Nothing selected' -Lines @('{Gray}Select the items you want to restore first (+ on a card).'); return $false }
     $undo = Get-BlobUndoPlan $Tweaks
-    if ($undo.Records.Count -eq 0) { Show-BlobGuiMessage -Title 'Nothing to restore' -Kind Warning -Lines $undo.Lines; return }
-    if (-not (Confirm-BlobGui -Title 'Restore original values?' -Lines $undo.Lines -OkText 'Restore')) { return }
+    if ($undo.Records.Count -eq 0) {
+        Show-BlobGuiMessage -Title 'Nothing to restore' -Kind Warning -Lines ($undo.Lines + @('', '{Gray}This setting already matched before BLOB OPTIMIZER changed anything (Windows default or your own choice), so there is no saved original to go back to.'))
+        return $false
+    }
+    if (-not (Confirm-BlobGui -Title 'Restore original values?' -Lines $undo.Lines -OkText 'Restore')) { return $false }
     Start-BlobGuiTask 'Restoring original values'
     $ok, $bad = Invoke-BlobRestoreCore -Records $undo.Records -Log { param($m) Add-BlobGuiLog $m }
     Add-BlobGuiLog ("{Cyan}Restore finished: {0} restored, {1} not restored." -f $ok, $bad)
     Update-BlobGuiPage
+    return $true
 }
 
 # ---------------------------------------------------------------------------
@@ -148,6 +135,7 @@ function New-BlobGuiDashboard {
     [void]$root.Children.Add((New-BlobHeading 'Quick actions' '0,10,0,10'))
     $qa = New-BlobStack 'Horizontal'
     [void]$qa.Children.Add((New-BlobButton 'Choose a preset' { Show-BlobGuiPage 'presets' } 'Accent'))
+    [void]$qa.Children.Add((New-BlobButton 'All optimizations' { Show-BlobGuiPage 'optimize' }))
     [void]$qa.Children.Add((New-BlobButton 'Scan for cleanup' { Show-BlobGuiPage 'cleanup' }))
     [void]$qa.Children.Add((New-BlobButton 'Create restore point' { Invoke-BlobGuiRestorePoint }))
     [void]$qa.Children.Add((New-BlobButton 'Review changes' { Show-BlobGuiPage 'restore' }))
@@ -209,73 +197,232 @@ function Invoke-BlobGuiPreset {
 }
 
 # ---------------------------------------------------------------------------
-#  Tweak sections
+#  Optimizations: all settings as cards with switches
 # ---------------------------------------------------------------------------
-function New-BlobGuiTweakRow {
-    param($Tweak)
-    $grid = New-Object Windows.Controls.Grid
-    $c0 = New-Object Windows.Controls.ColumnDefinition; $c0.Width = '*'
-    $c1 = New-Object Windows.Controls.ColumnDefinition; $c1.Width = 'Auto'
-    $grid.ColumnDefinitions.Add($c0); $grid.ColumnDefinitions.Add($c1)
-    $grid.Margin = '0,6,0,6'
+$Blob.GuiCategories = @('All', 'FPS & Latency', 'Performance', 'Network', 'Quality of Life', 'Privacy & Security')
 
-    $cb = New-Object Windows.Controls.CheckBox
-    $content = New-BlobStack
-    [void]$content.Children.Add((New-BlobText $Tweak.Name 14 'White' 'SemiBold'))
-    [void]$content.Children.Add((New-BlobText $Tweak.Description 12.5 'Gray' 'Normal' '0,2,0,0'))
-    if ($Tweak.Warning) { [void]$content.Children.Add((New-BlobText ("! " + $Tweak.Warning) 12 'Yellow' 'Normal' '0,3,0,0')) }
-    elseif ($Tweak.Note) { [void]$content.Children.Add((New-BlobText $Tweak.Note 12 'DarkGray' 'Normal' '0,3,0,0')) }
-    $cb.Content = $content
-    $cb.Tag = $Tweak
-    [Windows.Controls.Grid]::SetColumn($cb, 0)
-    [void]$grid.Children.Add($cb)
-
-    $badges = New-BlobStack 'Horizontal'
-    $badges.VerticalAlignment = 'Top'; $badges.Margin = '12,2,0,0'
-    if ($Tweak.Admin) { [void]$badges.Children.Add((New-BlobBadge 'ADMIN' 'DarkGray')) }
-    [void]$badges.Children.Add((New-BlobRiskBadge $Tweak.Risk))
-    $state = Get-BlobTweakState $Tweak
-    $stateBadge = switch ($state) { 'Applied' { New-BlobBadge 'APPLIED' 'Green' } 'Partial' { New-BlobBadge 'PARTIAL' 'Yellow' } default { New-BlobBadge 'NOT SET' 'DarkGray' } }
-    [void]$badges.Children.Add($stateBadge)
-    [void]$badges.Children.Add((New-BlobHelpIcon (New-BlobTweakTooltip $Tweak)))
-    [Windows.Controls.Grid]::SetColumn($badges, 1)
-    [void]$grid.Children.Add($badges)
-    $Blob.Gui.P.Checks += $cb
-    return $grid
+function Get-BlobGuiFilteredTweaks {
+    $list = @($Blob.Tweaks)
+    if ($Blob.Gui.OptFilter -and $Blob.Gui.OptFilter -ne 'All') { $list = @($list | Where-Object { $_.Category -eq $Blob.Gui.OptFilter }) }
+    $q = [string]$Blob.Gui.OptSearch
+    if ($q.Trim()) {
+        $q = $q.Trim()
+        $list = @($list | Where-Object { $_.Name -like "*$q*" -or $_.Description -like "*$q*" -or $_.Category -like "*$q*" })
+    }
+    return $list
 }
 
-function New-BlobGuiTweakPage {
-    param([string]$Section, [array]$Tools = @())
-    $Blob.Gui.P = @{ Checks = @(); Section = $Section }
+function New-BlobChip {
+    param([string]$Text)
+    $b = New-Object Windows.Controls.Border
+    $b.Background = Get-BlobBrush '#1E293B'; $b.CornerRadius = 4; $b.Padding = '8,2'
+    $b.HorizontalAlignment = 'Left'; $b.VerticalAlignment = 'Center'
+    $b.Child = New-BlobText $Text 11 '#A3AFBF' 'SemiBold'
+    return $b
+}
+
+function New-BlobGlyph {
+    param([int]$Code, [string]$Color = 'Gray', [double]$Size = 13)
+    $t = New-Object Windows.Controls.TextBlock
+    $t.Text = [string][char]$Code
+    $t.FontFamily = New-Object Windows.Media.FontFamily 'Segoe MDL2 Assets'
+    $t.FontSize = $Size; $t.Foreground = Get-BlobBrush $Color; $t.VerticalAlignment = 'Center'
+    return $t
+}
+
+function New-BlobTweakCard {
+    param($Tweak)
+    $state = Get-BlobTweakState $Tweak
+    $selected = [bool]$Blob.Gui.Selected[$Tweak.Id]
+    $card = New-Object Windows.Controls.Border
+    $card.Background = Get-BlobBrush '#131B25'; $card.CornerRadius = 10; $card.Padding = '16,14,16,12'; $card.Margin = '0,0,12,12'
+    $card.BorderThickness = 1
+    $card.BorderBrush = if ($selected) { Get-BlobBrush 'Cyan' } elseif ($state -eq 'Applied') { Get-BlobBrush '#1D3B5C' } else { Get-BlobBrush '#1E2A38' }
+    $card.MinHeight = 190
+    $dock = New-Object Windows.Controls.DockPanel
+    $dock.LastChildFill = $true
+
+    # Bottom row: + ? ! ...... label switch
+    $bottom = New-Object Windows.Controls.DockPanel
+    $bottom.Margin = '0,12,0,0'
+    [Windows.Controls.DockPanel]::SetDock($bottom, 'Bottom')
+    $right = New-BlobStack 'Horizontal'
+    [Windows.Controls.DockPanel]::SetDock($right, 'Right')
+    $labelText = switch ($state) { 'Applied' { 'Deactivate' } 'Partial' { 'Partly on' } default { 'Activate' } }
+    $labelColor = switch ($state) { 'Applied' { 'White' } 'Partial' { 'Yellow' } default { 'Gray' } }
+    [void]$right.Children.Add((New-BlobText $labelText 12.5 $labelColor 'Normal' '0,0,10,0'))
+    $right.Children[0].VerticalAlignment = 'Center'
+    $sw = New-Object Windows.Controls.CheckBox
+    $sw.Style = $Blob.Gui.Window.FindResource('Switch')
+    $sw.IsChecked = ($state -eq 'Applied')
+    $sw.VerticalAlignment = 'Center'
+    if ($Tweak.Admin -and -not $Blob.IsAdmin) {
+        $sw.IsEnabled = $false
+        $holder = New-Object Windows.Controls.Border
+        $holder.Background = [Windows.Media.Brushes]::Transparent
+        $holder.Child = $sw
+        Set-BlobTooltip $holder (New-BlobTooltipPanel -Title 'Administrator required' -Paragraphs @('This is a machine-wide setting. Restart BLOB OPTIMIZER from an administrator terminal to change it.'))
+        [void]$right.Children.Add($holder)
+    } else {
+        Register-BlobClick $sw ([scriptblock]::Create("Switch-BlobGuiTweak '$($Tweak.Id)'"))
+        [void]$right.Children.Add($sw)
+    }
+    [void]$bottom.Children.Add($right)
+    $left = New-BlobStack 'Horizontal'
+    $plus = New-Object Windows.Controls.Button
+    $plus.Style = $Blob.Gui.Window.FindResource('IconButton')
+    $plus.Content = [string][char]$(if ($selected) { 0xE73E } else { 0xE710 })
+    if ($selected) { $plus.Foreground = Get-BlobBrush 'Cyan' }
+    $plus.ToolTip = if ($selected) { 'Selected - click to unselect' } else { 'Select for batch apply / undo' }
+    Register-BlobClick $plus ([scriptblock]::Create("Switch-BlobGuiSelect '$($Tweak.Id)'"))
+    [void]$left.Children.Add($plus)
+    $help = New-BlobHelpIcon (New-BlobTweakTooltip $Tweak)
+    $help.Margin = '4,0,0,0'
+    [void]$left.Children.Add($help)
+    if ($Tweak.Risk -eq 'Advanced') {
+        $warn = New-BlobGlyph 0xE7BA 'Yellow' 15
+        $warn.Margin = '10,0,0,0'; $warn.Cursor = [Windows.Input.Cursors]::Help
+        $wt = @($Blob.RiskInfo.Advanced.Text)
+        if ($Tweak.Warning) { $wt += "{Yellow}$($Tweak.Warning)" }
+        Set-BlobTooltip $warn (New-BlobTooltipPanel -Title 'Higher risk setting' -Paragraphs $wt)
+        [void]$left.Children.Add($warn)
+    }
+    if ($Tweak.Admin) {
+        $lock = New-BlobGlyph 0xE72E $(if ($Blob.IsAdmin) { 'DarkGray' } else { 'Yellow' }) 13
+        $lock.Margin = '10,0,0,0'
+        Set-BlobTooltip $lock (New-BlobTooltipPanel -Title 'Administrator setting' -Paragraphs @('Machine-wide setting: needs administrator rights.'))
+        [void]$left.Children.Add($lock)
+    }
+    [void]$bottom.Children.Add($left)
+    [void]$dock.Children.Add($bottom)
+
+    # Top row: category chip ...... risk badge
+    $top = New-Object Windows.Controls.DockPanel
+    [Windows.Controls.DockPanel]::SetDock($top, 'Top')
+    $risk = New-BlobRiskBadge $Tweak.Risk
+    [Windows.Controls.DockPanel]::SetDock($risk, 'Right')
+    [void]$top.Children.Add($risk)
+    [void]$top.Children.Add((New-BlobChip $Tweak.Category))
+    [void]$dock.Children.Add($top)
+
+    $body = New-BlobStack
+    [void]$body.Children.Add((New-BlobText $Tweak.Name 15 'White' 'SemiBold' '0,12,0,6'))
+    $desc = New-BlobText $Tweak.Description 12.5 '#94A3B8'
+    $desc.MaxHeight = 70; $desc.TextTrimming = 'CharacterEllipsis'
+    [void]$body.Children.Add($desc)
+    [void]$dock.Children.Add($body)
+    $card.Child = $dock
+    return $card
+}
+
+function Update-BlobGuiCardGrid {
+    $g = $Blob.Gui.CardGrid
+    if (-not $g) { return }
+    $g.Children.Clear()
+    $list = @(Get-BlobGuiFilteredTweaks)
+    foreach ($t in $list) { [void]$g.Children.Add((New-BlobTweakCard $t)) }
+    $Blob.Gui.CardCount.Text = "$($list.Count) shown  -  $(@($Blob.Tweaks | Where-Object { (Get-BlobTweakState $_) -eq 'Applied' }).Count) of $($Blob.Tweaks.Count) active  -  $(@($Blob.Gui.Selected.Keys).Count) selected"
+    $n = @($Blob.Gui.Selected.Keys).Count
+    if ($Blob.Gui.ApplySelBtn) { $Blob.Gui.ApplySelBtn.Content = $(if ($n) { "Apply selected ($n)" } else { 'Apply selected' }) }
+    Update-BlobGuiCardColumns
+}
+
+function Get-BlobGuiSelectedTweaks { return @($Blob.Gui.Selected.Keys | ForEach-Object { Get-BlobTweak $_ } | Where-Object { $_ }) }
+
+function Switch-BlobGuiSelect {
+    param([string]$Id)
+    if ($Blob.Gui.Selected.ContainsKey($Id)) { $Blob.Gui.Selected.Remove($Id) } else { $Blob.Gui.Selected[$Id] = $true }
+    $offset = $Blob.Gui.PageScroll.VerticalOffset
+    Update-BlobGuiCardGrid
+    $Blob.Gui.PageScroll.UpdateLayout(); $Blob.Gui.PageScroll.ScrollToVerticalOffset($offset)
+}
+
+# Switch on a card: activate (apply with preview) or deactivate (restore original).
+function Switch-BlobGuiTweak {
+    param([string]$Id)
+    $t = Get-BlobTweak $Id
+    if (-not $t) { return }
+    $done = if ((Get-BlobTweakState $t) -eq 'Applied') { Invoke-BlobGuiUndo @($t) } else { Invoke-BlobGuiApply -Tweaks @($t) -Tag $t.Id }
+    if (-not $done) { Update-BlobGuiPage }   # cancelled: put the switch back
+}
+
+function New-BlobGuiOptimizations {
     $root = New-BlobStack
-    [void]$root.Children.Add((New-BlobRiskLegend))
-    $tweaks = @($Blob.Tweaks | Where-Object { $_.Section -eq $Section })
-    $groups = @($tweaks | ForEach-Object { $_.Group } | Select-Object -Unique)
-    foreach ($g in $groups) {
-        [void]$root.Children.Add((New-BlobHeading $g))
-        $stack = New-BlobStack
-        $items = @($tweaks | Where-Object { $_.Group -eq $g })
-        for ($i = 0; $i -lt $items.Count; $i++) {
-            [void]$stack.Children.Add((New-BlobGuiTweakRow $items[$i]))
-            if ($i -lt $items.Count - 1) {
-                $sep = New-Object Windows.Controls.Border
-                $sep.Height = 1; $sep.Background = Get-BlobBrush '#1E2A38'; $sep.Margin = '0,4,0,4'
-                [void]$stack.Children.Add($sep)
-            }
-        }
-        [void]$root.Children.Add((New-BlobCard $stack))
+    # Filter chips + search
+    $bar = New-Object Windows.Controls.DockPanel
+    $bar.Margin = '0,0,0,6'
+    $sbox = New-Object Windows.Controls.Grid
+    $sbox.Width = 250; $sbox.VerticalAlignment = 'Top'
+    $search = New-Object Windows.Controls.TextBox
+    $search.Text = [string]$Blob.Gui.OptSearch; $search.Padding = '30,6,8,6'
+    $hint = New-BlobText 'Search settings...' 13 'DarkGray' 'Normal' '31,7,0,0'
+    $hint.IsHitTestVisible = $false
+    if ($search.Text) { $hint.Visibility = 'Collapsed' }
+    $glass = New-BlobGlyph 0xE721 'DarkGray' 12
+    $glass.Margin = '10,0,0,0'; $glass.HorizontalAlignment = 'Left'; $glass.IsHitTestVisible = $false
+    [void]$sbox.Children.Add($search); [void]$sbox.Children.Add($hint); [void]$sbox.Children.Add($glass)
+    $Blob.Gui.SearchHint = $hint
+    [Windows.Controls.DockPanel]::SetDock($sbox, 'Right')
+    $search.Add_TextChanged({
+            param($s, $e)
+            $Blob.Gui.OptSearch = $s.Text
+            $Blob.Gui.SearchHint.Visibility = if ($s.Text) { 'Collapsed' } else { 'Visible' }
+            Update-BlobGuiCardGrid
+        })
+    [void]$bar.Children.Add($sbox)
+    $chips = New-Object Windows.Controls.WrapPanel
+    foreach ($c in $Blob.GuiCategories) {
+        $count = if ($c -eq 'All') { $Blob.Tweaks.Count } else { @($Blob.Tweaks | Where-Object { $_.Category -eq $c }).Count }
+        $b = New-Object Windows.Controls.Button
+        $b.Style = $Blob.Gui.Window.FindResource('ChipButton')
+        $b.Content = "$c  $count"
+        if ($Blob.Gui.OptFilter -eq $c) { $b.Background = Get-BlobBrush '#0E3A47'; $b.BorderBrush = Get-BlobBrush 'Cyan'; $b.Foreground = Get-BlobBrush 'Cyan' }
+        Register-BlobClick $b ([scriptblock]::Create("`$Blob.Gui.OptFilter = '$c'; Show-BlobGuiPage 'optimize'"))
+        [void]$chips.Children.Add($b)
     }
-    if ($Tools.Count -gt 0) {
-        [void]$root.Children.Add((New-BlobHeading 'Tools'))
-        $tb = New-BlobStack 'Horizontal'
-        foreach ($t in $Tools) { [void]$tb.Children.Add((New-BlobButton $t.Label $t.Action)) }
-        [void]$root.Children.Add((New-BlobCard $tb))
-    }
+    [void]$bar.Children.Add($chips)
+    [void]$root.Children.Add($bar)
+
+    $info = New-Object Windows.Controls.DockPanel
+    $info.Margin = '0,0,0,12'
+    $Blob.Gui.CardCount = New-BlobText '' 12 'DarkGray'
+    $legend = New-BlobStack 'Horizontal'
+    [Windows.Controls.DockPanel]::SetDock($legend, 'Right')
+    foreach ($k in @('Minimal', 'Standard', 'Advanced', 'Optional')) { $rb = New-BlobRiskBadge $k; [void]$legend.Children.Add($rb) }
+    [void]$info.Children.Add($legend)
+    [void]$info.Children.Add($Blob.Gui.CardCount)
+    [void]$root.Children.Add($info)
+
+    $grid = New-Object Windows.Controls.Primitives.UniformGrid
+    $grid.Columns = 3
+    $Blob.Gui.CardGrid = $grid
+    [void]$root.Children.Add($grid)
+
+    [void]$root.Children.Add((New-BlobHeading 'More tools' '0,12,0,10'))
+    $tools = New-Object Windows.Controls.WrapPanel
+    $toolDefs = @(
+        @('Memory and resources', { Show-BlobGuiMessage -Title 'Memory and resources' -Lines (Get-BlobMemoryInfo) }),
+        @('Gaming status', { Show-BlobGuiMessage -Title 'Gaming status' -Lines (Get-BlobGamingStatus) }),
+        @('Privacy overview', { Show-BlobGuiMessage -Title 'Privacy overview' -Lines (Get-BlobPrivacyOverview) }),
+        @('Optimize drives now', {
+                if (-not $Blob.IsAdmin) { Show-BlobGuiAdminRequired 'Drive optimization needs administrator rights.'; return }
+                if (Confirm-BlobGui -Title 'Optimize all fixed drives now?' -OkText 'Optimize' -Lines @('{Gray}Uses the built-in Windows optimizer (Optimize-Volume): SSDs get TRIM, hard drives are defragmented.', '{Gray}Safe to run. Hard drive defragmentation can take a long time; the window waits until it finishes.')) {
+                    Start-BlobGuiTask 'Optimizing drives'; Invoke-BlobOptimizeDrives -Log { param($m) Add-BlobGuiLog $m } } }),
+        @('Restart Explorer', { if (Confirm-BlobGui -Title 'Restart Windows Explorer?' -OkText 'Restart Explorer' -Lines @('{Gray}The taskbar and open Explorer windows close and reopen.')) { Restart-BlobExplorer; Add-BlobGuiLog '{Green}Explorer restarted.' } }),
+        @('Windows Performance Options', { Start-Process 'SystemPropertiesPerformance.exe' -ErrorAction SilentlyContinue }),
+        @('Windows privacy settings', { Start-Process 'ms-settings:privacy' -ErrorAction SilentlyContinue }))
+    foreach ($d in $toolDefs) { $tb = New-BlobButton $d[0] $d[1]; $tb.Margin = '0,0,8,8'; [void]$tools.Children.Add($tb) }
+    [void]$root.Children.Add((New-BlobCard $tools))
+
+    $Blob.Gui.ApplySelBtn = New-BlobButton 'Apply selected' {
+        $sel = Get-BlobGuiSelectedTweaks
+        if (Invoke-BlobGuiApply -Tweaks $sel -Tag 'selection') { $Blob.Gui.Selected.Clear(); Update-BlobGuiPage } } 'Accent' -Margin '0'
     Set-BlobGuiPageActions @(
-        (New-BlobButton 'Select all' { foreach ($c in $Blob.Gui.P.Checks) { $c.IsChecked = $true } }),
-        (New-BlobButton 'Clear' { foreach ($c in $Blob.Gui.P.Checks) { $c.IsChecked = $false } }),
-        (New-BlobButton 'Undo selected' { Invoke-BlobGuiUndo @($Blob.Gui.P.Checks | Where-Object { $_.IsChecked } | ForEach-Object { $_.Tag }) } -ToolTip 'Restore the original values saved by BLOB OPTIMIZER'),
-        (New-BlobButton 'Review and apply' { $null = Invoke-BlobGuiApply -Tweaks @($Blob.Gui.P.Checks | Where-Object { $_.IsChecked } | ForEach-Object { $_.Tag }) -Tag $Blob.Gui.P.Section } 'Accent' -Margin '0'))
+        (New-BlobButton 'Select shown' { foreach ($t in (Get-BlobGuiFilteredTweaks)) { $Blob.Gui.Selected[$t.Id] = $true }; Update-BlobGuiCardGrid }),
+        (New-BlobButton 'Clear selection' { $Blob.Gui.Selected.Clear(); Update-BlobGuiCardGrid }),
+        (New-BlobButton 'Undo selected' { $null = Invoke-BlobGuiUndo (Get-BlobGuiSelectedTweaks) } -ToolTip 'Restore the original values saved by BLOB OPTIMIZER'),
+        $Blob.Gui.ApplySelBtn)
+    Update-BlobGuiCardGrid
     return $root
 }
 

@@ -21,7 +21,7 @@
     },
     {
       "name": "STANDARD",
-      "description": "Recommended everyday optimizations: MINIMAL plus background apps, visual effects, Game DVR, taskbar and privacy cleanup.",
+      "description": "Recommended everyday optimizations: MINIMAL plus background apps, visual effects, Game DVR, file I/O, update sharing, taskbar, privacy and browser telemetry.",
       "warning": "",
       "tweaks": [
         "perf.menudelay",
@@ -48,12 +48,20 @@
         "pv.suggestions",
         "pv.diag",
         "pv.inking",
-        "pv.activity"
+        "pv.activity",
+        "perf.lastaccess",
+        "perf.edgeboost",
+        "perf.folderdiscovery",
+        "game.dopeer",
+        "pv.recall",
+        "pv.firefox",
+        "pv.chrome",
+        "pv.edgediag"
       ]
     },
     {
       "name": "ADVANCED",
-      "description": "STANDARD plus scheduler, GPU and telemetry-service changes. For experienced users.",
+      "description": "STANDARD plus CPU scheduling, power throttling, GPU and network-throttling changes and the DiagTrack service. For experienced users.",
       "warning": "ADVANCED changes can behave differently per system (GPU scheduling, fullscreen optimizations, DiagTrack service). Read each item, create a restore point, and undo anything that does not suit you.",
       "tweaks": [
         "perf.menudelay",
@@ -86,7 +94,18 @@
         "game.fso",
         "game.mmcss",
         "tw.longpaths",
-        "pv.diagtrack"
+        "pv.diagtrack",
+        "perf.lastaccess",
+        "perf.edgeboost",
+        "perf.folderdiscovery",
+        "game.dopeer",
+        "pv.recall",
+        "pv.firefox",
+        "pv.chrome",
+        "pv.edgediag",
+        "game.powerthrottle",
+        "game.priority",
+        "game.netthrottle"
       ]
     }
   ]

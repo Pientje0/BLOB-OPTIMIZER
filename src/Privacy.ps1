@@ -92,6 +92,39 @@ Register-BlobTweak @{
     Registry = @(@{ Path = 'HKCU:\Software\Policies\Microsoft\Windows\WindowsCopilot'; Name = 'TurnOffWindowsCopilot'; Value = 1 })
 }
 
+Register-BlobTweak @{
+    Id = 'pv.recall'; Section = 'Privacy'; Group = 'Activity history'; Risk = 'Standard'
+    Name = 'Disable Recall snapshots'
+    Description = 'Applies the official policy that stops Windows Recall (Copilot+ PCs) from saving screenshots of your activity.'
+    Registry = @(@{ Path = 'HKCU:\Software\Policies\Microsoft\Windows\WindowsAI'; Name = 'DisableAIDataAnalysis'; Value = 1 })
+    Note = 'Has no effect on PCs without Recall.'
+}
+Register-BlobTweak @{
+    Id = 'pv.firefox'; Section = 'Privacy'; Group = 'Browsers'; Risk = 'Standard'
+    Name = 'Disable Firefox telemetry'
+    Description = 'Official Firefox enterprise policies that stop Firefox sending usage data and disable its background "default browser agent".'
+    Registry = @(
+        @{ Path = 'HKLM:\SOFTWARE\Policies\Mozilla\Firefox'; Name = 'DisableTelemetry'; Value = 1 },
+        @{ Path = 'HKLM:\SOFTWARE\Policies\Mozilla\Firefox'; Name = 'DisableDefaultBrowserAgent'; Value = 1 })
+    Note = 'Firefox shows "Your browser is being managed by your organization". Harmless if Firefox is not installed.'
+}
+Register-BlobTweak @{
+    Id = 'pv.chrome'; Section = 'Privacy'; Group = 'Browsers'; Risk = 'Standard'
+    Name = 'Disable Chrome usage reporting'
+    Description = 'Official Chrome policy that stops sending usage statistics and crash reports to Google.'
+    Registry = @(@{ Path = 'HKLM:\SOFTWARE\Policies\Google\Chrome'; Name = 'MetricsReportingEnabled'; Value = 0 })
+    Note = 'Chrome shows "Managed by your organization". Harmless if Chrome is not installed.'
+}
+Register-BlobTweak @{
+    Id = 'pv.edgediag'; Section = 'Privacy'; Group = 'Browsers'; Risk = 'Standard'
+    Name = 'Minimize Microsoft Edge data collection'
+    Description = 'Official Edge policies: only required diagnostic data, and no browsing activity used for ads and personalization.'
+    Registry = @(
+        @{ Path = 'HKLM:\SOFTWARE\Policies\Microsoft\Edge'; Name = 'DiagnosticData'; Value = 0 },
+        @{ Path = 'HKLM:\SOFTWARE\Policies\Microsoft\Edge'; Name = 'PersonalizationReportingEnabled'; Value = 0 })
+    Note = 'Edge shows "managed by your organization" for policies.'
+}
+
 function Get-BlobPrivacyOverview {
     $lines = @('{Cyan}Privacy overview', '')
     $t = Get-BlobRegState 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection' 'AllowTelemetry'

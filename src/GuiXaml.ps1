@@ -83,6 +83,89 @@ $Blob.GuiTheme = @'
       </Setter.Value>
     </Setter>
   </Style>
+  <Style x:Key="TabButton" TargetType="Button">
+    <Setter Property="Foreground" Value="{StaticResource Sub}"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderBrush" Value="Transparent"/>
+    <Setter Property="FontFamily" Value="Segoe UI"/>
+    <Setter Property="FontSize" Value="13.5"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="0,0,0,2" Padding="14,0" Margin="2,0">
+            <ContentPresenter VerticalAlignment="Center"/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="#121A24"/></Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="IconButton" TargetType="Button">
+    <Setter Property="Foreground" Value="{StaticResource Sub}"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Width" Value="28"/>
+    <Setter Property="Height" Value="28"/>
+    <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="6">
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="#1E293B"/></Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="ChipButton" TargetType="Button">
+    <Setter Property="Foreground" Value="{StaticResource Sub}"/>
+    <Setter Property="Background" Value="#141C26"/>
+    <Setter Property="BorderBrush" Value="#243244"/>
+    <Setter Property="FontSize" Value="12.5"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Margin" Value="0,0,8,8"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
+                  CornerRadius="14" Padding="14,5">
+            <ContentPresenter VerticalAlignment="Center"/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="BorderBrush" Value="#22D3EE"/></Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="Switch" TargetType="CheckBox">
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="CheckBox">
+          <Border x:Name="Track" Width="40" Height="22" CornerRadius="11" Background="#334155">
+            <Ellipse x:Name="Thumb" Width="16" Height="16" Fill="#E6EDF3" HorizontalAlignment="Left" Margin="3,0"/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="Track" Property="Background" Value="#3B82F6"/>
+              <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Track" Property="Opacity" Value="0.85"/></Trigger>
+            <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Track" Property="Opacity" Value="0.35"/></Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
   <Style x:Key="CaptionButton" TargetType="Button">
     <Setter Property="Foreground" Value="{StaticResource Sub}"/>
     <Setter Property="Background" Value="Transparent"/>
@@ -325,7 +408,7 @@ $Blob.GuiTheme = @'
 $Blob.GuiXaml = @'
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="BLOB OPTIMIZER" Width="1220" Height="800" MinWidth="980" MinHeight="620"
+        Title="BLOB OPTIMIZER" Width="1240" Height="820" MinWidth="980" MinHeight="620"
         WindowStartupLocation="CenterScreen" Background="#0B0F14" WindowStyle="None" ResizeMode="CanResize"
         FontFamily="Segoe UI" UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
   <WindowChrome.WindowChrome>
@@ -336,6 +419,7 @@ $Blob.GuiXaml = @'
     <Grid>
       <Grid.RowDefinitions>
         <RowDefinition Height="46"/>
+        <RowDefinition Height="44"/>
         <RowDefinition Height="*"/>
         <RowDefinition Height="Auto"/>
         <RowDefinition Height="28"/>
@@ -347,7 +431,8 @@ $Blob.GuiXaml = @'
           <Border Width="22" Height="22" CornerRadius="11" Background="#22D3EE" Margin="0,0,10,0">
             <Border Width="10" Height="10" CornerRadius="5" Background="#0B0F14" Margin="6,0,0,6"/>
           </Border>
-          <TextBlock Text="BLOB OPTIMIZER" FontWeight="Bold" FontSize="14" VerticalAlignment="Center"/>
+          <TextBlock Text="BLOB" FontWeight="Black" FontSize="15" Foreground="#22D3EE" VerticalAlignment="Center"/>
+          <TextBlock Text=" OPTIMIZER" FontWeight="SemiBold" FontSize="15" VerticalAlignment="Center"/>
           <TextBlock x:Name="TitleVersion" Foreground="#64748B" FontSize="12" Margin="10,0,0,0" VerticalAlignment="Center"/>
           <Border x:Name="AdminBadge" CornerRadius="4" Padding="8,2" Margin="14,0,0,0" VerticalAlignment="Center">
             <TextBlock x:Name="AdminBadgeText" FontSize="11" FontWeight="SemiBold"/>
@@ -363,65 +448,49 @@ $Blob.GuiXaml = @'
         </StackPanel>
       </Grid>
 
-      <!-- Main area -->
-      <Grid Grid.Row="1">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="232"/>
-          <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+      <!-- Tab bar -->
+      <Border Grid.Row="1" Background="#0D1218" BorderBrush="#1C2733" BorderThickness="0,1,0,1">
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="10,0">
+          <StackPanel x:Name="NavPanel" Orientation="Horizontal"/>
+        </ScrollViewer>
+      </Border>
 
-        <Border Grid.Column="0" Background="#0D1218" BorderBrush="#1C2733" BorderThickness="0,1,1,0">
+      <!-- Page -->
+      <Grid Grid.Row="2" Background="#0B0F14">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Border Grid.Row="0" Padding="30,18,24,8">
           <DockPanel>
-            <StackPanel DockPanel.Dock="Top" Margin="26,16,20,12">
-              <TextBlock Text="BLOB" FontSize="34" FontWeight="Black" Foreground="#22D3EE" Margin="0,0,0,-8"/>
-              <TextBlock Text="O P T I M I Z E R" FontSize="12" FontWeight="SemiBold" Foreground="#94A3B8"/>
+            <StackPanel x:Name="PageActions" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center"/>
+            <StackPanel>
+              <TextBlock x:Name="PageTitle" FontSize="24" FontWeight="SemiBold"/>
+              <TextBlock x:Name="PageSubtitle" FontSize="13" Foreground="#94A3B8" Margin="0,4,0,0"/>
             </StackPanel>
-            <StackPanel DockPanel.Dock="Bottom" Margin="26,6,20,12">
-              <TextBlock x:Name="SideHost" Foreground="#64748B" FontSize="11"/>
-              <TextBlock Text="No installation &#x00B7; nothing left running" Foreground="#475569" FontSize="11" Margin="0,2,0,0"/>
-            </StackPanel>
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-              <StackPanel x:Name="NavPanel"/>
-            </ScrollViewer>
           </DockPanel>
         </Border>
-
-        <Grid Grid.Column="1" Background="#0B0F14">
-          <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-          </Grid.RowDefinitions>
-          <Border Grid.Row="0" BorderBrush="#1C2733" BorderThickness="0,1,0,1" Padding="30,18,24,16">
-            <DockPanel>
-              <StackPanel x:Name="PageActions" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center"/>
-              <StackPanel>
-                <TextBlock x:Name="PageTitle" FontSize="24" FontWeight="SemiBold"/>
-                <TextBlock x:Name="PageSubtitle" FontSize="13" Foreground="#94A3B8" Margin="0,4,0,0"/>
-              </StackPanel>
-            </DockPanel>
-          </Border>
-          <ScrollViewer x:Name="PageScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="30,20,24,24">
-            <ContentControl x:Name="PageHost"/>
-          </ScrollViewer>
-        </Grid>
+        <ScrollViewer x:Name="PageScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="30,12,24,24">
+          <ContentControl x:Name="PageHost"/>
+        </ScrollViewer>
       </Grid>
 
       <!-- Activity log -->
-      <Border Grid.Row="2" Background="#0D1218" BorderBrush="#1C2733" BorderThickness="0,1,0,0">
+      <Border Grid.Row="3" Background="#0D1218" BorderBrush="#1C2733" BorderThickness="0,1,0,0">
         <DockPanel>
-          <DockPanel DockPanel.Dock="Top" Margin="18,8,12,4">
+          <DockPanel DockPanel.Dock="Top" Margin="18,6,12,2">
             <Button x:Name="BtnToggleLog" DockPanel.Dock="Right" Content="Hide" Padding="10,3" Margin="0" FontSize="11"/>
             <Button x:Name="BtnClearLog" DockPanel.Dock="Right" Content="Clear" Padding="10,3" FontSize="11"/>
             <TextBlock Text="ACTIVITY" FontSize="11" FontWeight="Bold" Foreground="#64748B" VerticalAlignment="Center"/>
           </DockPanel>
-          <ScrollViewer x:Name="LogScroll" Height="92" VerticalScrollBarVisibility="Auto" Padding="18,0,12,8">
+          <ScrollViewer x:Name="LogScroll" Height="86" VerticalScrollBarVisibility="Auto" Padding="18,0,12,6">
             <StackPanel x:Name="LogPanel"/>
           </ScrollViewer>
         </DockPanel>
       </Border>
 
       <!-- Status bar -->
-      <Border Grid.Row="3" Background="#080B0F" BorderBrush="#1C2733" BorderThickness="0,1,0,0">
+      <Border Grid.Row="4" Background="#080B0F" BorderBrush="#1C2733" BorderThickness="0,1,0,0">
         <DockPanel Margin="18,0">
           <TextBlock x:Name="StatusRight" DockPanel.Dock="Right" Foreground="#475569" FontSize="11" VerticalAlignment="Center"/>
           <TextBlock x:Name="StatusText" Foreground="#94A3B8" FontSize="11" VerticalAlignment="Center" Text="Ready"/>

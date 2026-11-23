@@ -2,6 +2,25 @@
 
 All notable changes to BLOB OPTIMIZER are documented here. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] - 2026-11-23
+
+### Added
+- 15 new settings (55 in total):
+  - **FPS & latency:** disable power throttling, foreground priority boost, Multiplane Overlay fix, disable Xbox services.
+  - **Network:** disable network throttling, stop sharing updates with other PCs.
+  - **Performance:** file I/O (no last-access writes, no 8.3 names), Edge background/startup boost, faster Explorer folder loading.
+  - **Quality of life:** the Xbox button no longer opens Game Bar.
+  - **Privacy:** Recall snapshots, and Firefox, Chrome and Edge telemetry policies.
+  - Each has a detailed explanation.
+- Categories on every setting (FPS & Latency, Performance, Network, Quality of Life, Privacy & Security).
+- **Optimizations** tab: all settings as cards with category filter chips, search, a risk label, an Activate / Deactivate switch, **+** for batch selection, **?** help, and warning and admin icons.
+- *Optimize drives now* action (Windows Optimize-Volume: TRIM for SSDs, defrag for HDDs).
+- New settings added to the STANDARD (33) and ADVANCED (42) presets. Xbox services, MPO and 8.3 names are opt-in only.
+
+### Changed
+- Navigation moved from the sidebar to tabs across the top. The four section pages were merged into the Optimizations tab (the terminal UI keeps its sections).
+- Refreshing a page after a change keeps the scroll position.
+
 ## [1.2.0] - 2026-11-23
 
 ### Added

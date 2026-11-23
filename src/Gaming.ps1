@@ -31,7 +31,7 @@ Register-BlobTweak @{
     Note = 'Applies after sign-out.'
 }
 Register-BlobTweak @{
-    Id = 'game.stickykeys'; Section = 'Gaming'; Group = 'Input'; Risk = 'Standard'
+    Id = 'game.stickykeys'; Category = 'Quality of Life'; Section = 'Gaming'; Group = 'Input'; Risk = 'Standard'
     Name = 'Disable Sticky Keys shortcut prompt'
     Description = 'Stops the Sticky Keys dialog from appearing when Shift is pressed five times. Sticky Keys itself remains available in Settings.'
     Registry = @(@{ Path = 'HKCU:\Control Panel\Accessibility\StickyKeys'; Name = 'Flags'; Value = '506'; Type = 'String' })
@@ -63,6 +63,58 @@ Register-BlobTweak @{
         @{ Path = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games'; Name = 'Priority'; Value = 6 },
         @{ Path = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games'; Name = 'Scheduling Category'; Value = 'High'; Type = 'String' })
     Warning = 'Only affects games that register with MMCSS. No guaranteed FPS change.'
+}
+
+Register-BlobTweak @{
+    Id = 'game.powerthrottle'; Section = 'Gaming'; Group = 'CPU and scheduling'; Risk = 'Advanced'; Category = 'FPS & Latency'
+    Name = 'Disable power throttling'
+    Description = 'Stops Windows putting background and minimized apps into low-power "EcoQoS" mode, so the CPU never slows a process to save energy.'
+    Registry = @(@{ Path = 'HKLM:\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling'; Name = 'PowerThrottlingOff'; Value = 1 })
+    Warning = 'Reduces battery life on laptops and raises idle power use. Requires a restart.'
+}
+Register-BlobTweak @{
+    Id = 'game.priority'; Section = 'Gaming'; Group = 'CPU and scheduling'; Risk = 'Advanced'; Category = 'FPS & Latency'
+    Name = 'Boost foreground app priority'
+    Description = 'Sets Win32PrioritySeparation to 38: short, variable CPU time slices with a 3x boost for the window you are using (the game).'
+    Registry = @(@{ Path = 'HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl'; Name = 'Win32PrioritySeparation'; Value = 38 })
+    Warning = 'Background tasks (downloads, encoding, streaming) get less CPU while you play. Effect varies per system.'
+}
+Register-BlobTweak @{
+    Id = 'game.mpo'; Section = 'Gaming'; Group = 'Graphics'; Risk = 'Advanced'; Category = 'FPS & Latency'
+    Name = 'Disable Multiplane Overlay (MPO)'
+    Description = 'Microsoft-documented workaround that turns off multiplane overlay in the desktop compositor. Fixes flicker, black screens and stutter on some GPU/driver combinations.'
+    Registry = @(@{ Path = 'HKLM:\SOFTWARE\Microsoft\Windows\Dwm'; Name = 'OverlayTestMode'; Value = 5 })
+    Warning = 'Only use this if you see flicker or stutter. On healthy systems it can slightly increase GPU work. Restart required.'
+}
+Register-BlobTweak @{
+    Id = 'game.xbox'; Section = 'Gaming'; Group = 'Xbox'; Risk = 'Advanced'; Category = 'FPS & Latency'
+    Name = 'Disable Xbox services'
+    Description = 'Disables the Xbox Live sign-in, cloud save and networking services so they never start in the background.'
+    Services = @(
+        @{ Name = 'XblAuthManager'; Startup = 'Disabled' },
+        @{ Name = 'XblGameSave'; Startup = 'Disabled' },
+        @{ Name = 'XboxNetApiSvc'; Startup = 'Disabled' })
+    Warning = 'Breaks the Xbox app, PC Game Pass, Xbox sign-in in games and cloud saves. Xbox controllers keep working. Fully reversible.'
+}
+Register-BlobTweak @{
+    Id = 'game.nexus'; Section = 'Gaming'; Group = 'Xbox'; Risk = 'Optional'; Category = 'Quality of Life'
+    Name = 'Xbox button does not open Game Bar'
+    Description = 'Pressing the Guide (Xbox) button on a controller no longer opens Xbox Game Bar - handy if it pops up by accident in games.'
+    Registry = @(@{ Path = 'HKCU:\Software\Microsoft\GameBar'; Name = 'UseNexusForGameBarEnabled'; Value = 0 })
+}
+Register-BlobTweak @{
+    Id = 'game.netthrottle'; Section = 'Gaming'; Group = 'Network'; Risk = 'Advanced'; Category = 'Network'
+    Name = 'Disable network throttling'
+    Description = 'Sets NetworkThrottlingIndex to off. By default Windows limits non-multimedia network packet processing while media plays.'
+    Registry = @(@{ Path = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile'; Name = 'NetworkThrottlingIndex'; Value = 4294967295 })
+    Warning = 'Mostly affects throughput on fast connections while audio/video plays; little effect on ping. Restart required.'
+}
+Register-BlobTweak @{
+    Id = 'game.dopeer'; Section = 'Gaming'; Group = 'Network'; Risk = 'Standard'; Category = 'Network'
+    Name = 'Stop sharing updates with other PCs'
+    Description = 'Delivery Optimization can upload Windows updates to other PCs. This policy downloads only from Microsoft (HTTP only), so your upload bandwidth stays free.'
+    Registry = @(@{ Path = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization'; Name = 'DODownloadMode'; Value = 0 })
+    Note = 'Updates may download a little slower in homes with several PCs.'
 }
 
 function Get-BlobGamingStatus {

@@ -18,22 +18,22 @@ There is no installer, no EXE and nothing to uninstall. It runs inside one Power
 2. Paste the command and press Enter. The BLOB OPTIMIZER window opens:
 
 ```powershell
-irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.2.0/BLOB.ps1 | iex
+irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.3.0/BLOB.ps1 | iex
 ```
 
 **Terminal-only interface** (keyboard UI inside PowerShell):
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.2.0/BLOB.ps1))) -Tui
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.3.0/BLOB.ps1))) -Tui
 ```
 
 **Dry run** shows every change it would make without modifying anything:
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.2.0/BLOB.ps1))) -DryRun
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.3.0/BLOB.ps1))) -DryRun
 ```
 
-> Pinning a version tag (`v1.2.0`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
+> Pinning a version tag (`v1.3.0`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
 
 Without administrator rights, BLOB OPTIMIZER still starts in read-only mode: you can browse system info, settings, services, startup entries and cleanup sizes, and apply per-user settings. Anything machine-wide explains why it needs elevation. The tool never elevates itself.
 
@@ -47,7 +47,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\BLOB.ps1 -Tui     # termin
 
 ## Interfaces
 
-**Window (default).** A dark WPF window with sidebar navigation, checkbox lists, sortable tables, a live activity log, and a confirmation dialog that lists every exact change before anything is applied. WPF is part of Windows, so nothing is downloaded or installed. The PowerShell console stays open behind the window, and closing the window ends the tool. If WPF is unavailable (Server Core, or a non-STA session), BLOB OPTIMIZER falls back to the terminal interface automatically.
+**Window (default).** A dark WPF window with tabs across the top (Home, Presets, Optimizations, Services, Startup, Cleanup, Network, Power, Restore, Tools, Info), sortable tables, a live activity log, and a confirmation dialog that lists every exact change before anything is applied.
+
+**Optimizations tab.** All 55 settings as cards, filterable by category (FPS & Latency, Performance, Network, Quality of Life, Privacy & Security) and searchable. Each card shows its category, risk level and description, plus:
+- an **Activate / Deactivate** switch. Activating shows the exact changes and a restore-point option first, and deactivating restores the saved original value;
+- **+** to select cards for a batch *Apply selected* or *Undo selected*;
+- **?** for detailed help;
+- a warning icon on higher-risk settings and a lock icon on settings that need administrator rights. WPF is part of Windows, so nothing is downloaded or installed. The PowerShell console stays open behind the window, and closing the window ends the tool. If WPF is unavailable (Server Core, or a non-STA session), BLOB OPTIMIZER falls back to the terminal interface automatically.
 
 **Risk and help on every setting.** Each setting shows a risk label: LOW RISK, MEDIUM RISK, HIGH RISK or PREFERENCE. Hover the **?** next to it for a detailed explanation: what it does, why you might want it, the trade-off, the exact registry or service change (current → new), whether it needs admin rights, and how to undo it.
 
@@ -61,10 +67,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\BLOB.ps1 -Tui     # termin
 
 | Section | Contents |
 |---|---|
-| **Performance** | Menu delay, startup delay, Store background apps, visual effects, transparency, multimedia scheduling, live memory/CPU view, performance settings overview |
-| **Gaming** | Game Mode, Game DVR, mouse acceleration, Sticky Keys prompt, GPU scheduling, fullscreen optimizations, MMCSS priority, power plan shortcut. **No FPS gains are promised.** |
+| **Performance** | Menu delay, startup delay, Store background apps, Edge background/startup boost, visual effects, transparency, multimedia scheduling, file I/O (last-access writes, 8.3 names), Explorer folder loading, drive optimization (TRIM/defrag), live memory/CPU view |
+| **Gaming** | Game Mode, Game DVR, mouse acceleration, Sticky Keys prompt, GPU scheduling, fullscreen optimizations, MMCSS priority, power throttling, foreground priority, Multiplane Overlay fix, Xbox services, Xbox button, network throttling, update sharing (Delivery Optimization). **No FPS gains are promised.** |
 | **Tweaks** | File Explorer (extensions, This PC, hidden files, recent files), taskbar (search, Task View, Widgets, End task, alignment), Start (recommendations, web search), classic context menu, long paths |
-| **Privacy** | Advertising ID, tailored experiences, suggestions and auto-installed apps, lock screen ads, diagnostic data level, feedback, inking, activity history, DiagTrack service |
+| **Privacy** | Advertising ID, tailored experiences, suggestions and auto-installed apps, lock screen ads, diagnostic data level, feedback, inking, activity history, Recall snapshots, DiagTrack service, Firefox / Chrome / Edge telemetry policies |
 | **Services** | Curated review with explanations and recommended startup types, plus a browser of every service. Only startup types are changed, and critical services are protected |
 | **Startup** | Run keys and Startup folders. Entries are disabled with the same mechanism Task Manager uses, so nothing is deleted |
 | **Cleanup** | Temp files, thumbnail cache, crash dumps, WER reports, DirectX shader cache, Windows Update download cache, Recycle Bin, with a size preview first. Storage and disk health |
