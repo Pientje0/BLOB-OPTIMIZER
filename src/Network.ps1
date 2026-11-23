@@ -13,13 +13,17 @@ $Blob.DnsPresets = @(
 )
 
 function Get-BlobAdapters {
+    $pre = @(Get-BlobPrefetch 'Adapters')
+    if ($pre.Count -gt 0) { return @($pre | Where-Object { $_.Status -eq 'Up' } | Sort-Object Name) }
     try { return @(Get-NetAdapter -ErrorAction Stop | Where-Object { $_.Status -eq 'Up' } | Sort-Object InterfaceMetric, Name) } catch { return @() }
 }
 
 function Get-BlobDnsInfo {
     param($Adapter)
     $servers = @()
-    try { $servers = @((Get-DnsClientServerAddress -InterfaceIndex $Adapter.ifIndex -AddressFamily IPv4 -ErrorAction Stop).ServerAddresses) } catch { }
+    $preDns = Get-BlobPrefetch 'Dns'
+    if ($preDns -and $preDns.ContainsKey([int]$Adapter.ifIndex)) { $servers = @($preDns[[int]$Adapter.ifIndex]) }
+    else { try { $servers = @((Get-DnsClientServerAddress -InterfaceIndex $Adapter.ifIndex -AddressFamily IPv4 -ErrorAction Stop).ServerAddresses) } catch { } }
     $guid = $Adapter.InterfaceGuid
     $ns = Get-BlobRegState "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\$guid" 'NameServer'
     $static = $ns.Exists -and -not [string]::IsNullOrWhiteSpace([string]$ns.Value)
@@ -34,14 +38,20 @@ function Get-BlobNetworkInfo {
         $lines += "{White}$($a.Name)  {DarkGray}$($a.InterfaceDescription)"
         $lines += "{Gray}   Status       {Green}$($a.Status)  {Gray}Speed {White}$($a.LinkSpeed)  {Gray}MAC {White}$($a.MacAddress)"
         try {
-            $cfg = Get-NetIPConfiguration -InterfaceIndex $a.ifIndex -ErrorAction Stop
-            $ipv4 = @($cfg.IPv4Address | ForEach-Object { "$($_.IPAddress)/$($_.PrefixLength)" }) -join ', '
-            $ipv6 = @($cfg.IPv6Address | ForEach-Object { $_.IPAddress }) -join ', '
-            $gw = @($cfg.IPv4DefaultGateway | ForEach-Object { $_.NextHop }) -join ', '
+            $preIp = Get-BlobPrefetch 'IPConfig'
+            if ($preIp -and $preIp.ContainsKey([int]$a.ifIndex)) {
+                $c = $preIp[[int]$a.ifIndex]; $ipv4 = $c.IPv4; $ipv6 = $c.IPv6; $gw = $c.Gateway
+            } else {
+                $cfg = Get-NetIPConfiguration -InterfaceIndex $a.ifIndex -ErrorAction Stop
+                $ipv4 = @($cfg.IPv4Address | ForEach-Object { "$($_.IPAddress)/$($_.PrefixLength)" }) -join ', '
+                $ipv6 = @($cfg.IPv6Address | ForEach-Object { $_.IPAddress }) -join ', '
+                $gw = @($cfg.IPv4DefaultGateway | ForEach-Object { $_.NextHop }) -join ', '
+            }
             $lines += "{Gray}   IPv4         {White}$ipv4"
             if ($ipv6) { $lines += "{Gray}   IPv6         {White}$ipv6" }
             $lines += "{Gray}   Gateway      {White}$(if ($gw) { $gw } else { '-' })"
-            $prof = Get-NetConnectionProfile -InterfaceIndex $a.ifIndex -ErrorAction SilentlyContinue
+            $preProf = Get-BlobPrefetch 'Profiles'
+            $prof = if ($preProf) { $preProf[[int]$a.ifIndex] } else { Get-NetConnectionProfile -InterfaceIndex $a.ifIndex -ErrorAction SilentlyContinue }
             if ($prof) { $lines += "{Gray}   Network      {White}$($prof.Name)  {DarkGray}($($prof.NetworkCategory))" }
         } catch { }
         $dns = Get-BlobDnsInfo $a

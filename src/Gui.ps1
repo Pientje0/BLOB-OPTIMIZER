@@ -5,6 +5,15 @@
 #  is installed. All work goes through the same engine as the terminal UI.
 # ============================================================================
 
+# Shared, pre-compiled handlers: per-element data lives in DataContext, so
+# building many cards does not compile a new script block for each one.
+$Blob.GuiShared = @{
+    RiskTip     = { param($el) New-BlobTooltipPanel -Title $Blob.RiskInfo[$el.DataContext].Label -Paragraphs @($Blob.RiskInfo[$el.DataContext].Text) }
+    TweakTip    = { param($el) New-BlobTweakTooltip (Get-BlobTweak $el.DataContext) }
+    SwitchClick = { Switch-BlobGuiTweak $Blob.Gui.Sender.DataContext }
+    SelectClick = { Switch-BlobGuiSelect $Blob.Gui.Sender.DataContext }
+}
+
 $Blob.GuiColors = @{
     Cyan = '#22D3EE'; DarkCyan = '#0E7490'; White = '#E6EDF3'; Gray = '#A3AFBF'; DarkGray = '#64748B'
     Green = '#4ADE80'; Yellow = '#FACC15'; Red = '#F87171'; DarkYellow = '#CA8A04'; Magenta = '#E879F9'; Black = '#03141A'
@@ -37,16 +46,16 @@ function Get-BlobBrush {
 # Turns a colour-tagged line ("{Gray}a {White}b") into a TextBlock of Runs.
 function ConvertTo-BlobTextBlock {
     param([string]$Markup, [double]$Size = 13, [switch]$Mono, [string]$Default = 'White')
-    $tb = New-Object Windows.Controls.TextBlock
+    $tb = [Windows.Controls.TextBlock]::new()
     $tb.FontSize = $Size
     $tb.TextWrapping = 'Wrap'
-    if ($Mono) { $tb.FontFamily = New-Object Windows.Media.FontFamily 'Cascadia Mono, Consolas' }
+    if ($Mono) { $tb.FontFamily = [Windows.Media.FontFamily]::new('Cascadia Mono, Consolas') }
     $parts = [regex]::Split($Markup, $Blob.ColorTag)
     $color = $Default
     for ($i = 0; $i -lt $parts.Count; $i++) {
         if ($i % 2 -eq 1) { $color = $parts[$i]; continue }
         if ($parts[$i].Length -eq 0) { continue }
-        $run = New-Object Windows.Documents.Run $parts[$i]
+        $run = [Windows.Documents.Run]::new($parts[$i])
         $run.Foreground = Get-BlobBrush $color
         $tb.Inlines.Add($run)
     }
@@ -59,7 +68,7 @@ function ConvertTo-BlobTextBlock {
 # ---------------------------------------------------------------------------
 function New-BlobText {
     param([string]$Text, [double]$Size = 13, [string]$Color = 'White', [string]$Weight = 'Normal', [string]$Margin = '0')
-    $t = New-Object Windows.Controls.TextBlock
+    $t = [Windows.Controls.TextBlock]::new()
     $t.Text = $Text; $t.FontSize = $Size; $t.Foreground = Get-BlobBrush $Color
     $t.FontWeight = $Weight; $t.Margin = $Margin; $t.TextWrapping = 'Wrap'
     return $t
@@ -67,7 +76,7 @@ function New-BlobText {
 
 function New-BlobButton {
     param([string]$Label, [scriptblock]$Action, [ValidateSet('Normal', 'Accent', 'Danger')][string]$Kind = 'Normal', [string]$ToolTip, [string]$Margin)
-    $b = New-Object Windows.Controls.Button
+    $b = [Windows.Controls.Button]::new()
     $b.Content = $Label
     if ($Kind -eq 'Accent') { $b.Style = $Blob.Gui.Window.FindResource('AccentButton') }
     if ($Kind -eq 'Danger') { $b.Style = $Blob.Gui.Window.FindResource('DangerButton') }
@@ -82,7 +91,7 @@ function New-BlobButton {
 function Register-BlobClick {
     param($Control, [scriptblock]$Action)
     $Control.Tag = $Action
-    $Control.Add_Click({ param($s, $e) Invoke-BlobGuiAction $s.Tag })
+    $Control.Add_Click({ param($s, $e) $Blob.Gui.Sender = $s; Invoke-BlobGuiAction $s.Tag })
 }
 
 function Invoke-BlobGuiAction {
@@ -105,7 +114,7 @@ function Invoke-BlobGuiAction {
 
 function New-BlobCard {
     param($Child, [string]$Margin = '0,0,0,12', [string]$Padding = '18,14', [double]$Width = [double]::NaN)
-    $c = New-Object Windows.Controls.Border
+    $c = [Windows.Controls.Border]::new()
     $c.Background = Get-BlobBrush '#151D27'; $c.BorderBrush = Get-BlobBrush '#223041'
     $c.BorderThickness = 1; $c.CornerRadius = 10; $c.Padding = $Padding; $c.Margin = $Margin
     if (-not [double]::IsNaN($Width)) { $c.Width = $Width }
@@ -115,7 +124,7 @@ function New-BlobCard {
 
 function New-BlobBadge {
     param([string]$Text, [string]$Color = 'Gray')
-    $b = New-Object Windows.Controls.Border
+    $b = [Windows.Controls.Border]::new()
     $b.CornerRadius = 4; $b.Padding = '7,1'; $b.Margin = '8,0,0,0'; $b.VerticalAlignment = 'Center'
     $b.BorderBrush = Get-BlobBrush $Color; $b.BorderThickness = 1
     $t = New-BlobText $Text 10.5 $Color 'SemiBold'
@@ -125,7 +134,7 @@ function New-BlobBadge {
 
 function New-BlobStack {
     param([string]$Orientation = 'Vertical', [string]$Margin = '0')
-    $s = New-Object Windows.Controls.StackPanel
+    $s = [Windows.Controls.StackPanel]::new()
     $s.Orientation = $Orientation; $s.Margin = $Margin
     return $s
 }
@@ -137,7 +146,7 @@ function New-BlobHeading {
 
 function New-BlobBar {
     param([double]$Fraction, [double]$Width = 260)
-    $p = New-Object Windows.Controls.ProgressBar
+    $p = [Windows.Controls.ProgressBar]::new()
     $p.Minimum = 0; $p.Maximum = 1; $p.Value = [Math]::Min(1, [Math]::Max(0, $Fraction)); $p.Width = $Width
     $p.Foreground = if ($Fraction -ge 0.9) { Get-BlobBrush 'Red' } elseif ($Fraction -ge 0.75) { Get-BlobBrush 'Yellow' } else { Get-BlobBrush 'Cyan' }
     return $p
@@ -145,7 +154,7 @@ function New-BlobBar {
 
 function New-BlobCombo {
     param([string[]]$Items, [int]$Selected = 0, [double]$Width = 220)
-    $c = New-Object Windows.Controls.ComboBox
+    $c = [Windows.Controls.ComboBox]::new()
     foreach ($i in $Items) { [void]$c.Items.Add($i) }
     if ($Items.Count -gt 0) { $c.SelectedIndex = [Math]::Max(0, $Selected) }
     $c.Width = $Width; $c.Margin = '0,0,8,0'
@@ -155,10 +164,10 @@ function New-BlobCombo {
 function New-BlobGrid {
     param([array]$Columns, [double]$Height = 420)
     # Columns: @( @{ Header; Path; Width } )
-    $g = New-Object Windows.Controls.DataGrid
+    $g = [Windows.Controls.DataGrid]::new()
     $g.Height = $Height
     foreach ($col in $Columns) {
-        $c = New-Object Windows.Controls.DataGridTextColumn
+        $c = [Windows.Controls.DataGridTextColumn]::new()
         $c.Header = $col.Header
         $c.Binding = New-Object Windows.Data.Binding $col.Path
         if ($col.Width) { $c.Width = New-Object Windows.Controls.DataGridLength($col.Width, $(if ($col.Width -le 1) { 'Star' } else { 'Pixel' })) }
@@ -206,8 +215,8 @@ function Set-BlobTooltip {
 
 # A round "?" icon that shows detailed help when hovered.
 function New-BlobHelpIcon {
-    param($Tooltip)
-    $b = New-Object Windows.Controls.Border
+    param($Tooltip, [scriptblock]$Builder)
+    $b = [Windows.Controls.Border]::new()
     $b.Width = 20; $b.Height = 20; $b.CornerRadius = 10
     $b.BorderThickness = 1.5; $b.BorderBrush = Get-BlobBrush '#475569'; $b.Background = Get-BlobBrush '#0F172A'
     $b.Margin = '8,0,0,0'; $b.VerticalAlignment = 'Center'; $b.Cursor = [Windows.Input.Cursors]::Help
@@ -216,20 +225,29 @@ function New-BlobHelpIcon {
     $b.Child = $t
     $b.Add_MouseEnter({ param($s, $e) $s.BorderBrush = Get-BlobBrush 'Cyan'; $s.Child.Foreground = Get-BlobBrush 'Cyan' })
     $b.Add_MouseLeave({ param($s, $e) $s.BorderBrush = Get-BlobBrush '#475569'; $s.Child.Foreground = Get-BlobBrush 'Gray' })
-    Set-BlobTooltip $b $Tooltip
+    if ($Builder) { Set-BlobLazyTooltip $b $Builder } else { Set-BlobTooltip $b $Tooltip }
     return $b
+}
+
+# Tooltip content built on first hover (keeps pages with many cards fast).
+function Set-BlobLazyTooltip {
+    param($Element, [scriptblock]$Builder)
+    Set-BlobTooltip $Element 'Loading...'
+    $Element.Tag = $Builder
+    $Element.Add_ToolTipOpening({ param($s, $e) if ($s.Tag -is [scriptblock]) { $sb = $s.Tag; $s.Tag = $null; $s.ToolTip = & $sb $s } })
 }
 
 function New-BlobRiskBadge {
     param([string]$Risk)
     $r = $Blob.RiskInfo[$Risk]
     $badge = New-BlobBadge $r.Label $r.Color
-    Set-BlobTooltip $badge (New-BlobTooltipPanel -Title $r.Label -Paragraphs @($r.Text))
+    $badge.DataContext = $Risk
+    Set-BlobLazyTooltip $badge $Blob.GuiShared.RiskTip
     return $badge
 }
 
 function New-BlobRiskLegend {
-    $wrap = New-Object Windows.Controls.WrapPanel
+    $wrap = [Windows.Controls.WrapPanel]::new()
     [void]$wrap.Children.Add((New-BlobText 'Risk levels:' 12.5 'Gray' 'Normal' '0,2,4,0'))
     foreach ($k in @('Minimal', 'Standard', 'Advanced', 'Optional')) {
         $r = $Blob.RiskInfo[$k]
@@ -254,6 +272,7 @@ function Invoke-BlobGuiRestorePointStep {
 #  Activity log and status
 # ---------------------------------------------------------------------------
 function Update-BlobGui {
+    if ($Blob.Gui.Preloading) { return }
     try { $Blob.Gui.Window.Dispatcher.Invoke([Action] {}, [Windows.Threading.DispatcherPriority]::Background) } catch { }
 }
 
@@ -269,6 +288,7 @@ function Add-BlobGuiLog {
 
 function Set-BlobGuiStatus {
     param([string]$Text)
+    if ($Blob.Gui.Preloading) { return }
     $Blob.Gui.StatusText.Text = $Text
     Update-BlobGui
 }
@@ -332,7 +352,7 @@ function Show-BlobGuiInput {
     $d.FindName('DlgSub').Visibility = 'Collapsed'
     $body = $d.FindName('DlgBody')
     foreach ($p in $Prompt) { [void]$body.Children.Add((ConvertTo-BlobTextBlock $p)) }
-    $box = New-Object Windows.Controls.TextBox
+    $box = [Windows.Controls.TextBox]::new()
     $box.Text = $Default; $box.Margin = '0,12,0,6'
     [void]$body.Children.Add($box)
     $err = New-BlobText '' 12 'Red'
@@ -373,17 +393,58 @@ function Start-BlobGuiTask {
 # ---------------------------------------------------------------------------
 #  Window and navigation
 # ---------------------------------------------------------------------------
+# Per-page state that builders put on $Blob.Gui. It is saved with each cached
+# page and restored when the page is shown, so pages never share state.
+$Blob.GuiPageState = @('P', 'CardGrid', 'CardCount', 'ApplySelBtn', 'SearchHint', 'PendingActions')
+# Pages that show setting / journal state: refreshed in the background after any change.
+$Blob.GuiVolatilePages = @('dashboard', 'presets', 'optimize', 'services', 'startup', 'power', 'restore')
+# Preload order, and pages that wait for the background data snapshot on their first build.
+$Blob.GuiPreloadOrder = @('optimize', 'presets', 'startup', 'power', 'restore', 'tools', 'services', 'cleanup', 'network', 'sysinfo', 'dashboard')
+$Blob.GuiHeavyPages = @('services', 'cleanup', 'network', 'sysinfo', 'dashboard')
+
 function Set-BlobGuiPageActions {
     param([array]$Buttons = @())
-    $Blob.Gui.PageActions.Children.Clear()
-    foreach ($b in $Buttons) { [void]$Blob.Gui.PageActions.Children.Add($b) }
+    $Blob.Gui.PendingActions = @($Buttons)
+}
+
+# Builds a page into the cache without disturbing the page currently shown.
+function New-BlobGuiPageEntry {
+    param([string]$Key)
+    $page = $Blob.Gui.Pages | Where-Object { $_.Key -eq $Key } | Select-Object -First 1
+    $saved = @{}
+    foreach ($n in $Blob.GuiPageState) { $saved[$n] = $Blob.Gui[$n]; $Blob.Gui[$n] = $null }
+    $Blob.Gui.PendingActions = @()
+    $sw = [Diagnostics.Stopwatch]::StartNew()
+    try { $content = & $page.Build }
+    catch {
+        $content = New-BlobInfoCard @("{Red}This page could not be loaded: $($_.Exception.Message -replace '[{}]', '')")
+        Write-BlobLog "GUI page '$Key' failed: $($_.Exception.Message) $($_.InvocationInfo.PositionMessage)" 'ERROR'
+    }
+    $entry = @{ Content = $content; Stale = $false; Scroll = 0; Ms = $sw.ElapsedMilliseconds }
+    foreach ($n in $Blob.GuiPageState) { $entry[$n] = $Blob.Gui[$n]; $Blob.Gui[$n] = $saved[$n] }
+    $Blob.Gui.Cache[$Key] = $entry
+    return $entry
 }
 
 function Show-BlobGuiPage {
-    param([string]$Key, [switch]$KeepScroll)
+    param([string]$Key, [switch]$KeepScroll, [switch]$Rebuild)
     $page = $Blob.Gui.Pages | Where-Object { $_.Key -eq $Key } | Select-Object -First 1
     if (-not $page) { return }
+    if ($Blob.Gui.Current -and $Blob.Gui.Current -ne $Key -and $Blob.Gui.Cache.ContainsKey($Blob.Gui.Current)) {
+        $Blob.Gui.Cache[$Blob.Gui.Current].Scroll = $Blob.Gui.PageScroll.VerticalOffset
+    }
+
+    $entry = $Blob.Gui.Cache[$Key]
+    if ($Rebuild -or -not $entry -or $entry.Stale) {
+        $Blob.Gui.Window.Cursor = [Windows.Input.Cursors]::Wait
+        $Blob.Gui.StatusText.Text = "Loading $($page.Label)..."
+        $oldScroll = if ($entry) { $entry.Scroll } else { 0 }
+        try { $entry = New-BlobGuiPageEntry $Key } finally { $Blob.Gui.Window.Cursor = $null }
+        $entry.Scroll = $oldScroll
+    }
+
     $Blob.Gui.Current = $Key
+    foreach ($n in $Blob.GuiPageState) { $Blob.Gui[$n] = $entry[$n] }
     foreach ($p in $Blob.Gui.Pages) {
         $btn = $Blob.Gui.Nav[$p.Key]
         if ($p.Key -eq $Key) { $btn.Foreground = Get-BlobBrush 'Cyan'; $btn.BorderBrush = Get-BlobBrush 'Cyan' }
@@ -391,27 +452,82 @@ function Show-BlobGuiPage {
     }
     $Blob.Gui.PageTitle.Text = $page.Label
     $Blob.Gui.PageSubtitle.Text = $page.Subtitle
-    Set-BlobGuiPageActions @()
-    Set-BlobGuiStatus "Loading $($page.Label)..."
-    $Blob.Gui.CardGrid = $null
-    $Blob.Gui.Window.Cursor = [Windows.Input.Cursors]::Wait
-    try {
-        $content = & $page.Build
-        $Blob.Gui.PageHost.Content = $content
-        Update-BlobGuiCardColumns
-        if (-not $KeepScroll) { $Blob.Gui.PageScroll.ScrollToTop() }
-    } catch {
-        $Blob.Gui.PageHost.Content = New-BlobInfoCard @("{Red}This page could not be loaded: $($_.Exception.Message -replace '[{}]', '')")
-        Write-BlobLog "GUI page '$Key' failed: $($_.Exception.Message) $($_.InvocationInfo.PositionMessage)" 'ERROR'
-    } finally { $Blob.Gui.Window.Cursor = $null; Set-BlobGuiStatus 'Ready' }
+    $Blob.Gui.PageActions.Children.Clear()
+    foreach ($b in @($entry.PendingActions)) { if ($b) { [void]$Blob.Gui.PageActions.Children.Add($b) } }
+    $Blob.Gui.PageHost.Content = $entry.Content
+    Update-BlobGuiCardColumns
+    if (-not $KeepScroll) { $Blob.Gui.PageScroll.UpdateLayout(); $Blob.Gui.PageScroll.ScrollToVerticalOffset($entry.Scroll) }
+    if ($Blob.Gui.PreloadDone -or -not $Blob.Gui.PreloadTimer) { $Blob.Gui.StatusText.Text = 'Ready' }
 }
 
-# Re-renders the current page after a change, keeping the scroll position.
+# Re-renders the current page after a change (keeping the scroll position)
+# and schedules a quiet background refresh of the other affected tabs.
 function Update-BlobGuiPage {
+    $Blob.PrefetchValid = $false        # data may have changed: query live from now on
     $offset = $Blob.Gui.PageScroll.VerticalOffset
-    Show-BlobGuiPage $Blob.Gui.Current -KeepScroll
+    foreach ($k in $Blob.GuiVolatilePages) {
+        if ($k -ne $Blob.Gui.Current -and $Blob.Gui.Cache.ContainsKey($k)) { $Blob.Gui.Cache[$k].Stale = $true }
+    }
+    Show-BlobGuiPage $Blob.Gui.Current -KeepScroll -Rebuild
     $Blob.Gui.PageScroll.UpdateLayout()
     $Blob.Gui.PageScroll.ScrollToVerticalOffset($offset)
+    Start-BlobGuiPreload
+}
+
+function Start-BlobGuiPreload {
+    if (-not $Blob.Gui.PreloadTimer) {
+        $t = New-Object Windows.Threading.DispatcherTimer ([Windows.Threading.DispatcherPriority]::ApplicationIdle)
+        $t.Interval = [TimeSpan]::FromMilliseconds(30)
+        $t.Add_Tick({ Invoke-BlobGuiPreloadTick })
+        $Blob.Gui.PreloadTimer = $t
+    }
+    $Blob.Gui.PreloadTimer.Start()
+}
+
+# Builds at most one page per tick so the window stays responsive.
+function Invoke-BlobGuiPreloadTick {
+    if ($Blob.Gui.Preloading -or $Blob.Gui.Busy) { return }
+    if ($Blob.Gui.Window.OwnedWindows.Count -gt 0) { return }      # a dialog is open
+    if ($Blob.PrefetchState -eq 'Running') { $null = Receive-BlobPrefetch }
+    $waiting = $Blob.PrefetchState -eq 'Running'
+    # Warm the Optimizations cards a few at a time so the window never stalls.
+    if (-not $Blob.Gui.CardsWarm -and -not $Blob.Gui.Cache.ContainsKey('optimize')) {
+        if (-not $Blob.Gui.CardQueue) { $Blob.Gui.CardQueue = [Collections.Queue]::new([object[]]$Blob.Tweaks.ToArray()) }
+        $Blob.Gui.Preloading = $true
+        try {
+            for ($i = 0; $i -lt 6 -and $Blob.Gui.CardQueue.Count -gt 0; $i++) {
+                $t = $Blob.Gui.CardQueue.Dequeue()
+                $null = Get-BlobGuiCard $t (Get-BlobTweakState $t)
+            }
+        } finally { $Blob.Gui.Preloading = $false }
+        if ($Blob.Gui.CardQueue.Count -eq 0) { $Blob.Gui.CardsWarm = $true }
+        $Blob.Gui.StatusText.Text = "Preloading settings... $($Blob.Tweaks.Count - $Blob.Gui.CardQueue.Count) of $($Blob.Tweaks.Count)"
+        return
+    }
+    $next = $null
+    foreach ($k in $Blob.GuiPreloadOrder) {
+        $e = $Blob.Gui.Cache[$k]
+        if ($e -and -not $e.Stale) { continue }
+        if ($k -eq $Blob.Gui.Current) { continue }
+        if ($waiting -and -not $e -and $k -in $Blob.GuiHeavyPages) { continue }
+        $next = $k; break
+    }
+    $total = $Blob.Gui.Pages.Count
+    if (-not $next) {
+        if ($waiting) { $Blob.Gui.StatusText.Text = 'Collecting system information in the background...'; return }
+        $Blob.Gui.PreloadTimer.Stop()
+        if (-not $Blob.Gui.PreloadDone) {
+            $Blob.Gui.PreloadDone = $true
+            $ms = 0; foreach ($e in $Blob.Gui.Cache.Values) { $ms += $e.Ms }
+            Write-BlobLog "All $total tabs preloaded ($ms ms of build time)."
+        }
+        $Blob.Gui.StatusText.Text = 'Ready - all tabs loaded'
+        return
+    }
+    $Blob.Gui.Preloading = $true
+    try { $null = New-BlobGuiPageEntry $next } finally { $Blob.Gui.Preloading = $false }
+    $ready = @($Blob.Gui.Cache.Values | Where-Object { -not $_.Stale }).Count
+    if (-not $Blob.Gui.PreloadDone) { $Blob.Gui.StatusText.Text = "Preloading tabs... $ready of $total ready" }
 }
 
 # Card grids use as many columns as fit (about 300 px per card).
@@ -466,15 +582,15 @@ function Initialize-BlobGuiWindow {
 
     $Blob.Gui.Pages = Get-BlobGuiPages
     foreach ($p in $Blob.Gui.Pages) {
-        $btn = New-Object Windows.Controls.Button
+        $btn = [Windows.Controls.Button]::new()
         $btn.Style = $w.FindResource('TabButton')
         $sp = New-BlobStack 'Horizontal'
-        $icon = New-Object Windows.Controls.TextBlock
+        $icon = [Windows.Controls.TextBlock]::new()
         $icon.Text = [string][char]$p.Icon
-        $icon.FontFamily = New-Object Windows.Media.FontFamily 'Segoe MDL2 Assets'
+        $icon.FontFamily = [Windows.Media.FontFamily]::new('Segoe MDL2 Assets')
         $icon.FontSize = 13; $icon.Margin = '0,1,8,0'; $icon.VerticalAlignment = 'Center'
         $icon.SetBinding([Windows.Controls.TextBlock]::ForegroundProperty, (New-Object Windows.Data.Binding 'Foreground' -Property @{ Source = $btn })) | Out-Null
-        $label = New-Object Windows.Controls.TextBlock
+        $label = [Windows.Controls.TextBlock]::new()
         $label.Text = $p.Label; $label.VerticalAlignment = 'Center'
         $label.SetBinding([Windows.Controls.TextBlock]::ForegroundProperty, (New-Object Windows.Data.Binding 'Foreground' -Property @{ Source = $btn })) | Out-Null
         [void]$sp.Children.Add($icon); [void]$sp.Children.Add($label)
@@ -486,6 +602,12 @@ function Initialize-BlobGuiWindow {
     }
     $Blob.Gui.PageScroll.Add_SizeChanged({ Update-BlobGuiCardColumns })
     $Blob.Gui.Selected = @{}
+    $Blob.Gui.Cache = @{}
+    $Blob.Gui.PreloadDone = $false
+    $Blob.Gui.PreloadTimer = $null
+    $Blob.Gui.CardsWarm = $false
+    $Blob.Gui.CardQueue = $null
+    $Blob.Gui.CardCache = @{}
     if (-not $Blob.Gui.OptFilter) { $Blob.Gui.OptFilter = 'All' }
 
     $w.Add_ContentRendered({
@@ -497,6 +619,13 @@ function Initialize-BlobGuiWindow {
 
 function Start-BlobGui {
     Initialize-BlobGuiWindow
+    Start-BlobPrefetch                      # slow system data, collected on a background thread
     Show-BlobGuiPage 'dashboard'
+    $Blob.Gui.Window.Add_ContentRendered({ Start-BlobGuiPreload })
+    $Blob.Gui.Window.Add_Closed({
+            if ($Blob.Gui.PreloadTimer) { $Blob.Gui.PreloadTimer.Stop() }
+            Stop-BlobPrefetch
+        })
     $null = $Blob.Gui.Window.ShowDialog()
+    Stop-BlobPrefetch
 }

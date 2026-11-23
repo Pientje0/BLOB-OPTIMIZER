@@ -166,8 +166,8 @@ function Get-BlobSystemInfoLines {
     $kv = { param($k, $v) [void]$lines.Add("{Gray}$($k.PadRight(22)){White}$($v -replace '[{}]', '')") }
     & $add '{Cyan}Windows'
     try {
-        $os = Get-CimInstance Win32_OperatingSystem -ErrorAction Stop
-        $cv = Get-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction SilentlyContinue
+        $os = Get-BlobPrefetch 'OS'
+        if (-not $os) { $os = Get-CimInstance Win32_OperatingSystem -ErrorAction Stop }
         & $kv 'Edition' $Blob.SysInfo.OS
         & $kv 'Architecture' $os.OSArchitecture
         & $kv 'Installed' $os.InstallDate.ToString('yyyy-MM-dd')
@@ -178,26 +178,38 @@ function Get-BlobSystemInfoLines {
     & $add ''; & $add '{Cyan}Hardware'
     try {
         & $kv 'Model' $Blob.SysInfo.Model
-        $cpu = Get-CimInstance Win32_Processor -ErrorAction Stop | Select-Object -First 1
+        $cpu = @(Get-BlobPrefetch 'CPU') | Select-Object -First 1
+        if (-not $cpu) { $cpu = Get-CimInstance Win32_Processor -ErrorAction Stop | Select-Object -First 1 }
         & $kv 'Processor' ($cpu.Name -replace '\s+', ' ').Trim()
         & $kv 'Cores / threads' "$($cpu.NumberOfCores) / $($cpu.NumberOfLogicalProcessors)  @ $($cpu.MaxClockSpeed) MHz"
-        $mods = @(Get-CimInstance Win32_PhysicalMemory -ErrorAction Stop)
+        $mods = @(Get-BlobPrefetch 'Memory')
+        if ($mods.Count -eq 0) { $mods = @(Get-CimInstance Win32_PhysicalMemory -ErrorAction Stop) }
         & $kv 'Memory' ("{0} in {1} module(s), {2} MT/s" -f $Blob.SysInfo.RAM, $mods.Count, ($mods | Select-Object -First 1).Speed)
-        foreach ($g in (Get-CimInstance Win32_VideoController -ErrorAction Stop)) { & $kv 'Graphics' "$($g.Name)  (driver $($g.DriverVersion))" }
-        $bios = Get-CimInstance Win32_BIOS -ErrorAction Stop
+        $vid = @(Get-BlobPrefetch 'Video')
+        if ($vid.Count -eq 0) { $vid = @(Get-CimInstance Win32_VideoController -ErrorAction Stop) }
+        foreach ($g in $vid) { & $kv 'Graphics' "$($g.Name)  (driver $($g.DriverVersion))" }
+        $bios = Get-BlobPrefetch 'BIOS'
+        if (-not $bios) { $bios = Get-CimInstance Win32_BIOS -ErrorAction Stop }
         & $kv 'BIOS' "$($bios.Manufacturer) $($bios.SMBIOSBIOSVersion)"
-        $bb = Get-CimInstance Win32_BaseBoard -ErrorAction Stop
+        $bb = Get-BlobPrefetch 'Board'
+        if (-not $bb) { $bb = Get-CimInstance Win32_BaseBoard -ErrorAction Stop }
         & $kv 'Motherboard' "$($bb.Manufacturer) $($bb.Product)"
     } catch { }
-    try { foreach ($pd in (Get-PhysicalDisk -ErrorAction Stop)) { & $kv 'Disk' ("{0}  {1}  {2}  health {3}" -f $pd.FriendlyName, $pd.MediaType, (Format-BlobSize $pd.Size), $pd.HealthStatus) } } catch { }
+    try {
+        $pds = @(Get-BlobPrefetch 'PhysicalDisks')
+        if ($pds.Count -eq 0) { $pds = @(Get-PhysicalDisk -ErrorAction Stop) }
+        foreach ($pd in $pds) { & $kv 'Disk' ("{0}  {1}  {2}  health {3}" -f $pd.FriendlyName, $pd.MediaType, (Format-BlobSize $pd.Size), $pd.HealthStatus) } } catch { }
     & $add ''; & $add '{Cyan}Security status (read-only)'
     try {
-        $mp = Get-MpComputerStatus -ErrorAction Stop
+        $mp = Get-BlobPrefetch 'Defender'
+        if (-not $mp) { $mp = Get-MpComputerStatus -ErrorAction Stop }
         & $kv 'Defender real-time' $(if ($mp.RealTimeProtectionEnabled) { 'On' } else { 'Off' })
         & $kv 'Defender signatures' $mp.AntivirusSignatureLastUpdated
     } catch { & $kv 'Defender' 'status unavailable (third-party antivirus or no permission)' }
     try {
-        $fw = @(Get-NetFirewallProfile -ErrorAction Stop | ForEach-Object { "$($_.Name): $(if ($_.Enabled) { 'On' } else { 'Off' })" }) -join ', '
+        $fwp = @(Get-BlobPrefetch 'Firewall')
+        if ($fwp.Count -eq 0) { $fwp = @(Get-NetFirewallProfile -ErrorAction Stop) }
+        $fw = @($fwp | ForEach-Object { "$($_.Name): $(if ($_.Enabled) { 'On' } else { 'Off' })" }) -join ', '
         & $kv 'Firewall' $fw
     } catch { }
     & $add ''; & $add '{Cyan}BLOB OPTIMIZER'

@@ -8,7 +8,7 @@
 # Single state object shared by every module. It is created inside the
 # release script block, so it disappears when the tool exits.
 $Blob = @{
-    Version   = '1.3.0'
+    Version   = '1.3.1'
     Tweaks    = New-Object System.Collections.ArrayList
     Changes   = New-Object System.Collections.ArrayList
     LogBuffer = New-Object System.Collections.ArrayList
@@ -151,17 +151,35 @@ function Test-BlobNeedsAdmin {
 
 function Get-BlobRegValueName { param([string]$Name) if ($Name -eq '(default)') { return '' } return $Name }
 
+# Opens a registry key read-only through .NET (much faster than the PowerShell
+# registry provider). Returns $null when the key does not exist.
+function Open-BlobRegKey {
+    param([string]$Path)
+    if ($Path -notmatch '^(HKCU|HKLM):\\?(.*)$') { return $null }
+    $root = if ($Matches[1] -eq 'HKCU') { [Microsoft.Win32.Registry]::CurrentUser } else { [Microsoft.Win32.Registry]::LocalMachine }
+    $sub = $Matches[2].TrimEnd('\')
+    if (-not $sub) { return $null }
+    try { return $root.OpenSubKey($sub, $false) } catch { return $null }
+}
+
 function Get-BlobRegState {
     param([string]$Path, [string]$Name)
     $state = @{ KeyExists = $false; Exists = $false; Value = $null; Kind = $null }
-    try { $key = Get-Item -LiteralPath $Path -ErrorAction Stop } catch { return $state }
-    $state.KeyExists = $true
-    $n = Get-BlobRegValueName $Name
-    if (@($key.GetValueNames()) -contains $n) {
-        $state.Exists = $true
-        $state.Kind   = $key.GetValueKind($n).ToString()
-        $state.Value  = $key.GetValue($n, $null, 'DoNotExpandEnvironmentNames')
+    $key = Open-BlobRegKey $Path
+    if (-not $key) {
+        # Fallback for unusual paths (and the hive roots) via the provider.
+        if ($Path -match '^(HKCU|HKLM):\\?(.*)$' -and $Matches[2].Trim('\')) { return $state }
+        try { $key = Get-Item -LiteralPath $Path -ErrorAction Stop } catch { return $state }
     }
+    try {
+        $state.KeyExists = $true
+        $n = Get-BlobRegValueName $Name
+        if (@($key.GetValueNames()) -contains $n) {
+            $state.Exists = $true
+            $state.Kind   = $key.GetValueKind($n).ToString()
+            $state.Value  = $key.GetValue($n, $null, 'DoNotExpandEnvironmentNames')
+        }
+    } finally { if ($key -is [Microsoft.Win32.RegistryKey]) { $key.Dispose() } }
     return $state
 }
 

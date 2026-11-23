@@ -102,17 +102,19 @@ function New-BlobStatCard {
 function New-BlobGuiDashboard {
     $root = New-BlobStack
     $si = $Blob.SysInfo
-    $wrap = New-Object Windows.Controls.WrapPanel
+    $wrap = [Windows.Controls.WrapPanel]::new()
     [void]$wrap.Children.Add((New-BlobStatCard 'Windows' $si.OS))
     [void]$wrap.Children.Add((New-BlobStatCard 'Processor' $si.CPU))
     try {
-        $os = Get-CimInstance Win32_OperatingSystem -ErrorAction Stop
+        $os = Get-BlobPrefetch 'OS'
+        if (-not $os) { $os = Get-CimInstance Win32_OperatingSystem -ErrorAction Stop }
         $total = [double]$os.TotalVisibleMemorySize * 1KB; $used = $total - [double]$os.FreePhysicalMemory * 1KB
         [void]$wrap.Children.Add((New-BlobStatCard 'Memory' $si.RAM ("{0} in use ({1:N0}%)" -f (Format-BlobSize $used), (100 * $used / $total)) ($used / $total)))
     } catch { [void]$wrap.Children.Add((New-BlobStatCard 'Memory' $si.RAM)) }
     [void]$wrap.Children.Add((New-BlobStatCard 'Graphics' $si.GPU))
     try {
-        $c = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='$($env:SystemDrive)'" -ErrorAction Stop
+        $c = @(Get-BlobPrefetch 'LogicalDisks') | Where-Object { $_.DeviceID -eq $env:SystemDrive } | Select-Object -First 1
+        if (-not $c) { $c = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='$($env:SystemDrive)'" -ErrorAction Stop }
         [void]$wrap.Children.Add((New-BlobStatCard "System drive $($env:SystemDrive)" ("{0} free" -f (Format-BlobSize $c.FreeSpace)) ("of {0}" -f (Format-BlobSize $c.Size)) (1 - $c.FreeSpace / $c.Size)))
     } catch { }
     [void]$wrap.Children.Add((New-BlobStatCard 'Power plan' (Get-BlobActivePowerPlan).Name))
@@ -125,7 +127,7 @@ function New-BlobGuiDashboard {
     $applied = @($Blob.Tweaks | Where-Object { (Get-BlobTweakState $_) -eq 'Applied' }).Count
     $restorable = @(Get-BlobAppliedChanges).Count
     $startup = @(Get-BlobStartupEntries)
-    $wrap2 = New-Object Windows.Controls.WrapPanel
+    $wrap2 = [Windows.Controls.WrapPanel]::new()
     [void]$wrap2.Children.Add((New-BlobStatCard 'Optimizations applied' "$applied of $($Blob.Tweaks.Count)" 'Detected from current settings' ($applied / [Math]::Max(1, $Blob.Tweaks.Count))))
     [void]$wrap2.Children.Add((New-BlobStatCard 'Restorable changes' "$restorable" 'Saved in the change journal'))
     [void]$wrap2.Children.Add((New-BlobStatCard 'Startup programs' ("{0} enabled" -f @($startup | Where-Object { $_.Enabled }).Count) ("{0} entries in total" -f $startup.Count)))
@@ -150,7 +152,7 @@ function New-BlobGuiDashboard {
 # ---------------------------------------------------------------------------
 function New-BlobGuiPresets {
     $root = New-BlobStack
-    $wrap = New-Object Windows.Controls.WrapPanel
+    $wrap = [Windows.Controls.WrapPanel]::new()
     $accent = @{ MINIMAL = 'Green'; STANDARD = 'Cyan'; ADVANCED = 'Yellow' }
     foreach ($p in @(Get-BlobPresets)) {
         $tw = @($p.Ids | ForEach-Object { Get-BlobTweak $_ } | Where-Object { $_ })
@@ -214,7 +216,7 @@ function Get-BlobGuiFilteredTweaks {
 
 function New-BlobChip {
     param([string]$Text)
-    $b = New-Object Windows.Controls.Border
+    $b = [Windows.Controls.Border]::new()
     $b.Background = Get-BlobBrush '#1E293B'; $b.CornerRadius = 4; $b.Padding = '8,2'
     $b.HorizontalAlignment = 'Left'; $b.VerticalAlignment = 'Center'
     $b.Child = New-BlobText $Text 11 '#A3AFBF' 'SemiBold'
@@ -223,27 +225,27 @@ function New-BlobChip {
 
 function New-BlobGlyph {
     param([int]$Code, [string]$Color = 'Gray', [double]$Size = 13)
-    $t = New-Object Windows.Controls.TextBlock
+    $t = [Windows.Controls.TextBlock]::new()
     $t.Text = [string][char]$Code
-    $t.FontFamily = New-Object Windows.Media.FontFamily 'Segoe MDL2 Assets'
+    $t.FontFamily = [Windows.Media.FontFamily]::new('Segoe MDL2 Assets')
     $t.FontSize = $Size; $t.Foreground = Get-BlobBrush $Color; $t.VerticalAlignment = 'Center'
     return $t
 }
 
 function New-BlobTweakCard {
-    param($Tweak)
-    $state = Get-BlobTweakState $Tweak
-    $selected = [bool]$Blob.Gui.Selected[$Tweak.Id]
-    $card = New-Object Windows.Controls.Border
+    param($Tweak, [string]$State, [bool]$Selected)
+    $state = $State
+    $selected = $Selected
+    $card = [Windows.Controls.Border]::new()
     $card.Background = Get-BlobBrush '#131B25'; $card.CornerRadius = 10; $card.Padding = '16,14,16,12'; $card.Margin = '0,0,12,12'
     $card.BorderThickness = 1
     $card.BorderBrush = if ($selected) { Get-BlobBrush 'Cyan' } elseif ($state -eq 'Applied') { Get-BlobBrush '#1D3B5C' } else { Get-BlobBrush '#1E2A38' }
     $card.MinHeight = 190
-    $dock = New-Object Windows.Controls.DockPanel
+    $dock = [Windows.Controls.DockPanel]::new()
     $dock.LastChildFill = $true
 
     # Bottom row: + ? ! ...... label switch
-    $bottom = New-Object Windows.Controls.DockPanel
+    $bottom = [Windows.Controls.DockPanel]::new()
     $bottom.Margin = '0,12,0,0'
     [Windows.Controls.DockPanel]::SetDock($bottom, 'Bottom')
     $right = New-BlobStack 'Horizontal'
@@ -252,31 +254,35 @@ function New-BlobTweakCard {
     $labelColor = switch ($state) { 'Applied' { 'White' } 'Partial' { 'Yellow' } default { 'Gray' } }
     [void]$right.Children.Add((New-BlobText $labelText 12.5 $labelColor 'Normal' '0,0,10,0'))
     $right.Children[0].VerticalAlignment = 'Center'
-    $sw = New-Object Windows.Controls.CheckBox
+    $sw = [Windows.Controls.CheckBox]::new()
     $sw.Style = $Blob.Gui.Window.FindResource('Switch')
     $sw.IsChecked = ($state -eq 'Applied')
     $sw.VerticalAlignment = 'Center'
+    $card.Tag = $sw          # lets a reused card reset its switch after a cancelled click
     if ($Tweak.Admin -and -not $Blob.IsAdmin) {
         $sw.IsEnabled = $false
-        $holder = New-Object Windows.Controls.Border
+        $holder = [Windows.Controls.Border]::new()
         $holder.Background = [Windows.Media.Brushes]::Transparent
         $holder.Child = $sw
         Set-BlobTooltip $holder (New-BlobTooltipPanel -Title 'Administrator required' -Paragraphs @('This is a machine-wide setting. Restart BLOB OPTIMIZER from an administrator terminal to change it.'))
         [void]$right.Children.Add($holder)
     } else {
-        Register-BlobClick $sw ([scriptblock]::Create("Switch-BlobGuiTweak '$($Tweak.Id)'"))
+        $sw.DataContext = $Tweak.Id
+        Register-BlobClick $sw $Blob.GuiShared.SwitchClick
         [void]$right.Children.Add($sw)
     }
     [void]$bottom.Children.Add($right)
     $left = New-BlobStack 'Horizontal'
-    $plus = New-Object Windows.Controls.Button
+    $plus = [Windows.Controls.Button]::new()
     $plus.Style = $Blob.Gui.Window.FindResource('IconButton')
     $plus.Content = [string][char]$(if ($selected) { 0xE73E } else { 0xE710 })
     if ($selected) { $plus.Foreground = Get-BlobBrush 'Cyan' }
     $plus.ToolTip = if ($selected) { 'Selected - click to unselect' } else { 'Select for batch apply / undo' }
-    Register-BlobClick $plus ([scriptblock]::Create("Switch-BlobGuiSelect '$($Tweak.Id)'"))
+    $plus.DataContext = $Tweak.Id
+    Register-BlobClick $plus $Blob.GuiShared.SelectClick
     [void]$left.Children.Add($plus)
-    $help = New-BlobHelpIcon (New-BlobTweakTooltip $Tweak)
+    $help = New-BlobHelpIcon -Builder $Blob.GuiShared.TweakTip
+    $help.DataContext = $Tweak.Id
     $help.Margin = '4,0,0,0'
     [void]$left.Children.Add($help)
     if ($Tweak.Risk -eq 'Advanced') {
@@ -297,7 +303,7 @@ function New-BlobTweakCard {
     [void]$dock.Children.Add($bottom)
 
     # Top row: category chip ...... risk badge
-    $top = New-Object Windows.Controls.DockPanel
+    $top = [Windows.Controls.DockPanel]::new()
     [Windows.Controls.DockPanel]::SetDock($top, 'Top')
     $risk = New-BlobRiskBadge $Tweak.Risk
     [Windows.Controls.DockPanel]::SetDock($risk, 'Right')
@@ -315,13 +321,33 @@ function New-BlobTweakCard {
     return $card
 }
 
+# Returns the card for a tweak, reusing the cached element when its state and
+# selection are unchanged (so switching, searching and filtering stay instant).
+function Get-BlobGuiCard {
+    param($Tweak, [string]$State)
+    if (-not $Blob.Gui.CardCache) { $Blob.Gui.CardCache = @{} }
+    $sel = [bool]$Blob.Gui.Selected[$Tweak.Id]
+    $c = $Blob.Gui.CardCache[$Tweak.Id]
+    if (-not ($c -and $c.State -eq $State -and $c.Selected -eq $sel)) {
+        $c = @{ Element = (New-BlobTweakCard $Tweak $State $sel); State = $State; Selected = $sel }
+        $Blob.Gui.CardCache[$Tweak.Id] = $c
+    }
+    $el = $c.Element
+    if ($el.Parent -is [Windows.Controls.Panel]) { $el.Parent.Children.Remove($el) }
+    if ($el.Tag -is [Windows.Controls.CheckBox]) { $el.Tag.IsChecked = ($State -eq 'Applied') }
+    return $el
+}
+
 function Update-BlobGuiCardGrid {
     $g = $Blob.Gui.CardGrid
     if (-not $g) { return }
     $g.Children.Clear()
+    $states = @{}
+    foreach ($t in $Blob.Tweaks) { $states[$t.Id] = Get-BlobTweakState $t }
     $list = @(Get-BlobGuiFilteredTweaks)
-    foreach ($t in $list) { [void]$g.Children.Add((New-BlobTweakCard $t)) }
-    $Blob.Gui.CardCount.Text = "$($list.Count) shown  -  $(@($Blob.Tweaks | Where-Object { (Get-BlobTweakState $_) -eq 'Applied' }).Count) of $($Blob.Tweaks.Count) active  -  $(@($Blob.Gui.Selected.Keys).Count) selected"
+    foreach ($t in $list) { [void]$g.Children.Add((Get-BlobGuiCard $t $states[$t.Id])) }
+    $active = @($states.Values | Where-Object { $_ -eq 'Applied' }).Count
+    $Blob.Gui.CardCount.Text = "$($list.Count) shown  -  $active of $($Blob.Tweaks.Count) active  -  $(@($Blob.Gui.Selected.Keys).Count) selected"
     $n = @($Blob.Gui.Selected.Keys).Count
     if ($Blob.Gui.ApplySelBtn) { $Blob.Gui.ApplySelBtn.Content = $(if ($n) { "Apply selected ($n)" } else { 'Apply selected' }) }
     Update-BlobGuiCardColumns
@@ -349,11 +375,11 @@ function Switch-BlobGuiTweak {
 function New-BlobGuiOptimizations {
     $root = New-BlobStack
     # Filter chips + search
-    $bar = New-Object Windows.Controls.DockPanel
+    $bar = [Windows.Controls.DockPanel]::new()
     $bar.Margin = '0,0,0,6'
-    $sbox = New-Object Windows.Controls.Grid
+    $sbox = [Windows.Controls.Grid]::new()
     $sbox.Width = 250; $sbox.VerticalAlignment = 'Top'
-    $search = New-Object Windows.Controls.TextBox
+    $search = [Windows.Controls.TextBox]::new()
     $search.Text = [string]$Blob.Gui.OptSearch; $search.Padding = '30,6,8,6'
     $hint = New-BlobText 'Search settings...' 13 'DarkGray' 'Normal' '31,7,0,0'
     $hint.IsHitTestVisible = $false
@@ -370,20 +396,20 @@ function New-BlobGuiOptimizations {
             Update-BlobGuiCardGrid
         })
     [void]$bar.Children.Add($sbox)
-    $chips = New-Object Windows.Controls.WrapPanel
+    $chips = [Windows.Controls.WrapPanel]::new()
     foreach ($c in $Blob.GuiCategories) {
         $count = if ($c -eq 'All') { $Blob.Tweaks.Count } else { @($Blob.Tweaks | Where-Object { $_.Category -eq $c }).Count }
-        $b = New-Object Windows.Controls.Button
+        $b = [Windows.Controls.Button]::new()
         $b.Style = $Blob.Gui.Window.FindResource('ChipButton')
         $b.Content = "$c  $count"
         if ($Blob.Gui.OptFilter -eq $c) { $b.Background = Get-BlobBrush '#0E3A47'; $b.BorderBrush = Get-BlobBrush 'Cyan'; $b.Foreground = Get-BlobBrush 'Cyan' }
-        Register-BlobClick $b ([scriptblock]::Create("`$Blob.Gui.OptFilter = '$c'; Show-BlobGuiPage 'optimize'"))
+        Register-BlobClick $b ([scriptblock]::Create("`$Blob.Gui.OptFilter = '$c'; Show-BlobGuiPage 'optimize' -Rebuild"))
         [void]$chips.Children.Add($b)
     }
     [void]$bar.Children.Add($chips)
     [void]$root.Children.Add($bar)
 
-    $info = New-Object Windows.Controls.DockPanel
+    $info = [Windows.Controls.DockPanel]::new()
     $info.Margin = '0,0,0,12'
     $Blob.Gui.CardCount = New-BlobText '' 12 'DarkGray'
     $legend = New-BlobStack 'Horizontal'
@@ -393,13 +419,13 @@ function New-BlobGuiOptimizations {
     [void]$info.Children.Add($Blob.Gui.CardCount)
     [void]$root.Children.Add($info)
 
-    $grid = New-Object Windows.Controls.Primitives.UniformGrid
+    $grid = [Windows.Controls.Primitives.UniformGrid]::new()
     $grid.Columns = 3
     $Blob.Gui.CardGrid = $grid
     [void]$root.Children.Add($grid)
 
     [void]$root.Children.Add((New-BlobHeading 'More tools' '0,12,0,10'))
-    $tools = New-Object Windows.Controls.WrapPanel
+    $tools = [Windows.Controls.WrapPanel]::new()
     $toolDefs = @(
         @('Memory and resources', { Show-BlobGuiMessage -Title 'Memory and resources' -Lines (Get-BlobMemoryInfo) }),
         @('Gaming status', { Show-BlobGuiMessage -Title 'Gaming status' -Lines (Get-BlobGamingStatus) }),
@@ -459,7 +485,7 @@ function New-BlobGuiTools {
     [void]$warn.Children.Add((New-BlobText 'Third-party software' 14 'Yellow' 'SemiBold'))
     [void]$warn.Children.Add((New-BlobText 'These tools are made by other developers. BLOB OPTIMIZER only starts them for you: it shows the official download address first, verifies digital signatures where possible, and records that you launched them. Changes made inside these tools are NOT tracked and cannot be undone from the Restore page - use their own undo options and a System Restore point.' 12.5 'Gray' 'Normal' '0,4,0,0'))
     [void]$root.Children.Add((New-BlobCard $warn))
-    $wrap = New-Object Windows.Controls.WrapPanel
+    $wrap = [Windows.Controls.WrapPanel]::new()
     foreach ($t in $Blob.ExternalTools) {
         $s = New-BlobStack
         $head = New-BlobStack 'Horizontal'

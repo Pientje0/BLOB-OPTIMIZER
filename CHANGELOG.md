@@ -2,6 +2,16 @@
 
 All notable changes to BLOB OPTIMIZER are documented here. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.3.1] - 2026-11-23
+
+### Changed
+- **All tabs preload in the background**, so switching tabs takes milliseconds instead of 1–5 seconds. The Optimizations cards are prebuilt a few at a time so the window stays responsive.
+- **Slow system data is collected on three parallel background threads** (network; security and disks; system, services and cleanup sizes) while the window is already usable. All tabs are ready in about 7 seconds instead of more than 20.
+- After a change, only the current tab rebuilds immediately. Other affected tabs refresh in the background, and data is read live again.
+- Registry reads use .NET directly (about 20× faster). Cards are cached and reused, so a switch flip refreshes in about 0.3 s instead of 2.5 s.
+- The network snapshot uses `Get-NetIPAddress` / `Get-NetRoute` instead of the slow `Get-NetIPConfiguration`.
+- Tooltips are built on first hover. Each tab remembers its scroll position.
+
 ## [1.3.0] - 2026-11-23
 
 ### Added

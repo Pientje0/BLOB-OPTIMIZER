@@ -43,7 +43,7 @@ function New-BlobGuiServices {
     $root = New-BlobStack
     $bar = New-BlobStack 'Horizontal' '0,0,0,12'
     $P.Filter = New-BlobCombo @('Recommended review', 'All services', 'Running only') 0 200
-    $P.Search = New-Object Windows.Controls.TextBox
+    $P.Search = [Windows.Controls.TextBox]::new()
     $P.Search.Width = 260; $P.Search.Margin = '0,0,8,0'; $P.Search.ToolTip = 'Search by name'
     $P.Count = New-BlobText '' 12 'DarkGray' 'Normal' '8,8,0,0'
     [void]$bar.Children.Add($P.Filter)
@@ -190,7 +190,10 @@ function New-BlobGuiCleanup {
     $P = @{ Checks = @(); Sizes = @{} }
     $Blob.Gui.P = $P
     Set-BlobGuiStatus 'Scanning cleanup locations (read-only)...'
-    foreach ($t in $Blob.CleanupTargets) { $P.Sizes[$t.Id] = Measure-BlobCleanupTarget $t }
+    $preSizes = Get-BlobPrefetch 'CleanupSizes'
+    foreach ($t in $Blob.CleanupTargets) {
+        if ($preSizes -and $preSizes.ContainsKey($t.Id)) { $P.Sizes[$t.Id] = $preSizes[$t.Id] } else { $P.Sizes[$t.Id] = Measure-BlobCleanupTarget $t }
+    }
     $root = New-BlobStack
 
     $head = New-BlobStack 'Horizontal'
@@ -203,11 +206,11 @@ function New-BlobGuiCleanup {
     $list = New-BlobStack
     foreach ($t in $Blob.CleanupTargets) {
         $s = $P.Sizes[$t.Id]
-        $grid = New-Object Windows.Controls.Grid
-        $c0 = New-Object Windows.Controls.ColumnDefinition; $c0.Width = '*'
-        $c1 = New-Object Windows.Controls.ColumnDefinition; $c1.Width = 'Auto'
+        $grid = [Windows.Controls.Grid]::new()
+        $c0 = [Windows.Controls.ColumnDefinition]::new(); $c0.Width = '*'
+        $c1 = [Windows.Controls.ColumnDefinition]::new(); $c1.Width = 'Auto'
         $grid.ColumnDefinitions.Add($c0); $grid.ColumnDefinitions.Add($c1); $grid.Margin = '0,6,0,6'
-        $cb = New-Object Windows.Controls.CheckBox
+        $cb = [Windows.Controls.CheckBox]::new()
         $content = New-BlobStack
         [void]$content.Children.Add((New-BlobText $t.Name 14 'White' 'SemiBold'))
         $age = if ($t.MinAgeHours -gt 0) { " Only files older than $($t.MinAgeHours) hours." } else { '' }
@@ -238,7 +241,9 @@ function New-BlobGuiCleanup {
     [void]$root.Children.Add((New-BlobHeading 'Storage'))
     $st = New-BlobStack
     try {
-        foreach ($d in (Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=3' -ErrorAction Stop)) {
+        $lds = @(Get-BlobPrefetch 'LogicalDisks')
+        if ($lds.Count -eq 0) { $lds = @(Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=3' -ErrorAction Stop) }
+        foreach ($d in $lds) {
             if (-not $d.Size) { continue }
             $row = New-BlobStack 'Horizontal' '0,4,0,4'
             [void]$row.Children.Add((New-BlobText "$($d.DeviceID)" 14 'White' 'SemiBold' '0,0,14,0'))
@@ -247,7 +252,9 @@ function New-BlobGuiCleanup {
             [void]$row.Children.Add((New-BlobText ("  {0} free of {1}" -f (Format-BlobSize $d.FreeSpace), (Format-BlobSize $d.Size)) 13 'Gray' 'Normal' '12,0,0,0'))
             [void]$st.Children.Add($row)
         }
-        foreach ($pd in (Get-PhysicalDisk -ErrorAction Stop)) {
+        $pds = @(Get-BlobPrefetch 'PhysicalDisks')
+        if ($pds.Count -eq 0) { $pds = @(Get-PhysicalDisk -ErrorAction Stop) }
+        foreach ($pd in $pds) {
             [void]$st.Children.Add((New-BlobText ("{0}  -  {1}, {2}, health: {3}" -f $pd.FriendlyName, $pd.MediaType, (Format-BlobSize $pd.Size), $pd.HealthStatus) 12 'DarkGray' 'Normal' '0,6,0,0'))
         }
     } catch { }
@@ -297,7 +304,7 @@ function New-BlobGuiNetwork {
     $row = New-BlobStack 'Horizontal'
     $P.Adapter = New-BlobCombo @($P.Adapters | ForEach-Object { $_.Name }) 0 220
     $P.Preset = New-BlobCombo @($Blob.DnsPresets | ForEach-Object { $_.Name }) 0 240
-    $P.Custom = New-Object Windows.Controls.TextBox
+    $P.Custom = [Windows.Controls.TextBox]::new()
     $P.Custom.Width = 230; $P.Custom.Margin = '0,0,8,0'; $P.Custom.ToolTip = 'Custom servers, e.g. 1.1.1.1, 9.9.9.9'
     [void]$row.Children.Add($P.Adapter); [void]$row.Children.Add($P.Preset); [void]$row.Children.Add($P.Custom)
     [void]$row.Children.Add((New-BlobButton 'Apply DNS' { Set-BlobGuiDns } 'Accent'))
@@ -372,7 +379,7 @@ function New-BlobGuiPower {
     [void]$root.Children.Add((New-BlobHeading 'Power plans'))
     $plans = New-BlobStack
     foreach ($plan in @(Get-BlobPowerPlans)) {
-        $row = New-Object Windows.Controls.DockPanel
+        $row = [Windows.Controls.DockPanel]::new()
         $row.Margin = '0,4,0,4'
         $btn = New-BlobButton 'Activate' ([scriptblock]::Create("Invoke-BlobGuiSetPlan '$($plan.Guid)'")) -Margin '0'
         if ($plan.Active) { $btn.IsEnabled = $false; $btn.Content = 'Active' }
@@ -414,7 +421,7 @@ function New-BlobGuiPower {
 
     [void]$root.Children.Add((New-BlobHeading 'Hibernation'))
     $hib = Get-BlobHibernateEnabled
-    $hrow = New-Object Windows.Controls.DockPanel
+    $hrow = [Windows.Controls.DockPanel]::new()
     $hbtn = New-BlobButton $(if ($hib) { 'Turn off' } else { 'Turn on' }) { Invoke-BlobGuiHibernate } -Margin '0'
     [Windows.Controls.DockPanel]::SetDock($hbtn, 'Right'); [void]$hrow.Children.Add($hbtn)
     $hs = New-BlobStack
@@ -589,7 +596,7 @@ function Import-BlobGuiSnapshot {
 
 function Export-BlobGuiConfig {
     $applied = @($Blob.Tweaks | Where-Object { (Get-BlobTweakState $_) -eq 'Applied' } | ForEach-Object { $_.Id })
-    $dlg = New-Object Microsoft.Win32.SaveFileDialog
+    $dlg = [Microsoft.Win32.SaveFileDialog]::new()
     $dlg.Filter = 'BLOB OPTIMIZER configuration (*.json)|*.json'
     $dlg.FileName = "BLOB-config-{0}.json" -f (Get-Date -Format 'yyyyMMdd-HHmm')
     $dlg.InitialDirectory = [Environment]::GetFolderPath('MyDocuments')
@@ -600,7 +607,7 @@ function Export-BlobGuiConfig {
 }
 
 function Import-BlobGuiConfig {
-    $dlg = New-Object Microsoft.Win32.OpenFileDialog
+    $dlg = [Microsoft.Win32.OpenFileDialog]::new()
     $dlg.Filter = 'BLOB OPTIMIZER configuration (*.json)|*.json'
     $dlg.InitialDirectory = [Environment]::GetFolderPath('MyDocuments')
     if ($dlg.ShowDialog($Blob.Gui.Window) -ne $true) { return }

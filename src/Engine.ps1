@@ -22,9 +22,11 @@ function Register-BlobTweak {
     foreach ($op in $Tweak.Registry) { if (-not $op.Type) { $op.Type = 'DWord' } }
     $Tweak.Admin = (@($Tweak.Registry | Where-Object { Test-BlobNeedsAdmin $_.Path }).Count -gt 0) -or ($Tweak.Services.Count -gt 0)
     [void]$Blob.Tweaks.Add($Tweak)
+    if (-not $Blob.TweakIndex) { $Blob.TweakIndex = @{} }
+    $Blob.TweakIndex[$Tweak.Id] = $Tweak
 }
 
-function Get-BlobTweak { param([string]$Id) return ($Blob.Tweaks | Where-Object { $_.Id -eq $Id } | Select-Object -First 1) }
+function Get-BlobTweak { param([string]$Id) if ($Blob.TweakIndex -and $Id) { return $Blob.TweakIndex[$Id] } return $null }
 
 function Get-BlobTweakState {
     param($Tweak)

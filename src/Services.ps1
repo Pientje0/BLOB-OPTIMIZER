@@ -38,7 +38,8 @@ $Blob.ServiceGuide = @(
 )
 
 function Get-BlobServiceList {
-    try { $all = @(Get-CimInstance Win32_Service -ErrorAction Stop) } catch { $all = @() }
+    $all = @(Get-BlobPrefetch 'Services')
+    if ($all.Count -eq 0) { try { $all = @(Get-CimInstance Win32_Service -ErrorAction Stop) } catch { $all = @() } }
     $map = @{}
     foreach ($s in $all) { $map[$s.Name] = $s }
     return $map

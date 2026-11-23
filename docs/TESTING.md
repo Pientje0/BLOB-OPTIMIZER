@@ -32,6 +32,9 @@ Run this on a test VM or a spare PC before tagging a release. Test **Windows Pow
 - [ ] Cleanup totals update as boxes are ticked. Clean shows the permanent-deletion warning
 - [ ] Restore: double-click a row for details. Restore selected, Undo session, Export/Import (file dialogs) and snapshot import all work
 - [ ] Tabs across the top switch pages. The selected tab is underlined in cyan
+- [ ] The status bar shows "Preloading..." after opening, then "Ready - all tabs loaded" (about 10 s). After that, every tab opens instantly
+- [ ] After changing a setting, Home, Presets and Restore show the new state when opened
+- [ ] After closing the window, no extra PowerShell threads or processes remain (Task Manager)
 - [ ] Optimizations: the category chips filter the cards, search filters as you type, and the count line updates
 - [ ] Flipping a card switch on shows the preview dialog. Cancel puts the switch back. Apply turns it on and the label changes to Deactivate
 - [ ] Flipping an active switch off restores the original. A setting with no saved original explains why it cannot be restored

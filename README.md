@@ -18,22 +18,22 @@ There is no installer, no EXE and nothing to uninstall. It runs inside one Power
 2. Paste the command and press Enter. The BLOB OPTIMIZER window opens:
 
 ```powershell
-irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.3.0/BLOB.ps1 | iex
+irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.3.1/BLOB.ps1 | iex
 ```
 
 **Terminal-only interface** (keyboard UI inside PowerShell):
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.3.0/BLOB.ps1))) -Tui
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.3.1/BLOB.ps1))) -Tui
 ```
 
 **Dry run** shows every change it would make without modifying anything:
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.3.0/BLOB.ps1))) -DryRun
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.3.1/BLOB.ps1))) -DryRun
 ```
 
-> Pinning a version tag (`v1.3.0`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
+> Pinning a version tag (`v1.3.1`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
 
 Without administrator rights, BLOB OPTIMIZER still starts in read-only mode: you can browse system info, settings, services, startup entries and cleanup sizes, and apply per-user settings. Anything machine-wide explains why it needs elevation. The tool never elevates itself.
 
@@ -48,6 +48,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\BLOB.ps1 -Tui     # termin
 ## Interfaces
 
 **Window (default).** A dark WPF window with tabs across the top (Home, Presets, Optimizations, Services, Startup, Cleanup, Network, Power, Restore, Tools, Info), sortable tables, a live activity log, and a confirmation dialog that lists every exact change before anything is applied.
+
+**Instant tabs.** Every tab preloads in the background a few seconds after the window opens, so switching tabs is instant. Slow system information (network, disks, security status, services, cleanup sizes) is collected on three parallel background threads inside the same PowerShell process; these threads are closed when the window closes. After you change something, the current tab refreshes immediately, other affected tabs refresh quietly in the background, and all data is read live again.
 
 **Optimizations tab.** All 55 settings as cards, filterable by category (FPS & Latency, Performance, Network, Quality of Life, Privacy & Security) and searchable. Each card shows its category, risk level and description, plus:
 - an **Activate / Deactivate** switch. Activating shows the exact changes and a restore-point option first, and deactivating restores the saved original value;

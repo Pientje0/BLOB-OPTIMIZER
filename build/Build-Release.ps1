@@ -23,7 +23,7 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Path $PSScriptRoot -Parent
 $src = Join-Path $root 'src'
 $order = @('Core', 'UI', 'Engine', 'Performance', 'Gaming', 'Tweaks', 'Privacy', 'Services',
-           'Startup', 'Cleanup', 'Network', 'Power', 'Restore', 'TweakDetails', 'ExternalTools', 'Dashboard',
+           'Startup', 'Cleanup', 'Network', 'Power', 'Restore', 'TweakDetails', 'ExternalTools', 'Prefetch', 'Dashboard',
            'GuiXaml', 'Gui', 'GuiPages', 'GuiSystem', 'Main')
 
 $core = Get-Content -LiteralPath (Join-Path $src 'Core.ps1') -Raw
