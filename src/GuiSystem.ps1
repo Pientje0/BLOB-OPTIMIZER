@@ -219,7 +219,17 @@ function New-BlobGuiCleanup {
         [Windows.Controls.Grid]::SetColumn($cb, 0); [void]$grid.Children.Add($cb)
         $size = if ($s.Note) { New-BlobText $s.Note 13 'Yellow' } else { New-BlobText ("{0}   {1} items" -f (Format-BlobSize $s.Bytes), $s.Count) 13 'White' 'SemiBold' }
         $size.Margin = '16,2,0,0'
-        [Windows.Controls.Grid]::SetColumn($size, 1); [void]$grid.Children.Add($size)
+        $right = New-BlobStack 'Horizontal'
+        $right.VerticalAlignment = 'Top'
+        [void]$right.Children.Add($size)
+        $tipParas = @($t.Detail + $age,
+            '{Yellow}Deleted files are removed permanently - they do not go to the Recycle Bin and cannot be restored.',
+            '{Gray}Files that are currently in use are skipped automatically.',
+            $(if ($t.Admin) { '{Yellow}Requires administrator rights.' } else { '{Green}Works without administrator rights.' }),
+            '{DarkGray}Risk: LOW - these are temporary files and caches that Windows or apps recreate when needed.')
+        $tipMono = if ($t.Paths) { @($t.Paths | ForEach-Object { "{White}$_" }) } else { @('{White}Recycle Bin on all drives') }
+        [void]$right.Children.Add((New-BlobHelpIcon (New-BlobTooltipPanel -Title $t.Name -Paragraphs $tipParas -Mono $tipMono -MonoTitle 'Location')))
+        [Windows.Controls.Grid]::SetColumn($right, 1); [void]$grid.Children.Add($right)
         [void]$list.Children.Add($grid)
         $P.Checks += $cb
     }

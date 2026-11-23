@@ -32,6 +32,7 @@ function Get-BlobGuiPages {
         @{ Key = 'network'; Label = 'Network'; Icon = 0xE968; Subtitle = 'Information, diagnostics, DNS and optional resets'; Build = { New-BlobGuiNetwork } }
         @{ Key = 'power'; Label = 'Power'; Icon = 0xE945; Subtitle = 'Power plans, display and sleep timeouts, hibernation'; Build = { New-BlobGuiPower } }
         @{ Key = 'restore'; Label = 'Restore'; Icon = 0xE81C; Gap = $true; Subtitle = 'Undo changes, registry snapshots, restore points and configuration files'; Build = { New-BlobGuiRestore } }
+        @{ Key = 'tools'; Label = 'External Tools'; Icon = 0xE8A7; Subtitle = 'Launch well-known third-party tools: Chris Titus Tech WinUtil and O&O ShutUp10++'; Build = { New-BlobGuiTools } }
         @{ Key = 'sysinfo'; Label = 'System Info'; Icon = 0xE946; Subtitle = 'Hardware and Windows details (read-only)'; Build = { New-BlobGuiSysInfo } }
     )
 }
@@ -40,27 +41,49 @@ function Get-BlobGuiPages {
 #  Shared apply / undo flows
 # ---------------------------------------------------------------------------
 function Invoke-BlobGuiApply {
-    param([array]$Tweaks, [string]$Tag = 'gui', [switch]$SkipConfirm, [string[]]$ExtraLines = @())
+    param([array]$Tweaks, [string]$Tag = 'gui', [string[]]$ExtraLines = @(), [string]$Title, [switch]$ForceDanger)
     $Tweaks = @($Tweaks | Where-Object { $_ })
     if ($Tweaks.Count -eq 0) { Show-BlobGuiMessage -Title 'Nothing selected' -Lines @('{Gray}Tick one or more items first.'); return $false }
-    if (-not $SkipConfirm) {
-        $danger = @($Tweaks | Where-Object { $_.Risk -eq 'Advanced' }).Count -gt 0
-        $ok = Confirm-BlobGui -Title ("Apply {0} optimization(s)?" -f $Tweaks.Count) -Subtitle 'These exact settings will change. Original values are saved first.' `
-            -Lines ($ExtraLines + (Get-BlobTweakPreview $Tweaks)) -Danger:$danger -OkText 'Apply'
-        if (-not $ok) { return $false }
-    }
+    if (-not $Title) { $Title = "Apply {0} optimization(s)?" -f $Tweaks.Count }
+    $danger = $ForceDanger -or (@($Tweaks | Where-Object { $_.Risk -eq 'Advanced' }).Count -gt 0)
+    $canRp = $Blob.IsAdmin -and -not $Blob.DryRun
+    $rpText = if ($canRp) { 'Create a System Restore point first (recommended)' }
+              elseif ($Blob.DryRun) { 'Create a System Restore point first (not available in dry run)' }
+              else { 'Create a System Restore point first (requires administrator)' }
+    $ok = Show-BlobGuiDialog -Title $Title -Subtitle 'These exact settings will change. Original values are saved first.' `
+        -Lines ($ExtraLines + (Get-BlobTweakPreview $Tweaks)) -Danger:$danger -OkText 'Apply' `
+        -CheckText $rpText -CheckDefault $canRp -CheckEnabled $canRp
+    if (-not $ok) { return $false }
+    if ($Blob.Gui.DialogCheck) { Invoke-BlobGuiRestorePointStep "BLOB OPTIMIZER - before $Tag" }
     Start-BlobGuiTask ("Applying {0} optimization(s)" -f $Tweaks.Count)
     $out = Invoke-BlobTweakCore -Tweaks $Tweaks -Tag $Tag -Log { param($m) Add-BlobGuiLog $m }
     Add-BlobGuiLog "{Cyan}$($out.Summary)"
     if ($out.NeedsExplorer) {
-        if (Confirm-BlobGui -Title 'Restart Windows Explorer now?' -OkText 'Restart Explorer' -Lines @(
+        if (Show-BlobGuiDialog -Title 'Restart Windows Explorer now?' -OkText 'Restart Explorer' -CancelText 'Later' -Lines @(
                 '{Gray}Some changes appear only after Explorer restarts.',
-                '{Gray}The taskbar and open Explorer windows close and reopen. Choose Later to restart or sign out yourself.') -Subtitle '') {
+                '{Gray}The taskbar and open Explorer windows close and reopen. Choose Later to restart or sign out yourself.')) {
             Restart-BlobExplorer; Add-BlobGuiLog '{Green}Explorer restarted.'
         }
     }
     Update-BlobGuiPage
     return $true
+}
+
+# Rich hover help for one tweak: explanation, risk, exact changes, undo.
+function New-BlobTweakTooltip {
+    param($Tweak)
+    $r = $Blob.RiskInfo[$Tweak.Risk]
+    $state = Get-BlobTweakState $Tweak
+    $paras = @(
+        (Get-BlobTweakExplanation $Tweak),
+        "{$($r.Color)}$($r.Label){Gray} - $($r.Text)")
+    if ($Tweak.Warning) { $paras += "{Yellow}Warning: $($Tweak.Warning)" }
+    if ($Tweak.Note) { $paras += "{Gray}When it applies: $($Tweak.Note)" }
+    $paras += $(if ($Tweak.Admin) { '{Yellow}Requires administrator rights (machine-wide setting).' } else { '{Green}Works without administrator rights (your account only).' })
+    $paras += "{Gray}Current status: {White}$(switch ($state) { 'Applied' { 'applied' } 'Partial' { 'partly applied' } 'Default' { 'not applied (Windows default or your own setting)' } default { 'not applicable' } })"
+    $paras += '{Gray}Undo: the original value is saved before the change; restore it with "Undo selected" or from the Restore page.'
+    $mono = @(Get-BlobTweakPreview @($Tweak) | Select-Object -Skip 1 | Where-Object { $_ -match '^\{(Gray|DarkGray)\} {4}' -and $_ -notmatch 'Note:' })
+    return New-BlobTooltipPanel -Title $Tweak.Name -Paragraphs $paras -Mono $mono -MonoTitle 'Exact changes (current -> new)'
 }
 
 function Invoke-BlobGuiUndo {
@@ -128,6 +151,7 @@ function New-BlobGuiDashboard {
     [void]$qa.Children.Add((New-BlobButton 'Scan for cleanup' { Show-BlobGuiPage 'cleanup' }))
     [void]$qa.Children.Add((New-BlobButton 'Create restore point' { Invoke-BlobGuiRestorePoint }))
     [void]$qa.Children.Add((New-BlobButton 'Review changes' { Show-BlobGuiPage 'restore' }))
+    [void]$qa.Children.Add((New-BlobButton 'External tools' { Show-BlobGuiPage 'tools' }))
     [void]$root.Children.Add((New-BlobCard $qa))
     [void]$root.Children.Add((New-BlobText 'BLOB OPTIMIZER never disables Microsoft Defender, Windows Firewall, SmartScreen, UAC or Windows Update.' 12 'DarkGray' 'Normal' '2,6,0,0'))
     return $root
@@ -145,7 +169,11 @@ function New-BlobGuiPresets {
         $appliedCount = @($tw | Where-Object { (Get-BlobTweakState $_) -eq 'Applied' }).Count
         $color = if ($accent.ContainsKey($p.Name)) { $accent[$p.Name] } else { 'Cyan' }
         $s = New-BlobStack
-        [void]$s.Children.Add((New-BlobText $p.Name 22 $color 'Bold'))
+        $title = New-BlobStack 'Horizontal'
+        [void]$title.Children.Add((New-BlobText $p.Name 22 $color 'Bold'))
+        $riskLines = @($tw | ForEach-Object { "{$($Blob.RiskInfo[$_.Risk].Color)}$($Blob.RiskInfo[$_.Risk].Label.PadRight(12)){White}$($_.Name)" })
+        [void]$title.Children.Add((New-BlobHelpIcon (New-BlobTooltipPanel -Title "$($p.Name) preset" -Paragraphs @($p.Description, $p.Warning, '{Gray}Every setting in this preset and its risk level:') -Mono $riskLines)))
+        [void]$s.Children.Add($title)
         [void]$s.Children.Add((New-BlobText "$($tw.Count) settings  -  $appliedCount already applied" 12 'DarkGray' 'Normal' '0,4,0,10'))
         [void]$s.Children.Add((New-BlobText $p.Description 13 'Gray'))
         if ($p.Warning) { [void]$s.Children.Add((New-BlobText $p.Warning 12 'Yellow' 'Normal' '0,10,0,0')) }
@@ -177,16 +205,7 @@ function Invoke-BlobGuiPreset {
     $tw = @($p.Ids | ForEach-Object { Get-BlobTweak $_ } | Where-Object { $_ })
     $extra = @()
     if ($p.Warning) { $extra = @("{Yellow}$($p.Warning)", '') }
-    $ok = Confirm-BlobGui -Title "Apply the $($p.Name) preset?" -Subtitle "$($tw.Count) optimizations. These exact settings will change." `
-        -Lines ($extra + (Get-BlobTweakPreview $tw)) -Danger:($p.Name -match 'ADVANCED') -OkText 'Apply preset'
-    if (-not $ok) { return }
-    if ($Blob.IsAdmin -and -not $Blob.DryRun) {
-        $rp = Show-BlobGuiDialog -Title 'Create a System Restore point first?' -OkText 'Create restore point' -CancelText 'Skip' -Lines @(
-            '{Gray}Recommended before applying a preset. It may take a minute.',
-            '{DarkGray}Windows creates at most one restore point per 24 hours by default.')
-        if ($rp) { Start-BlobGuiTask 'Creating System Restore point'; Add-BlobGuiLog (New-BlobRestorePoint "BLOB OPTIMIZER - $($p.Name) preset") }
-    }
-    $null = Invoke-BlobGuiApply -Tweaks $tw -Tag "preset-$($p.Name)" -SkipConfirm
+    $null = Invoke-BlobGuiApply -Tweaks $tw -Tag "preset-$($p.Name)" -ExtraLines $extra -Title "Apply the $($p.Name) preset ($($tw.Count) optimizations)?" -ForceDanger:($p.Name -match 'ADVANCED')
 }
 
 # ---------------------------------------------------------------------------
@@ -213,12 +232,12 @@ function New-BlobGuiTweakRow {
 
     $badges = New-BlobStack 'Horizontal'
     $badges.VerticalAlignment = 'Top'; $badges.Margin = '12,2,0,0'
-    $riskColor = @{ Minimal = 'Green'; Standard = 'Cyan'; Advanced = 'Yellow'; Optional = 'Gray' }[$Tweak.Risk]
     if ($Tweak.Admin) { [void]$badges.Children.Add((New-BlobBadge 'ADMIN' 'DarkGray')) }
-    [void]$badges.Children.Add((New-BlobBadge $Tweak.Risk.ToUpper() $riskColor))
+    [void]$badges.Children.Add((New-BlobRiskBadge $Tweak.Risk))
     $state = Get-BlobTweakState $Tweak
     $stateBadge = switch ($state) { 'Applied' { New-BlobBadge 'APPLIED' 'Green' } 'Partial' { New-BlobBadge 'PARTIAL' 'Yellow' } default { New-BlobBadge 'NOT SET' 'DarkGray' } }
     [void]$badges.Children.Add($stateBadge)
+    [void]$badges.Children.Add((New-BlobHelpIcon (New-BlobTweakTooltip $Tweak)))
     [Windows.Controls.Grid]::SetColumn($badges, 1)
     [void]$grid.Children.Add($badges)
     $Blob.Gui.P.Checks += $cb
@@ -229,6 +248,7 @@ function New-BlobGuiTweakPage {
     param([string]$Section, [array]$Tools = @())
     $Blob.Gui.P = @{ Checks = @(); Section = $Section }
     $root = New-BlobStack
+    [void]$root.Children.Add((New-BlobRiskLegend))
     $tweaks = @($Blob.Tweaks | Where-Object { $_.Section -eq $Section })
     $groups = @($tweaks | ForEach-Object { $_.Group } | Select-Object -Unique)
     foreach ($g in $groups) {
@@ -281,4 +301,48 @@ function New-BlobGuiSysInfo {
     }
     if ($current) { [void]$root.Children.Add((New-BlobCard $current)) }
     return $root
+}
+
+# ---------------------------------------------------------------------------
+#  External tools
+# ---------------------------------------------------------------------------
+function New-BlobGuiTools {
+    $root = New-BlobStack
+    $warn = New-BlobStack
+    [void]$warn.Children.Add((New-BlobText 'Third-party software' 14 'Yellow' 'SemiBold'))
+    [void]$warn.Children.Add((New-BlobText 'These tools are made by other developers. BLOB OPTIMIZER only starts them for you: it shows the official download address first, verifies digital signatures where possible, and records that you launched them. Changes made inside these tools are NOT tracked and cannot be undone from the Restore page - use their own undo options and a System Restore point.' 12.5 'Gray' 'Normal' '0,4,0,0'))
+    [void]$root.Children.Add((New-BlobCard $warn))
+    $wrap = New-Object Windows.Controls.WrapPanel
+    foreach ($t in $Blob.ExternalTools) {
+        $s = New-BlobStack
+        $head = New-BlobStack 'Horizontal'
+        [void]$head.Children.Add((New-BlobText $t.Name 17 'White' 'SemiBold'))
+        [void]$head.Children.Add((New-BlobHelpIcon (New-BlobTooltipPanel -Title $t.Name -Paragraphs (Get-BlobExternalToolLines $t))))
+        [void]$s.Children.Add($head)
+        [void]$s.Children.Add((New-BlobText $t.Publisher 12 'DarkGray' 'Normal' '0,2,0,10'))
+        [void]$s.Children.Add((New-BlobText $t.Summary 13 'Gray'))
+        [void]$s.Children.Add((New-BlobText "Source: $($t.Url)" 11.5 'DarkGray' 'Normal' '0,10,0,0'))
+        if ($t.Kind -eq 'Exe') { [void]$s.Children.Add((New-BlobText "Signature must be valid and from $($t.Signer) before it runs." 11.5 'DarkGray' 'Normal' '0,2,0,0')) }
+        $btns = New-BlobStack 'Horizontal' '0,14,0,0'
+        [void]$btns.Children.Add((New-BlobButton 'Launch' ([scriptblock]::Create("Invoke-BlobGuiExternalTool '$($t.Id)'")) 'Accent'))
+        [void]$btns.Children.Add((New-BlobButton 'Website' ([scriptblock]::Create("Start-Process '$($t.Home)'"))))
+        [void]$s.Children.Add($btns)
+        [void]$wrap.Children.Add((New-BlobCard $s '0,0,14,14' '20,18' 440))
+    }
+    [void]$root.Children.Add($wrap)
+    return $root
+}
+
+function Invoke-BlobGuiExternalTool {
+    param([string]$Id)
+    $t = Get-BlobExternalTool $Id
+    if (-not $t) { return }
+    $canRp = $Blob.IsAdmin -and -not $Blob.DryRun
+    $rpText = if ($canRp) { 'Create a System Restore point first (strongly recommended)' } else { 'Create a System Restore point first (requires administrator)' }
+    $ok = Show-BlobGuiDialog -Title "Launch $($t.Name)?" -Subtitle 'Third-party software - read before continuing' -Lines (Get-BlobExternalToolLines $t) `
+        -OkText 'Launch' -Kind 'Warning' -CheckText $rpText -CheckDefault $canRp -CheckEnabled $canRp
+    if (-not $ok) { return }
+    if ($Blob.Gui.DialogCheck) { Invoke-BlobGuiRestorePointStep "BLOB OPTIMIZER - before $($t.Name)" }
+    Start-BlobGuiTask "Launching $($t.Name)"
+    $null = Start-BlobExternalTool -Tool $t -Log { param($m) Add-BlobGuiLog $m }
 }

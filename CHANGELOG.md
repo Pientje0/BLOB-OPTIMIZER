@@ -2,6 +2,19 @@
 
 All notable changes to BLOB OPTIMIZER are documented here. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2026-11-23
+
+### Added
+- Clear risk labels on every setting (LOW RISK, MEDIUM RISK, HIGH RISK, PREFERENCE), a risk legend on each section, and explanations of each risk level on hover.
+- A **?** help icon on every setting, cleanup location and preset. Hovering it shows a detailed explanation, the risk, the exact registry or service changes (current → new), admin requirements, the current status and how to undo.
+- Hand-written detailed explanations for all 40 settings. They also appear in the terminal details view.
+- A *Create a System Restore point first* checkbox in every apply dialog, including presets and external tools.
+- External Tools page and terminal menu (`T`): launchers for Chris Titus Tech's WinUtil and O&O ShutUp10++. The source URL is shown before launch, the ShutUp10++ signature is verified, and the launch is recorded in the journal.
+
+### Changed
+- Restore point creation detects when Windows silently skips it (24-hour limit) and reports that honestly.
+- The window sizes itself to the screen.
+
 ## [1.1.0] - 2026-11-23
 
 ### Added

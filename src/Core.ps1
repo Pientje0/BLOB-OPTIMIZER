@@ -8,7 +8,7 @@
 # Single state object shared by every module. It is created inside the
 # release script block, so it disappears when the tool exits.
 $Blob = @{
-    Version   = '1.1.0'
+    Version   = '1.2.0'
     Tweaks    = New-Object System.Collections.ArrayList
     Changes   = New-Object System.Collections.ArrayList
     LogBuffer = New-Object System.Collections.ArrayList

@@ -307,9 +307,17 @@ $Blob.GuiTheme = @'
   </Style>
 
   <Style TargetType="ToolTip">
-    <Setter Property="Background" Value="#111821"/>
     <Setter Property="Foreground" Value="{StaticResource Text}"/>
-    <Setter Property="BorderBrush" Value="{StaticResource Line}"/>
+    <Setter Property="HasDropShadow" Value="True"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ToolTip">
+          <Border Background="#121A24" BorderBrush="#2B6F80" BorderThickness="1" CornerRadius="8" Padding="14,12" MaxWidth="520">
+            <ContentPresenter/>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
 </ResourceDictionary>
 '@
@@ -442,10 +450,15 @@ $Blob.GuiDialogXaml = @'
         </StackPanel>
       </Border>
       <Border DockPanel.Dock="Bottom" Padding="24,12" BorderBrush="#1C2733" BorderThickness="0,1,0,0" Background="#0D1218">
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-          <Button x:Name="DlgCancel" Content="Cancel" MinWidth="96"/>
-          <Button x:Name="DlgOk" Content="Confirm" MinWidth="120" Margin="0" Style="{StaticResource AccentButton}"/>
-        </StackPanel>
+        <DockPanel>
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+            <Button x:Name="DlgCancel" Content="Cancel" MinWidth="96"/>
+            <Button x:Name="DlgOk" Content="Confirm" MinWidth="120" Margin="0" Style="{StaticResource AccentButton}"/>
+          </StackPanel>
+          <CheckBox x:Name="DlgCheck" VerticalAlignment="Center" Margin="0,0,16,0" Visibility="Collapsed">
+            <TextBlock x:Name="DlgCheckText" FontSize="13"/>
+          </CheckBox>
+        </DockPanel>
       </Border>
       <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,14">
         <StackPanel x:Name="DlgBody"/>

@@ -122,19 +122,29 @@ function Show-BlobRegSnapshots {
     Complete-BlobWork 'Snapshot import finished. Sign out or restart for all settings to apply.'
 }
 
+function Get-BlobRestorePointCount {
+    try { return @(Get-CimInstance -Namespace 'root/default' -ClassName 'SystemRestore' -ErrorAction Stop).Count } catch { return -1 }
+}
+
+# Creates a System Restore point and reports honestly whether Windows made one.
 function New-BlobRestorePoint {
     param([string]$Description = 'BLOB OPTIMIZER')
     if (-not $Blob.IsAdmin) { return '{Yellow} SKIP {White}Restore point {Gray}(administrator rights required)' }
     if ($Blob.DryRun) { return '{Magenta} DRY  {White}Restore point not created (dry run)' }
+    $before = Get-BlobRestorePointCount
     try {
         $r = Invoke-CimMethod -Namespace 'root/default' -ClassName 'SystemRestore' -MethodName 'CreateRestorePoint' -ErrorAction Stop `
             -Arguments @{ Description = $Description; RestorePointType = [uint32]12; EventType = [uint32]100 }
-        if ($r.ReturnValue -eq 0) {
-            Add-BlobActionRecord -Source 'restore' -Label 'Created System Restore point' -Target $Description
-            return '{Green} OK   {White}Restore point requested {Gray}(Windows skips it if one was made in the last 24 h)'
+        if ($r.ReturnValue -ne 0) {
+            return "{Yellow} SKIP {White}Restore point not created {Gray}(Windows returned $($r.ReturnValue) - System Protection may be off for the system drive)"
         }
-        return "{Yellow} SKIP {White}Restore point {Gray}(Windows returned $($r.ReturnValue) - System Protection may be off for C:)"
-    } catch { return "{Red} FAIL {White}Restore point {Gray}($($_.Exception.Message -replace '[{}]', ''))" }
+        $after = Get-BlobRestorePointCount
+        if ($before -ge 0 -and $after -le $before) {
+            return '{Yellow} SKIP {White}Windows did not create a new restore point {Gray}(one was already made in the last 24 hours - that one still protects you)'
+        }
+        Add-BlobActionRecord -Source 'restore' -Label 'Created System Restore point' -Target $Description
+        return "{Green} OK   {White}System Restore point created {Gray}('$Description')"
+    } catch { return "{Red} FAIL {White}Restore point {Gray}($($_.Exception.Message -replace '[{}]', '') - is System Protection enabled?)" }
 }
 
 function Export-BlobConfig {

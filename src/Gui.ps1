@@ -177,6 +177,80 @@ function New-BlobInfoCard {
 }
 
 # ---------------------------------------------------------------------------
+#  Help ("?") icons, rich tooltips and risk badges
+# ---------------------------------------------------------------------------
+function New-BlobTooltipPanel {
+    param([string]$Title, [string[]]$Paragraphs = @(), [string[]]$Mono = @(), [string]$MonoTitle = '')
+    $s = New-BlobStack
+    $s.MaxWidth = 490
+    [void]$s.Children.Add((New-BlobText $Title 14 'White' 'SemiBold' '0,0,0,6'))
+    foreach ($p in $Paragraphs) {
+        if (-not $p) { continue }
+        [void]$s.Children.Add((ConvertTo-BlobTextBlock $p -Size 12.5 -Default 'Gray'))
+        $s.Children[$s.Children.Count - 1].Margin = '0,0,0,6'
+    }
+    if ($Mono.Count -gt 0) {
+        if ($MonoTitle) { [void]$s.Children.Add((New-BlobText $MonoTitle.ToUpper() 10.5 'DarkGray' 'Bold' '0,4,0,4')) }
+        foreach ($m in $Mono) { [void]$s.Children.Add((ConvertTo-BlobTextBlock $m -Mono -Size 11.5)) }
+    }
+    return $s
+}
+
+function Set-BlobTooltip {
+    param($Element, $Content)
+    $Element.ToolTip = $Content
+    [Windows.Controls.ToolTipService]::SetInitialShowDelay($Element, 120)
+    [Windows.Controls.ToolTipService]::SetShowDuration($Element, 120000)
+    [Windows.Controls.ToolTipService]::SetPlacement($Element, 'Bottom')
+}
+
+# A round "?" icon that shows detailed help when hovered.
+function New-BlobHelpIcon {
+    param($Tooltip)
+    $b = New-Object Windows.Controls.Border
+    $b.Width = 20; $b.Height = 20; $b.CornerRadius = 10
+    $b.BorderThickness = 1.5; $b.BorderBrush = Get-BlobBrush '#475569'; $b.Background = Get-BlobBrush '#0F172A'
+    $b.Margin = '8,0,0,0'; $b.VerticalAlignment = 'Center'; $b.Cursor = [Windows.Input.Cursors]::Help
+    $t = New-BlobText '?' 12 'Gray' 'Bold'
+    $t.HorizontalAlignment = 'Center'; $t.VerticalAlignment = 'Center'; $t.Margin = '0,-1,0,0'
+    $b.Child = $t
+    $b.Add_MouseEnter({ param($s, $e) $s.BorderBrush = Get-BlobBrush 'Cyan'; $s.Child.Foreground = Get-BlobBrush 'Cyan' })
+    $b.Add_MouseLeave({ param($s, $e) $s.BorderBrush = Get-BlobBrush '#475569'; $s.Child.Foreground = Get-BlobBrush 'Gray' })
+    Set-BlobTooltip $b $Tooltip
+    return $b
+}
+
+function New-BlobRiskBadge {
+    param([string]$Risk)
+    $r = $Blob.RiskInfo[$Risk]
+    $badge = New-BlobBadge $r.Label $r.Color
+    Set-BlobTooltip $badge (New-BlobTooltipPanel -Title $r.Label -Paragraphs @($r.Text))
+    return $badge
+}
+
+function New-BlobRiskLegend {
+    $wrap = New-Object Windows.Controls.WrapPanel
+    [void]$wrap.Children.Add((New-BlobText 'Risk levels:' 12.5 'Gray' 'Normal' '0,2,4,0'))
+    foreach ($k in @('Minimal', 'Standard', 'Advanced', 'Optional')) {
+        $r = $Blob.RiskInfo[$k]
+        $item = New-BlobStack 'Horizontal' '0,0,14,0'
+        [void]$item.Children.Add((New-BlobRiskBadge $k))
+        $short = switch ($k) { 'Minimal' { 'safe, minor' } 'Standard' { 'changes a feature' } 'Advanced' { 'test afterwards' } default { 'looks / taste' } }
+        [void]$item.Children.Add((New-BlobText $short 12 'DarkGray' 'Normal' '6,2,0,0'))
+        [void]$wrap.Children.Add($item)
+    }
+    [void]$wrap.Children.Add((New-BlobText 'Hover any ? for full details.' 12 'DarkGray' 'Normal' '0,2,0,0'))
+    return (New-BlobCard $wrap '0,0,0,14' '16,10')
+}
+
+# Restore point step used before applying changes from the window.
+function Invoke-BlobGuiRestorePointStep {
+    param([string]$Description)
+    Start-BlobGuiTask 'Creating System Restore point (this can take a minute)'
+    Add-BlobGuiLog (New-BlobRestorePoint $Description)
+}
+
+# ---------------------------------------------------------------------------
 #  Activity log and status
 # ---------------------------------------------------------------------------
 function Update-BlobGui {
@@ -204,7 +278,8 @@ function Set-BlobGuiStatus {
 # ---------------------------------------------------------------------------
 function Show-BlobGuiDialog {
     param([string]$Title, [string]$Subtitle = '', [string[]]$Lines = @(), [string]$OkText = 'Confirm',
-          [switch]$Danger, [switch]$InfoOnly, [string]$Kind = 'Info', [string]$CancelText = 'Cancel')
+          [switch]$Danger, [switch]$InfoOnly, [string]$Kind = 'Info', [string]$CancelText = 'Cancel',
+          [string]$CheckText, [bool]$CheckDefault = $false, [bool]$CheckEnabled = $true)
     $d = New-BlobGuiWindow $Blob.GuiDialogXaml
     $d.Owner = $Blob.Gui.Window
     $d.Title = $Title
@@ -221,12 +296,20 @@ function Show-BlobGuiDialog {
     if ($Danger) { $accent = 'Red'; $ok.Background = Get-BlobBrush 'Red'; $ok.BorderBrush = Get-BlobBrush 'Red' }
     $d.FindName('DlgBorder').BorderBrush = Get-BlobBrush $accent
     if ($InfoOnly) { $cancel.Visibility = 'Collapsed' }
+    $check = $d.FindName('DlgCheck')
+    if ($CheckText) {
+        $check.Visibility = 'Visible'
+        $d.FindName('DlgCheckText').Text = $CheckText
+        $check.IsChecked = $CheckDefault
+        $check.IsEnabled = $CheckEnabled
+    }
     $d.Tag = $false
     $ok.Add_Click({ param($s, $e) $w = [Windows.Window]::GetWindow($s); $w.Tag = $true; $w.Close() })
     $cancel.Add_Click({ param($s, $e) [Windows.Window]::GetWindow($s).Close() })
     $d.Add_KeyDown({ param($s, $e) if ($e.Key -eq 'Escape') { $s.Close() } })
     if ($Lines.Count -le 6) { $d.Height = 300 }
     $null = $d.ShowDialog()
+    $Blob.Gui.DialogCheck = ($CheckText -and $check.IsEnabled -and [bool]$check.IsChecked)
     return [bool]$d.Tag
 }
 
@@ -331,6 +414,12 @@ function Initialize-BlobGuiWindow {
                      'LogScroll', 'LogPanel', 'StatusText', 'StatusRight', 'RootBorder')) {
         $Blob.Gui[$n] = $w.FindName($n)
     }
+    # Fit the window to the screen (taller when there is room, so the whole sidebar shows).
+    try {
+        $wa = [Windows.SystemParameters]::WorkArea
+        $w.Height = [Math]::Max($w.MinHeight, [Math]::Min(880, $wa.Height - 40))
+        $w.Width = [Math]::Max($w.MinWidth, [Math]::Min(1240, $wa.Width - 40))
+    } catch { }
     $w.Title = "BLOB OPTIMIZER $($Blob.Version)"
     $Blob.Gui.TitleVersion.Text = "v$($Blob.Version)"
     if ($Blob.IsAdmin) {

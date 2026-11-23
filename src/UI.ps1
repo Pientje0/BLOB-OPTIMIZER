@@ -161,6 +161,20 @@ function Read-BlobKey {
     return $k
 }
 
+# Word-wraps plain text into lines of at most $Width characters.
+function Split-BlobText {
+    param([string]$Text, [int]$Width = 96)
+    $out = New-Object System.Collections.ArrayList
+    $line = ''
+    foreach ($word in ($Text -split '\s+')) {
+        if ($line.Length -gt 0 -and ($line.Length + 1 + $word.Length) -gt $Width) { [void]$out.Add($line); $line = $word }
+        elseif ($line.Length -gt 0) { $line += ' ' + $word }
+        else { $line = $word }
+    }
+    if ($line) { [void]$out.Add($line) }
+    return $out.ToArray()
+}
+
 function Format-BlobPad {
     param([string]$Text, [int]$Width)
     $plain = Get-BlobPlainText $Text

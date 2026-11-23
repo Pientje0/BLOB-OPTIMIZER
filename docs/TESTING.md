@@ -31,7 +31,13 @@ Run this on a test VM or a spare PC before tagging a release. Test **Windows Pow
 - [ ] Services and Startup tables support multi-select (Ctrl/Shift). Protected services are refused
 - [ ] Cleanup totals update as boxes are ticked. Clean shows the permanent-deletion warning
 - [ ] Restore: double-click a row for details. Restore selected, Undo session, Export/Import (file dialogs) and snapshot import all work
-- [ ] `-Tui` opens the terminal UI instead
+- [ ] Every setting shows a risk label, and the legend appears at the top of each tweak page
+- [ ] Hovering **?** on a setting, cleanup location or preset shows the detailed tooltip with exact changes
+- [ ] The apply dialog shows *Create a System Restore point first*: ticked as admin, disabled for standard users and in dry run
+- [ ] With the box ticked, the log shows the restore point as OK, or as SKIP (24 h limit) with an explanation
+- [ ] External Tools: **Launch** shows the source URL first. WinUtil opens in a new admin window after the UAC prompt
+- [ ] ShutUp10++ downloads, the log shows "Signature valid (… O&O Software …)", and it starts. Cancelling UAC is logged as SKIP
+- [ ] `-Tui` opens the terminal UI instead. `T` on its dashboard opens External Tools
 
 ## 4. Terminal UI
 

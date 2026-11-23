@@ -18,22 +18,22 @@ There is no installer, no EXE and nothing to uninstall. It runs inside one Power
 2. Paste the command and press Enter. The BLOB OPTIMIZER window opens:
 
 ```powershell
-irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.1.0/BLOB.ps1 | iex
+irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.2.0/BLOB.ps1 | iex
 ```
 
 **Terminal-only interface** (keyboard UI inside PowerShell):
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.1.0/BLOB.ps1))) -Tui
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.2.0/BLOB.ps1))) -Tui
 ```
 
 **Dry run** shows every change it would make without modifying anything:
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.1.0/BLOB.ps1))) -DryRun
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.2.0/BLOB.ps1))) -DryRun
 ```
 
-> Pinning a version tag (`v1.1.0`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
+> Pinning a version tag (`v1.2.0`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
 
 Without administrator rights, BLOB OPTIMIZER still starts in read-only mode: you can browse system info, settings, services, startup entries and cleanup sizes, and apply per-user settings. Anything machine-wide explains why it needs elevation. The tool never elevates itself.
 
@@ -48,6 +48,12 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\BLOB.ps1 -Tui     # termin
 ## Interfaces
 
 **Window (default).** A dark WPF window with sidebar navigation, checkbox lists, sortable tables, a live activity log, and a confirmation dialog that lists every exact change before anything is applied. WPF is part of Windows, so nothing is downloaded or installed. The PowerShell console stays open behind the window, and closing the window ends the tool. If WPF is unavailable (Server Core, or a non-STA session), BLOB OPTIMIZER falls back to the terminal interface automatically.
+
+**Risk and help on every setting.** Each setting shows a risk label: LOW RISK, MEDIUM RISK, HIGH RISK or PREFERENCE. Hover the **?** next to it for a detailed explanation: what it does, why you might want it, the trade-off, the exact registry or service change (current → new), whether it needs admin rights, and how to undo it.
+
+**Restore point on apply.** Every apply confirmation, including presets, has a *Create a System Restore point first* checkbox. It is ticked by default when running as administrator. BLOB OPTIMIZER tells you honestly if Windows skipped the restore point because one was already made in the last 24 hours.
+
+**External tools.** One-click launchers for [Chris Titus Tech's WinUtil](https://github.com/ChrisTitusTech/winutil) and [O&O ShutUp10++](https://www.oo-software.com/en/shutup10). See *Third-party tools* below.
 
 **Terminal (`-Tui`).** The full keyboard-driven terminal UI. It has the same features and uses the same engine and the same backup journal.
 
@@ -101,11 +107,22 @@ Files are created only after you make your first real change. Dry runs and brows
 
 Delete that folder at any time to remove all traces. Configuration exports go wherever you choose (Documents by default).
 
+## Third-party tools
+
+The **External Tools** page (or `T` in the terminal UI) can launch two well-known tools made by other developers. Nothing is downloaded until you click **Launch** and confirm a dialog that shows the exact source address.
+
+| Tool | Source | How it runs |
+|---|---|---|
+| Chris Titus Tech's WinUtil | `https://christitus.com/win` | Opens a separate administrator PowerShell window (Windows asks for permission) and runs `irm https://christitus.com/win \| iex` |
+| O&O ShutUp10++ | `https://dl5.oo-software.com/files/ooshutup10/OOSU10.exe` | Downloads to `%TEMP%\BLOB-OPTIMIZER-tools`, **checks that the Authenticode signature is valid and from O&O Software**, and only then starts it. If the check fails, the file is deleted |
+
+Changes made inside these tools are **not** recorded by BLOB OPTIMIZER and cannot be undone from Restore. Use their own undo options and a System Restore point (offered in the launch dialog).
+
 ## Transparency and antivirus
 
 - The source is plain, readable PowerShell with no obfuscation, no encoded commands, no hidden windows and no `-EncodedCommand`.
-- It downloads nothing at runtime, and it creates no services, scheduled tasks, Run keys or background processes.
-- It makes network connections only when you start a diagnostic. The screen lists the hosts first.
+- It downloads nothing at runtime unless you explicitly launch a third-party tool from External Tools. It creates no services, scheduled tasks, Run keys or background processes.
+- It makes network connections only when you start a diagnostic or launch an external tool. The address is always shown first.
 - `BLOB.ps1.sha256` is published with each release. Check a download with `Get-FileHash .\BLOB.ps1`.
 - Releases should be Authenticode-signed when a code-signing certificate is available: `Set-AuthenticodeSignature .\BLOB.ps1 -Certificate $cert -TimestampServer http://timestamp.digicert.com`.
 
@@ -130,6 +147,8 @@ BLOB-OPTIMIZER/
 │   ├── Performance.ps1  Gaming.ps1  Tweaks.ps1  Privacy.ps1
 │   ├── Services.ps1  Startup.ps1  Cleanup.ps1  Network.ps1  Power.ps1
 │   ├── Restore.ps1          history, snapshots, restore points, export/import
+│   ├── TweakDetails.ps1     risk levels and detailed per-setting explanations
+│   ├── ExternalTools.ps1    WinUtil / ShutUp10++ launchers with signature check
 │   ├── GuiXaml.ps1          window markup and dark theme (WPF XAML)
 │   ├── Gui.ps1              window shell, navigation, dialogs, activity log
 │   ├── GuiPages.ps1         dashboard, presets, tweak sections, system info

@@ -56,12 +56,9 @@ function Format-BlobState {
 
 function Format-BlobRisk {
     param([string]$Risk)
-    switch ($Risk) {
-        'Minimal'  { '{Green}MINIMAL ' }
-        'Standard' { '{Cyan}STANDARD' }
-        'Advanced' { '{Yellow}ADVANCED' }
-        default    { '{Gray}OPTIONAL' }
-    }
+    $r = $Blob.RiskInfo[$Risk]
+    if (-not $r) { return '{Gray}' + $Risk.ToUpper() }
+    return "{$($r.Color)}" + $r.Label.PadRight(11)
 }
 
 # Lines describing exactly what applying the given tweaks will change.
@@ -206,15 +203,16 @@ function Invoke-BlobRestoreRecords {
 
 function Get-BlobTweakDetail {
     param($Tweak)
-    $lines = @(
-        "{White}$($Tweak.Name)", '',
-        "{Gray}$($Tweak.Description)", '',
+    $lines = @("{White}$($Tweak.Name)", '')
+    $lines += @(Split-BlobText (Get-BlobTweakExplanation $Tweak) | ForEach-Object { "{Gray}$_" })
+    $lines += ''
+    $lines += @(Split-BlobText $Blob.RiskInfo[$Tweak.Risk].Text | ForEach-Object { "{DarkGray}$_" })
+    $lines += @('',
         ("{DarkGray}Risk      $(Format-BlobRisk $Tweak.Risk)"),
         ("{DarkGray}Status    $(Format-BlobState (Get-BlobTweakState $Tweak))"),
         ("{DarkGray}Admin     " + $(if ($Tweak.Admin) { '{Yellow}required' } else { '{Green}not required' })),
         ("{DarkGray}Undo      " + $(if (@(Get-BlobAppliedChanges -Source $Tweak.Id).Count -gt 0) { '{Green}backup available' } else { '{DarkGray}no backup recorded yet' })),
-        '', '{Cyan}Settings changed:'
-    )
+        '', '{Cyan}Settings changed:')
     return $lines + (Get-BlobTweakPreview @($Tweak) | Select-Object -Skip 1)
 }
 
