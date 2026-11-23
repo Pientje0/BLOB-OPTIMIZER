@@ -18,13 +18,13 @@ There is no installer, no EXE, no GUI and nothing to uninstall. It runs inside o
 2. Paste the command and press Enter:
 
 ```powershell
-irm https://raw.githubusercontent.com/Pientje09-abe/BLOB-OPTIMIZER/v1.0.0/BLOB.ps1 | iex
+irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.0.0/BLOB.ps1 | iex
 ```
 
 **Dry run** shows every change it would make without modifying anything:
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje09-abe/BLOB-OPTIMIZER/v1.0.0/BLOB.ps1))) -DryRun
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.0.0/BLOB.ps1))) -DryRun
 ```
 
 > Pinning a version tag (`v1.0.0`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
@@ -127,7 +127,7 @@ BLOB-OPTIMIZER/
 Build a release:
 
 ```powershell
-powershell -NoProfile -File .\build\Build-Release.ps1 -Repository Pientje09-abe/BLOB-OPTIMIZER
+powershell -NoProfile -File .\build\Build-Release.ps1 -Repository Pientje0/BLOB-OPTIMIZER
 ```
 
 The build wraps every module in one script block, so no functions or variables leak into the user's session. It embeds `presets.json`, fails if the output contains non-ASCII characters or syntax errors, and writes the SHA-256 file.
