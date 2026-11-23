@@ -1,3 +1,6 @@
 *.ps1 text eol=crlf
 *.json text eol=lf
 *.md text eol=lf
+# Release is stored byte-for-byte so its hash matches BLOB.ps1.sha256
+BLOB.ps1 -text
+BLOB.ps1.sha256 -text
