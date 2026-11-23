@@ -18,16 +18,16 @@ There is no installer, no EXE, no GUI and nothing to uninstall. It runs inside o
 2. Paste the command and press Enter:
 
 ```powershell
-irm https://raw.githubusercontent.com/OWNER/REPOSITORY/v1.0.0/BLOB.ps1 | iex
+irm https://raw.githubusercontent.com/Pientje09-abe/BLOB-OPTIMIZER/v1.0.0/BLOB.ps1 | iex
 ```
 
 **Dry run** shows every change it would make without modifying anything:
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/OWNER/REPOSITORY/v1.0.0/BLOB.ps1))) -DryRun
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje09-abe/BLOB-OPTIMIZER/v1.0.0/BLOB.ps1))) -DryRun
 ```
 
-> Replace `OWNER/REPOSITORY` with the published GitHub repository. Pinning a version tag (`v1.0.0`) means the code you run is exactly the code you can read in that tag. To use the latest release, publish a new tag and update the URL.
+> Pinning a version tag (`v1.0.0`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
 
 Without administrator rights, BLOB OPTIMIZER still starts in read-only mode: you can browse system info, settings, services, startup entries and cleanup sizes, and apply per-user settings. Anything machine-wide explains why it needs elevation. The tool never elevates itself.
 
@@ -127,7 +127,7 @@ BLOB-OPTIMIZER/
 Build a release:
 
 ```powershell
-powershell -NoProfile -File .\build\Build-Release.ps1 -Repository OWNER/REPOSITORY
+powershell -NoProfile -File .\build\Build-Release.ps1 -Repository Pientje09-abe/BLOB-OPTIMIZER
 ```
 
 The build wraps every module in one script block, so no functions or variables leak into the user's session. It embeds `presets.json`, fails if the output contains non-ASCII characters or syntax errors, and writes the SHA-256 file.

@@ -16,7 +16,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$Repository = 'OWNER/REPOSITORY'
+    [string]$Repository = 'Pientje09-abe/BLOB-OPTIMIZER'
 )
 
 $ErrorActionPreference = 'Stop'
