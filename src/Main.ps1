@@ -12,10 +12,10 @@ function Invoke-BlobSelfTest {
     $check = {
         param($name, $block)
         try { $r = & $block; Write-Host ("  [ OK ] {0} {1}" -f $name, $r) -ForegroundColor Green }
-        catch { Write-Host ("  [FAIL] {0}: {1}" -f $name, $_.Exception.Message) -ForegroundColor Red; $Blob.SelfTestFailed = $true }
+        catch { Write-Host ("  [FAIL] {0}: {1}" -f $name, $_.Exception.Message) -ForegroundColor Green; $Blob.SelfTestFailed = $true }
     }
     $Blob.SelfTestFailed = $false
-    Write-Host "BLOB OPTIMIZER $($Blob.Version) self-test (read-only)" -ForegroundColor Cyan
+    Write-Host "BLOB OPTIMIZER $($Blob.Version) self-test (read-only)" -ForegroundColor Green
     & $check 'System summary'  { $s = Get-BlobSystemSummary; "- $($s.OS)" }
     & $check 'Tweak catalogue' { $bad = @($Blob.Tweaks | Group-Object { $_.Id } | Where-Object { $_.Count -gt 1 }); if ($bad) { throw "duplicate ids: $($bad.Name -join ',')" }; "- $($Blob.Tweaks.Count) tweaks" }
     & $check 'Tweak states'    { $st = @($Blob.Tweaks | ForEach-Object { Get-BlobTweakState $_ }); "- $(@($st | Where-Object { $_ -eq 'Applied' }).Count) applied" }
@@ -40,44 +40,78 @@ function Invoke-BlobSelfTest {
         "- XAML ok, $built/$($Blob.Gui.Pages.Count) pages built"
     }
     & $check 'Cleanup scan'    { $t = $Blob.CleanupTargets[0]; $m = Measure-BlobCleanupTarget $t; "- $($t.Name): $(Format-BlobSize $m.Bytes)" }
-    if ($Blob.SelfTestFailed) { Write-Host 'Self-test FAILED' -ForegroundColor Red } else { Write-Host 'Self-test passed' -ForegroundColor Green }
+    if ($Blob.SelfTestFailed) { Write-Host 'Self-test FAILED' -ForegroundColor Green } else { Write-Host 'Self-test passed' -ForegroundColor Green }
+}
+
+# Relaunches BLOB OPTIMIZER through the standard Windows administrator prompt (UAC).
+# Returns 'Started', 'Declined' or 'NoSource'. Never bypasses the prompt.
+function Request-BlobElevation {
+    param([bool]$DryRun, [bool]$Tui, [string]$ScriptPath)
+    $exe = try { (Get-Process -Id $PID).Path } catch { $null }
+    if (-not $exe) { $exe = 'powershell.exe' }
+    $extra = @()
+    if ($DryRun) { $extra += '-DryRun' }
+    if ($Tui) { $extra += '-Tui' }
+    if ($ScriptPath -and (Test-Path -LiteralPath $ScriptPath)) {
+        $argList = "-NoProfile -ExecutionPolicy Bypass -File `"$ScriptPath`" $($extra -join ' ')"
+    } elseif ($Blob.ReleaseUrl) {
+        # Started with irm | iex: run the same pinned release URL again, elevated.
+        $argList = "-NoProfile -ExecutionPolicy Bypass -Command `"& ([scriptblock]::Create((irm '$($Blob.ReleaseUrl)'))) $($extra -join ' ')`""
+    } else { return 'NoSource' }
+    try {
+        Start-Process -FilePath $exe -ArgumentList $argList -Verb RunAs -ErrorAction Stop
+        Write-BlobLog "Relaunched elevated: $exe $argList"
+        return 'Started'
+    } catch { return 'Declined' }
 }
 
 function Start-BlobOptimizer {
-    param([bool]$DryRun, [bool]$Tui)
+    param([bool]$DryRun, [bool]$Tui, [bool]$NoElevate, [string]$ScriptPath)
 
-    if ($PSVersionTable.PSVersion.Major -lt 5) { Write-Host 'BLOB OPTIMIZER requires PowerShell 5.1 or newer.' -ForegroundColor Red; return }
-    if ($PSVersionTable.PSEdition -eq 'Core' -and -not $IsWindows) { Write-Host 'BLOB OPTIMIZER only runs on Windows.' -ForegroundColor Red; return }
+    if ($PSVersionTable.PSVersion.Major -lt 5) { Write-Host 'BLOB OPTIMIZER requires PowerShell 5.1 or newer.' -ForegroundColor Green; return }
+    if ($PSVersionTable.PSEdition -eq 'Core' -and -not $IsWindows) { Write-Host 'BLOB OPTIMIZER only runs on Windows.' -ForegroundColor Green; return }
 
     Initialize-BlobState -DryRun $DryRun
     $Blob.SysInfo = Get-BlobSystemSummary
 
     if ($env:BLOB_SELFTEST -eq '1') { Invoke-BlobSelfTest; return }
 
+    # Always run as administrator: ask Windows (UAC) to relaunch elevated.
+    if (-not $Blob.IsAdmin -and -not $NoElevate -and $env:BLOB_NOELEVATE -ne '1') {
+        Write-Host '  BLOB OPTIMIZER needs administrator rights - Windows will ask for permission...' -ForegroundColor Green
+        $elev = Request-BlobElevation -DryRun $Blob.DryRun -Tui $Tui -ScriptPath $ScriptPath
+        if ($elev -eq 'Started') {
+            Write-Host '  BLOB OPTIMIZER opened in a new administrator window. You can close this one.' -ForegroundColor Green
+            return
+        }
+        if ($elev -eq 'Declined') { Write-Host '  Administrator permission was not given - continuing in read-only mode.' -ForegroundColor DarkGreen }
+        else { Write-Host '  Could not relaunch automatically - continuing in read-only mode.' -ForegroundColor DarkGreen }
+    }
+
     # Window interface (default). Falls back to the terminal UI when WPF is unavailable.
     if (-not $Tui -and $env:BLOB_TUI -ne '1') {
         $why = Test-BlobGuiSupported
         if (-not $why) {
             Write-Host ''
-            Write-Host '  BLOB OPTIMIZER window is open.' -ForegroundColor Cyan -NoNewline
-            Write-Host ' Close it to return to this prompt. (Terminal version: add -Tui)' -ForegroundColor Gray
+            Write-Host '  BLOB OPTIMIZER window is open.' -ForegroundColor Green -NoNewline
+            Write-Host ' Close it to return to this prompt. (Terminal version: add -Tui)' -ForegroundColor DarkGreen
             $failure = $null
             try { Start-BlobGui } catch { $failure = $_ }
             if ($failure) {
                 Write-BlobLog "Fatal (window): $($failure.Exception.Message) $($failure.InvocationInfo.PositionMessage)" 'ERROR'
-                Write-Host 'BLOB OPTIMIZER window stopped because of an unexpected error:' -ForegroundColor Red
-                Write-Host "  $($failure.Exception.Message)" -ForegroundColor Red
-                Write-Host "  $($failure.InvocationInfo.PositionMessage)" -ForegroundColor DarkGray
+                Write-Host 'BLOB OPTIMIZER window stopped because of an unexpected error:' -ForegroundColor Green
+                Write-Host "  $($failure.Exception.Message)" -ForegroundColor Green
+                Write-Host "  $($failure.InvocationInfo.PositionMessage)" -ForegroundColor DarkGreen
             }
             Write-BlobExitSummary
             return
         }
-        Write-Host "  Window interface unavailable ($why) - starting the terminal interface." -ForegroundColor Yellow
+        Write-Host "  Window interface unavailable ($why) - starting the terminal interface." -ForegroundColor Green
     }
 
-    if ($Host.Name -match 'ISE') { Write-Host 'Please run BLOB OPTIMIZER in Windows Terminal or a PowerShell console (the ISE has no interactive console).' -ForegroundColor Yellow; return }
+    if ($Host.Name -match 'ISE') { Write-Host 'Please run BLOB OPTIMIZER in Windows Terminal or a PowerShell console (the ISE has no interactive console).' -ForegroundColor Green; return }
     try { $null = [Console]::KeyAvailable; $null = [Console]::WindowWidth } catch {
-        Write-Host 'BLOB OPTIMIZER needs an interactive console window (input is redirected).' -ForegroundColor Yellow; return
+        Write-Host 'BLOB OPTIMIZER needs an interactive console window (input is redirected).' -ForegroundColor Green; return
     }
 
     $failure = $null
@@ -92,9 +126,9 @@ function Start-BlobOptimizer {
 
     if ($failure) {
         Write-BlobLog "Fatal: $($failure.Exception.Message) $($failure.InvocationInfo.PositionMessage)" 'ERROR'
-        Write-Host 'BLOB OPTIMIZER stopped because of an unexpected error:' -ForegroundColor Red
-        Write-Host "  $($failure.Exception.Message)" -ForegroundColor Red
-        Write-Host "  $($failure.InvocationInfo.PositionMessage)" -ForegroundColor DarkGray
+        Write-Host 'BLOB OPTIMIZER stopped because of an unexpected error:' -ForegroundColor Green
+        Write-Host "  $($failure.Exception.Message)" -ForegroundColor Green
+        Write-Host "  $($failure.InvocationInfo.PositionMessage)" -ForegroundColor DarkGreen
     }
     Write-BlobExitSummary
 }
@@ -102,11 +136,11 @@ function Start-BlobOptimizer {
 function Write-BlobExitSummary {
     $session = @($Blob.Changes | Where-Object { $_.SessionId -eq $Blob.SessionId })
     Write-Host ''
-    Write-Host '  BLOB OPTIMIZER closed.' -ForegroundColor Cyan -NoNewline
-    Write-Host ' Nothing is left running.' -ForegroundColor Gray
+    Write-Host '  BLOB OPTIMIZER closed.' -ForegroundColor Green -NoNewline
+    Write-Host ' Nothing is left running.' -ForegroundColor DarkGreen
     if ($session.Count -gt 0) {
-        Write-Host ("  {0} change(s) recorded this session. Undo them any time from Restore." -f $session.Count) -ForegroundColor Gray
-        Write-Host "  Backups and logs: $($Blob.DataRoot)" -ForegroundColor DarkGray
+        Write-Host ("  {0} change(s) recorded this session. Undo them any time from Restore." -f $session.Count) -ForegroundColor DarkGreen
+        Write-Host "  Backups and logs: $($Blob.DataRoot)" -ForegroundColor DarkGreen
     }
     Write-Host ''
 }

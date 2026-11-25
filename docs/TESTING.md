@@ -46,6 +46,11 @@ Run this on a test VM or a spare PC before tagging a release. Test **Windows Pow
 - [ ] With the box ticked, the log shows the restore point as OK, or as SKIP (24 h limit) with an explanation
 - [ ] External Tools: **Launch** shows the source URL first. WinUtil opens in a new admin window after the UAC prompt
 - [ ] ShutUp10++ downloads, the log shows "Signature valid (… O&O Software …)", and it starts. Cancelling UAC is logged as SKIP
+- [ ] The whole window is black and green, with square corners and no shadows (tooltips, dialogs, drop-downs)
+- [ ] From a non-admin PowerShell, Windows Terminal and **cmd**, the launch command shows the UAC prompt. **Yes** opens an administrator window, and the first console says it can be closed
+- [ ] Choosing **No** at the UAC prompt continues in read-only mode with a message
+- [ ] `-NoElevate` starts without the prompt. `-DryRun` and `-Tui` are kept after elevation
+- [ ] `BLOB.cmd` next to `BLOB.ps1` starts it from cmd / double-click
 - [ ] `-Tui` opens the terminal UI instead. `T` on its dashboard opens External Tools
 
 ## 4. Terminal UI

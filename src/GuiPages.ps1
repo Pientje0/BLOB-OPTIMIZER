@@ -217,17 +217,20 @@ function Get-BlobGuiFilteredTweaks {
 function New-BlobChip {
     param([string]$Text)
     $b = [Windows.Controls.Border]::new()
-    $b.Background = Get-BlobBrush '#1E293B'; $b.CornerRadius = 4; $b.Padding = '8,2'
+    $b.Background = Get-BlobBrush '#062A10'; $b.CornerRadius = 0; $b.Padding = '8,2'
     $b.HorizontalAlignment = 'Left'; $b.VerticalAlignment = 'Center'
-    $b.Child = New-BlobText $Text 11 '#A3AFBF' 'SemiBold'
+    $b.Child = New-BlobText $Text 11 '#2EDB55' 'SemiBold'
     return $b
 }
 
+# Plain-text markers (no icon font): ! warning, ADMIN lock, > search, + / x select.
 function New-BlobGlyph {
     param([int]$Code, [string]$Color = 'Gray', [double]$Size = 13)
+    $map = @{ 0xE7BA = '!'; 0xE72E = 'ADMIN'; 0xE721 = '>'; 0xE710 = '[+]'; 0xE73E = '[x]' }
     $t = [Windows.Controls.TextBlock]::new()
-    $t.Text = [string][char]$Code
-    $t.FontFamily = [Windows.Media.FontFamily]::new('Segoe MDL2 Assets')
+    $t.Text = if ($map.ContainsKey($Code)) { $map[$Code] } else { '*' }
+    $t.FontFamily = [Windows.Media.FontFamily]::new('Consolas')
+    $t.FontWeight = 'Bold'
     $t.FontSize = $Size; $t.Foreground = Get-BlobBrush $Color; $t.VerticalAlignment = 'Center'
     return $t
 }
@@ -237,9 +240,9 @@ function New-BlobTweakCard {
     $state = $State
     $selected = $Selected
     $card = [Windows.Controls.Border]::new()
-    $card.Background = Get-BlobBrush '#131B25'; $card.CornerRadius = 10; $card.Padding = '16,14,16,12'; $card.Margin = '0,0,12,12'
+    $card.Background = Get-BlobBrush '#000000'; $card.CornerRadius = 0; $card.Padding = '16,14,16,12'; $card.Margin = '0,0,12,12'
     $card.BorderThickness = 1
-    $card.BorderBrush = if ($selected) { Get-BlobBrush 'Cyan' } elseif ($state -eq 'Applied') { Get-BlobBrush '#1D3B5C' } else { Get-BlobBrush '#1E2A38' }
+    $card.BorderBrush = if ($selected) { Get-BlobBrush 'Cyan' } elseif ($state -eq 'Applied') { Get-BlobBrush '#0F6A24' } else { Get-BlobBrush '#0F6A24' }
     $card.MinHeight = 190
     $dock = [Windows.Controls.DockPanel]::new()
     $dock.LastChildFill = $true
@@ -275,7 +278,8 @@ function New-BlobTweakCard {
     $left = New-BlobStack 'Horizontal'
     $plus = [Windows.Controls.Button]::new()
     $plus.Style = $Blob.Gui.Window.FindResource('IconButton')
-    $plus.Content = [string][char]$(if ($selected) { 0xE73E } else { 0xE710 })
+    $plus.Content = $(if ($selected) { '[x]' } else { '[+]' })
+    $plus.Width = 34
     if ($selected) { $plus.Foreground = Get-BlobBrush 'Cyan' }
     $plus.ToolTip = if ($selected) { 'Selected - click to unselect' } else { 'Select for batch apply / undo' }
     $plus.DataContext = $Tweak.Id
@@ -313,7 +317,7 @@ function New-BlobTweakCard {
 
     $body = New-BlobStack
     [void]$body.Children.Add((New-BlobText $Tweak.Name 15 'White' 'SemiBold' '0,12,0,6'))
-    $desc = New-BlobText $Tweak.Description 12.5 '#94A3B8'
+    $desc = New-BlobText $Tweak.Description 12.5 '#2EDB55'
     $desc.MaxHeight = 70; $desc.TextTrimming = 'CharacterEllipsis'
     [void]$body.Children.Add($desc)
     [void]$dock.Children.Add($body)
@@ -402,7 +406,7 @@ function New-BlobGuiOptimizations {
         $b = [Windows.Controls.Button]::new()
         $b.Style = $Blob.Gui.Window.FindResource('ChipButton')
         $b.Content = "$c  $count"
-        if ($Blob.Gui.OptFilter -eq $c) { $b.Background = Get-BlobBrush '#0E3A47'; $b.BorderBrush = Get-BlobBrush 'Cyan'; $b.Foreground = Get-BlobBrush 'Cyan' }
+        if ($Blob.Gui.OptFilter -eq $c) { $b.Background = Get-BlobBrush '#062A10'; $b.BorderBrush = Get-BlobBrush 'Cyan'; $b.Foreground = Get-BlobBrush 'Cyan' }
         Register-BlobClick $b ([scriptblock]::Create("`$Blob.Gui.OptFilter = '$c'; Show-BlobGuiPage 'optimize' -Rebuild"))
         [void]$chips.Children.Add($b)
     }

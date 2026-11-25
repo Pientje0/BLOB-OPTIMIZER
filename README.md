@@ -14,28 +14,35 @@ There is no installer, no EXE and nothing to uninstall. It runs inside one Power
 
 ## Launch
 
-1. Right-click **Windows Terminal** (or PowerShell) and choose **Run as administrator**.
-2. Paste the command and press Enter. The BLOB OPTIMIZER window opens:
+Open **PowerShell**, **Windows Terminal** or plain **cmd**. It does not need to be an administrator window. Paste the command and press Enter. BLOB OPTIMIZER always runs as administrator: if needed, it asks Windows for permission (the normal UAC prompt) and reopens itself in an administrator window.
+
+PowerShell / Windows Terminal:
 
 ```powershell
-irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.3.1/BLOB.ps1 | iex
+irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.4.0/BLOB.ps1 | iex
+```
+
+cmd.exe:
+
+```cmd
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.4.0/BLOB.ps1 | iex"
 ```
 
 **Terminal-only interface** (keyboard UI inside PowerShell):
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.3.1/BLOB.ps1))) -Tui
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.4.0/BLOB.ps1))) -Tui
 ```
 
 **Dry run** shows every change it would make without modifying anything:
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.3.1/BLOB.ps1))) -DryRun
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.4.0/BLOB.ps1))) -DryRun
 ```
 
-> Pinning a version tag (`v1.3.1`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
+> Pinning a version tag (`v1.4.0`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
 
-Without administrator rights, BLOB OPTIMIZER still starts in read-only mode: you can browse system info, settings, services, startup entries and cleanup sizes, and apply per-user settings. Anything machine-wide explains why it needs elevation. The tool never elevates itself.
+**Administrator rights.** BLOB OPTIMIZER requests administrator rights at start-up through the standard Windows UAC prompt. It never bypasses or suppresses that prompt. If you choose *No*, it continues in read-only mode: you can browse everything and apply per-user settings. Add `-NoElevate` (or set `$env:BLOB_NOELEVATE = '1'`) to skip the prompt.
 
 ### Run a local copy
 
@@ -47,7 +54,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\BLOB.ps1 -Tui     # termin
 
 ## Interfaces
 
-**Window (default).** A dark WPF window with tabs across the top (Home, Presets, Optimizations, Services, Startup, Cleanup, Network, Power, Restore, Tools, Info), sortable tables, a live activity log, and a confirmation dialog that lists every exact change before anything is applied.
+**Look.** Very basic black and green: pure black background, green text and 1-pixel green lines, a monospace font, square corners and no shadows. Severity is shown with words and inverted badges (HIGH RISK). The terminal interface uses the same black and green.
+
+**Window (default).** A WPF window with tabs across the top (Home, Presets, Optimizations, Services, Startup, Cleanup, Network, Power, Restore, Tools, Info), sortable tables, a live activity log, and a confirmation dialog that lists every exact change before anything is applied.
 
 **Instant tabs.** Every tab preloads in the background a few seconds after the window opens, so switching tabs is instant. Slow system information (network, disks, security status, services, cleanup sizes) is collected on three parallel background threads inside the same PowerShell process; these threads are closed when the window closes. After you change something, the current tab refreshes immediately, other affected tabs refresh quietly in the background, and all data is read live again.
 
@@ -146,6 +155,7 @@ Antivirus products sometimes flag `irm | iex` tools heuristically, and no tool c
 BLOB-OPTIMIZER/
 ├── BLOB.ps1                 generated single-file release (do not edit)
 ├── BLOB.ps1.sha256
+├── BLOB.cmd                 double-click / cmd launcher for a local copy of BLOB.ps1
 ├── README.md  CHANGELOG.md
 ├── src/                     readable source modules (edit these)
 │   ├── Core.ps1             state, journal, registry/service engine, restore

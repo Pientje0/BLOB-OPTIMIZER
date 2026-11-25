@@ -14,9 +14,10 @@ $Blob.GuiShared = @{
     SelectClick = { Switch-BlobGuiSelect $Blob.Gui.Sender.DataContext }
 }
 
+# Black and green only. Severity is shown with words and inverted badges.
 $Blob.GuiColors = @{
-    Cyan = '#22D3EE'; DarkCyan = '#0E7490'; White = '#E6EDF3'; Gray = '#A3AFBF'; DarkGray = '#64748B'
-    Green = '#4ADE80'; Yellow = '#FACC15'; Red = '#F87171'; DarkYellow = '#CA8A04'; Magenta = '#E879F9'; Black = '#03141A'
+    Cyan = '#3DFF6A'; DarkCyan = '#0F6A24'; White = '#3DFF6A'; Gray = '#2EDB55'; DarkGray = '#1E9A3E'
+    Green = '#3DFF6A'; Yellow = '#3DFF6A'; Red = '#3DFF6A'; DarkYellow = '#2EDB55'; Magenta = '#3DFF6A'; Black = '#000000'
 }
 
 function Test-BlobGuiSupported {
@@ -49,7 +50,7 @@ function ConvertTo-BlobTextBlock {
     $tb = [Windows.Controls.TextBlock]::new()
     $tb.FontSize = $Size
     $tb.TextWrapping = 'Wrap'
-    if ($Mono) { $tb.FontFamily = [Windows.Media.FontFamily]::new('Cascadia Mono, Consolas') }
+    if ($Mono) { $tb.FontFamily = [Windows.Media.FontFamily]::new('Consolas') }
     $parts = [regex]::Split($Markup, $Blob.ColorTag)
     $color = $Default
     for ($i = 0; $i -lt $parts.Count; $i++) {
@@ -115,8 +116,8 @@ function Invoke-BlobGuiAction {
 function New-BlobCard {
     param($Child, [string]$Margin = '0,0,0,12', [string]$Padding = '18,14', [double]$Width = [double]::NaN)
     $c = [Windows.Controls.Border]::new()
-    $c.Background = Get-BlobBrush '#151D27'; $c.BorderBrush = Get-BlobBrush '#223041'
-    $c.BorderThickness = 1; $c.CornerRadius = 10; $c.Padding = $Padding; $c.Margin = $Margin
+    $c.Background = Get-BlobBrush '#000000'; $c.BorderBrush = Get-BlobBrush '#0F6A24'
+    $c.BorderThickness = 1; $c.CornerRadius = 0; $c.Padding = $Padding; $c.Margin = $Margin
     if (-not [double]::IsNaN($Width)) { $c.Width = $Width }
     $c.Child = $Child
     return $c
@@ -125,7 +126,7 @@ function New-BlobCard {
 function New-BlobBadge {
     param([string]$Text, [string]$Color = 'Gray')
     $b = [Windows.Controls.Border]::new()
-    $b.CornerRadius = 4; $b.Padding = '7,1'; $b.Margin = '8,0,0,0'; $b.VerticalAlignment = 'Center'
+    $b.CornerRadius = 0; $b.Padding = '7,1'; $b.Margin = '8,0,0,0'; $b.VerticalAlignment = 'Center'
     $b.BorderBrush = Get-BlobBrush $Color; $b.BorderThickness = 1
     $t = New-BlobText $Text 10.5 $Color 'SemiBold'
     $b.Child = $t
@@ -217,14 +218,14 @@ function Set-BlobTooltip {
 function New-BlobHelpIcon {
     param($Tooltip, [scriptblock]$Builder)
     $b = [Windows.Controls.Border]::new()
-    $b.Width = 20; $b.Height = 20; $b.CornerRadius = 10
-    $b.BorderThickness = 1.5; $b.BorderBrush = Get-BlobBrush '#475569'; $b.Background = Get-BlobBrush '#0F172A'
+    $b.Width = 20; $b.Height = 20; $b.CornerRadius = 0
+    $b.BorderThickness = 1.5; $b.BorderBrush = Get-BlobBrush '#1E9A3E'; $b.Background = Get-BlobBrush '#000000'
     $b.Margin = '8,0,0,0'; $b.VerticalAlignment = 'Center'; $b.Cursor = [Windows.Input.Cursors]::Help
     $t = New-BlobText '?' 12 'Gray' 'Bold'
     $t.HorizontalAlignment = 'Center'; $t.VerticalAlignment = 'Center'; $t.Margin = '0,-1,0,0'
     $b.Child = $t
     $b.Add_MouseEnter({ param($s, $e) $s.BorderBrush = Get-BlobBrush 'Cyan'; $s.Child.Foreground = Get-BlobBrush 'Cyan' })
-    $b.Add_MouseLeave({ param($s, $e) $s.BorderBrush = Get-BlobBrush '#475569'; $s.Child.Foreground = Get-BlobBrush 'Gray' })
+    $b.Add_MouseLeave({ param($s, $e) $s.BorderBrush = Get-BlobBrush '#1E9A3E'; $s.Child.Foreground = Get-BlobBrush 'Gray' })
     if ($Builder) { Set-BlobLazyTooltip $b $Builder } else { Set-BlobTooltip $b $Tooltip }
     return $b
 }
@@ -241,6 +242,9 @@ function New-BlobRiskBadge {
     param([string]$Risk)
     $r = $Blob.RiskInfo[$Risk]
     $badge = New-BlobBadge $r.Label $r.Color
+    if ($Risk -eq 'Advanced') {    # inverted so higher risk stands out without extra colours
+        $badge.Background = Get-BlobBrush 'Green'; $badge.Child.Foreground = Get-BlobBrush 'Black'
+    }
     $badge.DataContext = $Risk
     Set-BlobLazyTooltip $badge $Blob.GuiShared.RiskTip
     return $badge
@@ -377,10 +381,8 @@ function Show-BlobGuiAdminRequired {
     param([string]$Why)
     Show-BlobGuiMessage -Title 'Administrator rights required' -Kind Warning -Lines @(
         "{White}$Why", '',
-        '{Gray}BLOB OPTIMIZER never elevates itself silently. To use this feature:',
-        '{Gray}  1. Close BLOB OPTIMIZER.',
-        '{Gray}  2. Right-click Windows Terminal and choose "Run as administrator".',
-        '{Gray}  3. Run the launch command again.')
+        '{Gray}BLOB OPTIMIZER asks for administrator rights when it starts.',
+        '{Gray}Close it and start it again, then choose Yes in the Windows permission prompt.')
 }
 
 # Runs a list of operations with progress in the activity log.
@@ -448,7 +450,7 @@ function Show-BlobGuiPage {
     foreach ($p in $Blob.Gui.Pages) {
         $btn = $Blob.Gui.Nav[$p.Key]
         if ($p.Key -eq $Key) { $btn.Foreground = Get-BlobBrush 'Cyan'; $btn.BorderBrush = Get-BlobBrush 'Cyan' }
-        else { $btn.Foreground = Get-BlobBrush '#94A3B8'; $btn.BorderBrush = [Windows.Media.Brushes]::Transparent }
+        else { $btn.Foreground = Get-BlobBrush '#2EDB55'; $btn.BorderBrush = [Windows.Media.Brushes]::Transparent }
     }
     $Blob.Gui.PageTitle.Text = $page.Label
     $Blob.Gui.PageSubtitle.Text = $page.Subtitle
@@ -557,9 +559,9 @@ function Initialize-BlobGuiWindow {
     $w.Title = "BLOB OPTIMIZER $($Blob.Version)"
     $Blob.Gui.TitleVersion.Text = "v$($Blob.Version)"
     if ($Blob.IsAdmin) {
-        $Blob.Gui.AdminBadge.Background = Get-BlobBrush '#052E1C'; $Blob.Gui.AdminBadgeText.Text = 'ADMINISTRATOR'; $Blob.Gui.AdminBadgeText.Foreground = Get-BlobBrush 'Green'
+        $Blob.Gui.AdminBadge.Background = Get-BlobBrush '#062A10'; $Blob.Gui.AdminBadgeText.Text = 'ADMINISTRATOR'; $Blob.Gui.AdminBadgeText.Foreground = Get-BlobBrush 'Green'
     } else {
-        $Blob.Gui.AdminBadge.Background = Get-BlobBrush '#3A2E05'; $Blob.Gui.AdminBadgeText.Text = 'STANDARD USER - READ ONLY FOR SYSTEM SETTINGS'; $Blob.Gui.AdminBadgeText.Foreground = Get-BlobBrush 'Yellow'
+        $Blob.Gui.AdminBadge.Background = Get-BlobBrush '#062A10'; $Blob.Gui.AdminBadgeText.Text = 'STANDARD USER - READ ONLY FOR SYSTEM SETTINGS'; $Blob.Gui.AdminBadgeText.Foreground = Get-BlobBrush 'Yellow'
     }
     if ($Blob.DryRun) { $Blob.Gui.DryRunBadge.Visibility = 'Visible' }
     $Blob.Gui.StatusRight.Text = "$($Blob.SysInfo.Host)  -  PowerShell $($PSVersionTable.PSVersion.Major).$($PSVersionTable.PSVersion.Minor)  -  No installation, nothing left running  -  Backups: $($Blob.DataRoot)"
@@ -570,8 +572,8 @@ function Initialize-BlobGuiWindow {
     # A chromeless maximised window overhangs the screen edge; pad it.
     $w.Add_StateChanged({
             $win = $Blob.Gui.Window
-            if ($win.WindowState -eq 'Maximized') { $Blob.Gui.RootBorder.Margin = '7'; $Blob.Gui.BtnMax.Content = [string][char]0xE923 }
-            else { $Blob.Gui.RootBorder.Margin = '0'; $Blob.Gui.BtnMax.Content = [string][char]0xE922 }
+            if ($win.WindowState -eq 'Maximized') { $Blob.Gui.RootBorder.Margin = '7'; $Blob.Gui.BtnMax.Content = '[-]' }
+            else { $Blob.Gui.RootBorder.Margin = '0'; $Blob.Gui.BtnMax.Content = '[ ]' }
         })
     $Blob.Gui.BtnClearLog.Add_Click({ $Blob.Gui.LogPanel.Children.Clear() })
     $Blob.Gui.BtnToggleLog.Add_Click({
@@ -585,15 +587,10 @@ function Initialize-BlobGuiWindow {
         $btn = [Windows.Controls.Button]::new()
         $btn.Style = $w.FindResource('TabButton')
         $sp = New-BlobStack 'Horizontal'
-        $icon = [Windows.Controls.TextBlock]::new()
-        $icon.Text = [string][char]$p.Icon
-        $icon.FontFamily = [Windows.Media.FontFamily]::new('Segoe MDL2 Assets')
-        $icon.FontSize = 13; $icon.Margin = '0,1,8,0'; $icon.VerticalAlignment = 'Center'
-        $icon.SetBinding([Windows.Controls.TextBlock]::ForegroundProperty, (New-Object Windows.Data.Binding 'Foreground' -Property @{ Source = $btn })) | Out-Null
         $label = [Windows.Controls.TextBlock]::new()
-        $label.Text = $p.Label; $label.VerticalAlignment = 'Center'
+        $label.Text = $p.Label.ToUpper(); $label.VerticalAlignment = 'Center'
         $label.SetBinding([Windows.Controls.TextBlock]::ForegroundProperty, (New-Object Windows.Data.Binding 'Foreground' -Property @{ Source = $btn })) | Out-Null
-        [void]$sp.Children.Add($icon); [void]$sp.Children.Add($label)
+        [void]$sp.Children.Add($label)
         $btn.Content = $sp
         $btn.Tag = $p.Key
         $btn.Add_Click({ param($s, $e) if (-not $Blob.Gui.Busy) { Show-BlobGuiPage $s.Tag } })

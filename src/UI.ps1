@@ -55,10 +55,19 @@ function Restore-BlobConsole {
 # ---------------------------------------------------------------------------
 #  Low-level drawing
 # ---------------------------------------------------------------------------
+# Black and green only: every colour is mapped to Green / DarkGreen, and any
+# highlighted background becomes inverted black-on-green.
+$Blob.TuiFg = @{
+    Cyan = 'Green'; White = 'Green'; Green = 'Green'; Yellow = 'Green'; Red = 'Green'; Magenta = 'Green'
+    Gray = 'DarkGreen'; DarkGray = 'DarkGreen'; DarkCyan = 'DarkGreen'; DarkYellow = 'DarkGreen'; Black = 'Black'
+}
+
 function Write-BlobAt {
     param([int]$X, [int]$Y, [string]$Text, [ConsoleColor]$Fg = 'White', [ConsoleColor]$Bg = 'Black')
     if ($Text.Length -eq 0) { return }
     try { [Console]::SetCursorPosition($X, $Y) } catch { return }
+    if ($Bg -ne 'Black') { $Bg = 'Green'; $Fg = 'Black' }
+    elseif ($Blob.TuiFg.ContainsKey([string]$Fg)) { $Fg = [ConsoleColor]$Blob.TuiFg[[string]$Fg] }
     [Console]::ForegroundColor = $Fg
     [Console]::BackgroundColor = $Bg
     [Console]::Write($Text)
@@ -442,9 +451,7 @@ function Show-BlobAdminRequired {
     param([string]$Crumb, [string]$Why)
     Show-BlobNotice -Crumb $Crumb -Kind Warning -Title 'Administrator rights required' -Lines @(
         "{White}$Why", '',
-        '{Gray}BLOB OPTIMIZER never elevates itself silently. To use this feature:',
-        '{Gray}  1. Close BLOB OPTIMIZER (Esc on the dashboard).',
-        '{Gray}  2. Right-click Windows Terminal and choose "Run as administrator".',
-        '{Gray}  3. Run the launch command again.',
+        '{Gray}BLOB OPTIMIZER asks for administrator rights when it starts.',
+        '{Gray}Close it (Esc on the dashboard), start it again and choose Yes in the Windows prompt.',
         '', '{DarkGray}Read-only features keep working without administrator rights.')
 }

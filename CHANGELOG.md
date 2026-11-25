@@ -2,6 +2,15 @@
 
 All notable changes to BLOB OPTIMIZER are documented here. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] - 2026-11-25
+
+### Changed
+- **Black and green, very basic look.** Pure black background, green text and 1-pixel green lines, the Consolas monospace font everywhere, square corners, no shadows, no icon font (plain `[+]`, `[?]`, `!`, `ADMIN` markers) and text-only tabs. Severity is shown with words and inverted HIGH RISK badges. The terminal interface is black and green too.
+- **Always runs as administrator.** When started without admin rights (from PowerShell, Windows Terminal or cmd), it relaunches itself through the standard Windows UAC prompt, keeping `-DryRun` / `-Tui`. If permission is declined, it continues in read-only mode. `-NoElevate` / `BLOB_NOELEVATE=1` skips the prompt.
+
+### Added
+- A cmd.exe launch command in the README and `BLOB.cmd` for local copies.
+
 ## [1.3.1] - 2026-11-23
 
 ### Changed
