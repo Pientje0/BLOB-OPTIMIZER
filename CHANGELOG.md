@@ -2,6 +2,18 @@
 
 All notable changes to BLOB OPTIMIZER are documented here. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [2.2.1] - 2026-11-25
+
+### Removed
+- **Every privacy entry that could not be changed (23).**
+  - The information-only items: Defender/SpyNet (5), automatic update behaviour, activation checks and Bluetooth pairing.
+  - Settings without a reliable switch: location history, geofencing, location-based ads, location override, Edge Secure Network, Microsoft 365 promotional features, OneDrive notifications, Copilot key and mobile-device notifications.
+  - The Edge Legacy entries (6).
+  - The *Microsoft Edge Legacy* and *Microsoft Defender and SpyNet* sections are gone; the Privacy page now has 156 settings in 20 sections, all switchable.
+
+### Changed
+- The self-test now fails if a privacy setting without a switch is ever added.
+
 ## [2.2.0] - 2026-11-25
 
 ### Added

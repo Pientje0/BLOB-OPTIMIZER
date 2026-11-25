@@ -24,7 +24,7 @@ $Blob.MainMenu = @(
     @{ Key = '10'; Label = 'Restore'; Run = { Show-BlobRestore }; Info = 'Change history, undo, registry snapshots and config export/import.' }
     @{ Key = '11'; Label = 'System Info'; Run = { Show-BlobSystemInfo }; Info = 'Detailed hardware and Windows information (read-only).' }
     @{ Key = 'P'; Label = 'Presets'; Run = { Show-BlobPresets }; Info = 'MINIMAL, STANDARD or ADVANCED - every change previewed before applying.' }
-    @{ Key = 'V'; Label = 'Privacy center'; Run = { Show-BlobTweakSection -Section 'PrivacyCenter' -Crumb 'Privacy center' -Intro @('{White}Privacy center', "{Gray}$(@(Get-BlobPrivacyItems).Count) settings in 22 sections. Enter shows the full explanation, recommendation and privacy impact.") }; Info = 'All privacy settings, explained, with a recommendation for each.' }
+    @{ Key = 'V'; Label = 'Privacy center'; Run = { Show-BlobTweakSection -Section 'PrivacyCenter' -Crumb 'Privacy center' -Intro @('{White}Privacy center', "{Gray}$(@(Get-BlobPrivacyItems).Count) settings in $($Blob.PrivacyGroups.Count) sections. Enter shows the full explanation, recommendation and privacy impact.") }; Info = 'All privacy settings, explained, with a recommendation for each.' }
     @{ Key = 'T'; Label = 'External Tools'; Run = { Show-BlobExternalTools }; Info = 'Launch Chris Titus Tech WinUtil or O&O ShutUp10++ (third-party, asks first).' }
     @{ Key = '0'; Label = 'Exit'; Run = $null; Info = 'Close BLOB OPTIMIZER. Nothing keeps running in the background.' }
 )

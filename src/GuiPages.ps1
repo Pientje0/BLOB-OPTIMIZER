@@ -9,7 +9,7 @@ function Get-BlobGuiPages {
         @{ Key = 'dashboard'; Label = 'Overview'; Subtitle = 'Where this PC stands, and where to start.'; Build = { New-BlobGuiDashboard } }
         @{ Key = 'presets'; Label = 'Presets'; Subtitle = 'Three tested bundles. Each one lists every value it changes before anything happens.'; Build = { New-BlobGuiPresets } }
         @{ Key = 'optimize'; Label = 'Tweaks'; Subtitle = 'Switch what you want on or off. Nothing is changed until you review and apply.'; Build = { New-BlobGuiOptimizations } }
-        @{ Key = 'privacy'; Label = 'Privacy'; Subtitle = "$(@(Get-BlobPrivacyItems).Count) privacy settings in 22 sections. Every one explained, rated and recommended. Nothing changes until you review and apply."; Build = { New-BlobGuiPrivacy } }
+        @{ Key = 'privacy'; Label = 'Privacy'; Subtitle = "$(@(Get-BlobPrivacyItems).Count) privacy settings in $($Blob.PrivacyGroups.Count) sections. Every one explained, rated and recommended. Nothing changes until you review and apply."; Build = { New-BlobGuiPrivacy } }
         @{ Key = 'services'; Label = 'Services'; Subtitle = 'Startup types only. Nothing is deleted, and services Windows depends on are locked.'; Build = { New-BlobGuiServices } }
         @{ Key = 'startup'; Label = 'Startup'; Subtitle = 'Programs that start when you sign in. Disabled the same way Task Manager does it.'; Build = { New-BlobGuiStartup } }
         @{ Key = 'apps'; Label = 'Apps'; Subtitle = 'Remove programs completely: their own uninstaller first, then the leftovers you choose.'; Build = { New-BlobGuiApps } }
@@ -191,7 +191,7 @@ function New-BlobGuiDashboard {
     [void]$start.Children.Add((New-BlobHeading 'Start here' '0,0,0,2'))
     [void]$start.Children.Add((New-BlobActionRow 'Apply a preset' 'Minimal, Standard or Advanced. Every value is shown before it changes.' { Show-BlobGuiPage 'presets' }))
     [void]$start.Children.Add((New-BlobActionRow 'Pick individual tweaks' "$($core.Count) settings, sorted by what they affect and how risky they are." { Show-BlobGuiPage 'optimize' }))
-    [void]$start.Children.Add((New-BlobActionRow 'Review your privacy' "$(@(Get-BlobPrivacyItems).Count) privacy settings in 22 sections, each explained with a clear recommendation." { Show-BlobGuiPage 'privacy' }))
+    [void]$start.Children.Add((New-BlobActionRow 'Review your privacy' "$(@(Get-BlobPrivacyItems).Count) privacy settings in $($Blob.PrivacyGroups.Count) sections, each explained with a clear recommendation." { Show-BlobGuiPage 'privacy' }))
     [void]$start.Children.Add((New-BlobActionRow 'Remove an app completely' 'Its own uninstaller, then the folders and keys it leaves behind.' { Show-BlobGuiPage 'apps' }))
     [void]$start.Children.Add((New-BlobActionRow 'Clear temporary files' 'Measures caches and temp folders first, then asks.' { Show-BlobGuiPage 'cleanup' }))
     [void]$start.Children.Add((New-BlobActionRow 'Make a restore point' 'A Windows-level safety net before you change anything big.' { Invoke-BlobGuiRestorePoint }))

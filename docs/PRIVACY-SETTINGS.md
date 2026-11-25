@@ -1,12 +1,12 @@
 # Privacy settings reference
 
-Generated from the BLOB OPTIMIZER privacy catalogue (179 settings in 22 sections). Every entry answers the same questions: what it does, what can be collected, the benefit of turning it off, what you lose, possible problems, a recommendation and a privacy impact rating.
+Generated from the BLOB OPTIMIZER privacy catalogue (156 settings in 20 sections). Every entry answers the same questions: what it does, what can be collected, the benefit of turning it off, what you lose, possible problems, a recommendation and a privacy impact rating.
 
-**Recommendations:** DISABLE = good privacy benefit with minimal disadvantages. OPTIONAL = depends on how you use the PC. KEEP ENABLED = important for security, stability or everyday use. NOT APPLICABLE = the feature no longer exists on current Windows.
+**Recommendations:** DISABLE = good privacy benefit with minimal disadvantages. OPTIONAL = depends on how you use the PC. KEEP ENABLED = important for security, stability or everyday use.
 
-**How BLOB changes them:** only documented Windows, Edge and Office policy or settings values (shown under *Change*). Every original value is saved first and can be restored. Items marked *information only* have no switch, either because no reliable switch exists or because turning them off would weaken security (Microsoft Defender, security updates, activation). O&O ShutUp10++ IDs are given where known; none are guessed.
+**How BLOB changes them:** only documented Windows, Edge and Office policy or settings values (shown under *Change*). Every setting listed here can be switched in BLOB; every original value is saved first and can be restored. Microsoft Defender, security updates and Windows activation are never changed. O&O ShutUp10++ IDs are given where known; none are guessed.
 
-Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
+Totals - DISABLE: 101, OPTIONAL: 54, KEEP ENABLED: 1.
 
 ## Sections
 
@@ -14,24 +14,22 @@ Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
 2. [Telemetry and User Behavior](#2-telemetry-and-user-behavior) (9)
 3. [App Privacy](#3-app-privacy) (26)
 4. [Cortana and Input Personalisation](#4-cortana-and-input-personalisation) (5)
-5. [Location Services](#5-location-services) (10)
+5. [Location Services](#5-location-services) (6)
 6. [Search](#6-search) (5)
 7. [Synchronisation of Windows Settings](#7-synchronisation-of-windows-settings) (5)
-8. [Security](#8-security) (9)
-9. [Windows Update](#9-windows-update) (8)
-10. [Microsoft Edge Chromium](#10-microsoft-edge-chromium) (26)
-11. [Microsoft Edge Legacy](#11-microsoft-edge-legacy) (6)
-12. [Microsoft Office](#12-microsoft-office) (6)
-13. [Microsoft 365](#13-microsoft-365) (4)
-14. [Windows Explorer](#14-windows-explorer) (9)
-15. [Lock Screen](#15-lock-screen) (5)
-16. [Taskbar](#16-taskbar) (5)
-17. [Activity History and Clipboard](#17-activity-history-and-clipboard) (6)
-18. [Microsoft Defender and SpyNet](#18-microsoft-defender-and-spynet) (5)
-19. [Microsoft Copilot and Windows AI](#19-microsoft-copilot-and-windows-ai) (9)
-20. [Mobile Devices](#20-mobile-devices) (5)
-21. [Miscellaneous](#21-miscellaneous) (6)
-22. [Gaming](#22-gaming) (4)
+8. [Security](#8-security) (8)
+9. [Windows Update](#9-windows-update) (7)
+10. [Microsoft Edge Chromium](#10-microsoft-edge-chromium) (25)
+11. [Microsoft Office](#11-microsoft-office) (6)
+12. [Microsoft 365](#12-microsoft-365) (3)
+13. [Windows Explorer](#13-windows-explorer) (8)
+14. [Lock Screen](#14-lock-screen) (5)
+15. [Taskbar](#15-taskbar) (5)
+16. [Activity History and Clipboard](#16-activity-history-and-clipboard) (6)
+17. [Microsoft Copilot and Windows AI](#17-microsoft-copilot-and-windows-ai) (8)
+18. [Mobile Devices](#18-mobile-devices) (4)
+19. [Miscellaneous](#19-miscellaneous) (5)
+20. [Gaming](#20-gaming) (4)
 
 ## 1. Privacy
 
@@ -582,17 +580,6 @@ Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
 - **Possible problems:** Same effect as turning Windows location off; reversible from Restore.
 - **Change:** service `lfsvc` startup = Disabled
 
-### Location history
-
-**OPTIONAL** - privacy impact **Medium**
-
-- **What it does:** Windows keeps the last 24 hours of device location so apps with permission can read it.
-- **What can be collected:** Recent positions of the device.
-- **Benefit of turning it off:** Turning Windows location off (above) stops the history. You can clear it any time in Settings > Privacy & security > Location.
-- **What you lose:** Nothing beyond location itself.
-- **Possible problems:** No separate switch exists on current Windows, so BLOB lists this for information.
-- **Change:** information only, no switch
-
 ### Location sensors
 
 **OPTIONAL** - privacy impact **Medium** - needs administrator
@@ -615,28 +602,6 @@ Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
 - **Possible problems:** None.
 - **Change:** `HKLM\SOFTWARE\Policies\Microsoft\Windows\LocationAndSensors\DisableLocationScripting = 1`
 
-### Geofencing
-
-**OPTIONAL** - privacy impact **Medium**
-
-- **What it does:** Lets apps trigger actions when you enter or leave an area.
-- **What can be collected:** Your movements in and out of defined areas.
-- **Benefit of turning it off:** Covered by turning off app location access or Windows location above.
-- **What you lose:** Location-based reminders.
-- **Possible problems:** No separate switch on current Windows; listed for information.
-- **Change:** information only, no switch
-
-### Location-based advertising
-
-**DISABLE** - privacy impact **Medium**
-
-- **What it does:** Ads chosen using where you are.
-- **What can be collected:** Location combined with your advertising ID.
-- **Benefit of turning it off:** Covered by turning off the advertising ID (Privacy section) and app location access.
-- **What you lose:** Local ads.
-- **Possible problems:** No separate switch; listed for information.
-- **Change:** information only, no switch
-
 ### Find My Device (O&O L008)
 
 **OPTIONAL** - privacy impact **Medium** - needs administrator
@@ -647,17 +612,6 @@ Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
 - **What you lose:** You cannot locate or lock the PC remotely if it is lost or stolen.
 - **Possible problems:** Weakens theft recovery; keep it on for laptops you carry around.
 - **Change:** `HKLM\SOFTWARE\Policies\Microsoft\FindMyDevice\AllowFindMyDevice = 0`
-
-### Location override (O&O P098)
-
-**OPTIONAL** - privacy impact **Low**
-
-- **What it does:** Lets you set a default location that apps use when the real one is unavailable.
-- **What can be collected:** A location you choose.
-- **Benefit of turning it off:** Set or clear it in Settings > Privacy & security > Location > Default location.
-- **What you lose:** Nothing.
-- **Possible problems:** No documented switch; listed for information.
-- **Change:** information only, no switch
 
 ## 6. Search
 
@@ -863,17 +817,6 @@ Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
 - **Possible problems:** None for most users.
 - **Change:** `HKCU\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\wiFiDirect\Value = Deny`
 
-### Bluetooth pairing
-
-**KEEP ENABLED** - privacy impact **Low**
-
-- **What it does:** Pairing lets keyboards, mice, headsets and controllers connect to the PC.
-- **What can be collected:** Device names and addresses of paired devices, stored locally.
-- **Benefit of turning it off:** Little privacy gain; turn Bluetooth off in Settings when you do not use it.
-- **What you lose:** All Bluetooth devices would stop working.
-- **Possible problems:** Disabling pairing breaks wireless peripherals, so BLOB does not offer a switch.
-- **Change:** information only, no switch
-
 ## 9. Windows Update
 
 ### Peer-to-peer update sharing
@@ -941,17 +884,6 @@ Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
 - **What you lose:** New features arrive six months later.
 - **Possible problems:** Windows Home may ignore this policy.
 - **Change:** `HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\DeferFeatureUpdates = 1`, `HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\DeferFeatureUpdatesPeriodInDays = 180`
-
-### Automatic update behaviour
-
-**KEEP ENABLED** - privacy impact **Low**
-
-- **What it does:** Windows downloads and installs security updates automatically.
-- **What can be collected:** Update checks send device and version details.
-- **Benefit of turning it off:** Very little privacy gain.
-- **What you lose:** Security patches would arrive late or not at all.
-- **Possible problems:** Turning automatic updates off leaves the PC exposed to known attacks, so BLOB does not offer a switch.
-- **Change:** information only, no switch
 
 ### Automatic Microsoft Store app updates
 
@@ -1164,17 +1096,6 @@ Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
 - **Possible problems:** None. Edge shows "Your browser is managed by your organisation" for policies.
 - **Change:** `HKLM\SOFTWARE\Policies\Microsoft\Edge\NewTabPageHideDefaultTopSites = 1`
 
-### Edge Secure Network
-
-**OPTIONAL** - privacy impact **Medium**
-
-- **What it does:** A free VPN-like proxy for public Wi-Fi run with Cloudflare.
-- **What can be collected:** Traffic is routed through the proxy provider when used.
-- **Benefit of turning it off:** Turn it off in Edge Settings > Privacy if you do not want traffic routed through a proxy.
-- **What you lose:** Encrypted browsing on public Wi-Fi.
-- **Possible problems:** No dependable policy; listed for information.
-- **Change:** information only, no switch
-
 ### Fast Startup
 
 **DISABLE** - privacy impact **Low** - needs administrator
@@ -1252,75 +1173,7 @@ Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
 - **Possible problems:** None. Edge shows "Your browser is managed by your organisation" for policies.
 - **Change:** `HKLM\SOFTWARE\Policies\Microsoft\Edge\AddressBarMicrosoftSearchInBingProviderEnabled = 0`
 
-## 11. Microsoft Edge Legacy
-
-### Web tracking
-
-**NOT APPLICABLE** - privacy impact **Low**
-
-- **What it does:** Setting of the old Microsoft Edge (EdgeHTML), which Microsoft removed from Windows in 2021.
-- **What can be collected:** Nothing - the browser no longer exists on current Windows.
-- **Benefit of turning it off:** No benefit: there is nothing left to turn off.
-- **What you lose:** Nothing.
-- **Possible problems:** Not applicable. The Chromium-based Edge settings are in the section above.
-- **Change:** information only, no switch
-
-### Form suggestions
-
-**NOT APPLICABLE** - privacy impact **Low**
-
-- **What it does:** Setting of the old Microsoft Edge (EdgeHTML), which Microsoft removed from Windows in 2021.
-- **What can be collected:** Nothing - the browser no longer exists on current Windows.
-- **Benefit of turning it off:** No benefit: there is nothing left to turn off.
-- **What you lose:** Nothing.
-- **Possible problems:** Not applicable. The Chromium-based Edge settings are in the section above.
-- **Change:** information only, no switch
-
-### Search history
-
-**NOT APPLICABLE** - privacy impact **Low**
-
-- **What it does:** Setting of the old Microsoft Edge (EdgeHTML), which Microsoft removed from Windows in 2021.
-- **What can be collected:** Nothing - the browser no longer exists on current Windows.
-- **Benefit of turning it off:** No benefit: there is nothing left to turn off.
-- **What you lose:** Nothing.
-- **Possible problems:** Not applicable. The Chromium-based Edge settings are in the section above.
-- **Change:** information only, no switch
-
-### Edge Bar
-
-**NOT APPLICABLE** - privacy impact **Low**
-
-- **What it does:** Setting of the old Microsoft Edge (EdgeHTML), which Microsoft removed from Windows in 2021.
-- **What can be collected:** Nothing - the browser no longer exists on current Windows.
-- **Benefit of turning it off:** No benefit: there is nothing left to turn off.
-- **What you lose:** Nothing.
-- **Possible problems:** Not applicable. The Chromium-based Edge settings are in the section above.
-- **Change:** information only, no switch
-
-### Personalised suggestions
-
-**NOT APPLICABLE** - privacy impact **Low**
-
-- **What it does:** Setting of the old Microsoft Edge (EdgeHTML), which Microsoft removed from Windows in 2021.
-- **What can be collected:** Nothing - the browser no longer exists on current Windows.
-- **Benefit of turning it off:** No benefit: there is nothing left to turn off.
-- **What you lose:** Nothing.
-- **Possible problems:** Not applicable. The Chromium-based Edge settings are in the section above.
-- **Change:** information only, no switch
-
-### Browser data collection
-
-**NOT APPLICABLE** - privacy impact **Low**
-
-- **What it does:** Setting of the old Microsoft Edge (EdgeHTML), which Microsoft removed from Windows in 2021.
-- **What can be collected:** Nothing - the browser no longer exists on current Windows.
-- **Benefit of turning it off:** No benefit: there is nothing left to turn off.
-- **What you lose:** Nothing.
-- **Possible problems:** Not applicable. The Chromium-based Edge settings are in the section above.
-- **Change:** information only, no switch
-
-## 12. Microsoft Office
+## 11. Microsoft Office
 
 ### Connected experiences with content analytics
 
@@ -1388,7 +1241,7 @@ Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
 - **Possible problems:** Microsoft 365 subscriptions need sign-in to activate; only use this with standalone Office.
 - **Change:** `HKCU\Software\Policies\Microsoft\office\16.0\common\signin\signinoptions = 3`
 
-## 13. Microsoft 365
+## 12. Microsoft 365
 
 ### Cloud-connected Office features
 
@@ -1423,18 +1276,7 @@ Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
 - **Possible problems:** None.
 - **Change:** `HKCU\Software\Policies\Microsoft\office\16.0\common\clienttelemetry\SendTelemetry = 3`
 
-### Promotional features
-
-**DISABLE** - privacy impact **Low**
-
-- **What it does:** Promotional messages and upgrade offers inside Microsoft 365 apps.
-- **What can be collected:** Interaction with offers.
-- **Benefit of turning it off:** Turning off connected experiences (above) removes most of them.
-- **What you lose:** Nothing.
-- **Possible problems:** No separate documented switch; listed for information.
-- **Change:** information only, no switch
-
-## 14. Windows Explorer
+## 13. Windows Explorer
 
 ### OneDrive integration
 
@@ -1457,17 +1299,6 @@ Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
 - **What you lose:** Nothing.
 - **Possible problems:** None.
 - **Change:** `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\ShowSyncProviderNotifications = 0`
-
-### OneDrive notifications
-
-**OPTIONAL** - privacy impact **Low**
-
-- **What it does:** OneDrive app notifications about sync, memories and storage.
-- **What can be collected:** Nothing extra.
-- **Benefit of turning it off:** Turn them off in OneDrive Settings > Notifications.
-- **What you lose:** OneDrive alerts.
-- **Possible problems:** Managed inside OneDrive; listed for information.
-- **Change:** information only, no switch
 
 ### OneDrive network access before login
 
@@ -1535,7 +1366,7 @@ Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
 - **Possible problems:** None.
 - **Change:** `HKLM\SOFTWARE\Policies\Microsoft\Windows\Explorer\DisableGraphRecentItems = 1`
 
-## 15. Lock Screen
+## 14. Lock Screen
 
 ### Windows Spotlight
 
@@ -1592,7 +1423,7 @@ Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
 - **Possible problems:** None.
 - **Change:** `HKCU\Software\Policies\Microsoft\Windows\CloudContent\DisableThirdPartySuggestions = 1`
 
-## 16. Taskbar
+## 15. Taskbar
 
 ### Windows Widgets
 
@@ -1649,7 +1480,7 @@ Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
 - **Possible problems:** None.
 - **Change:** `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Start_AccountNotifications = 0`, `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Start_IrisRecommendations = 0`
 
-## 17. Activity History and Clipboard
+## 16. Activity History and Clipboard
 
 ### Sending activity history to Microsoft
 
@@ -1717,64 +1548,7 @@ Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
 - **Possible problems:** None.
 - **Change:** `HKCU\Software\Microsoft\Clipboard\EnableCloudClipboard = 0`
 
-## 18. Microsoft Defender and SpyNet
-
-### Automatic file sample submissions
-
-**KEEP ENABLED** - privacy impact **Low**
-
-- **What it does:** Sends suspicious files to Microsoft for analysis.
-- **What can be collected:** Copies of suspicious files; Defender asks before sending files likely to contain personal data.
-- **Benefit of turning it off:** Small: the data is technical and used to protect you and everyone else.
-- **What you lose:** New and fast-spreading malware is caught much later, sometimes not at all.
-- **Possible problems:** Turning this off weakens Microsoft Defender. BLOB never changes Defender settings; you can review them in Windows Security.
-- **Change:** information only, no switch
-
-### Microsoft SpyNet participation
-
-**KEEP ENABLED** - privacy impact **Low**
-
-- **What it does:** Cloud-delivered protection (formerly SpyNet/MAPS): Defender asks the cloud about unknown files.
-- **What can be collected:** File hashes, file names and detection details.
-- **Benefit of turning it off:** Small: the data is technical and used to protect you and everyone else.
-- **What you lose:** New and fast-spreading malware is caught much later, sometimes not at all.
-- **Possible problems:** Turning this off weakens Microsoft Defender. BLOB never changes Defender settings; you can review them in Windows Security.
-- **Change:** information only, no switch
-
-### Malware infection reporting
-
-**KEEP ENABLED** - privacy impact **Low**
-
-- **What it does:** Reports detected malware to Microsoft.
-- **What can be collected:** Detection names and affected file paths.
-- **Benefit of turning it off:** Small: the data is technical and used to protect you and everyone else.
-- **What you lose:** New and fast-spreading malware is caught much later, sometimes not at all.
-- **Possible problems:** Turning this off weakens Microsoft Defender. BLOB never changes Defender settings; you can review them in Windows Security.
-- **Change:** information only, no switch
-
-### Cloud-based Defender information sharing
-
-**KEEP ENABLED** - privacy impact **Low**
-
-- **What it does:** Shares threat information with Microsoft to block new threats within seconds.
-- **What can be collected:** Threat metadata from your PC.
-- **Benefit of turning it off:** Small: the data is technical and used to protect you and everyone else.
-- **What you lose:** New and fast-spreading malware is caught much later, sometimes not at all.
-- **Possible problems:** Turning this off weakens Microsoft Defender. BLOB never changes Defender settings; you can review them in Windows Security.
-- **Change:** information only, no switch
-
-### Automatic sample submission
-
-**KEEP ENABLED** - privacy impact **Low**
-
-- **What it does:** Same as automatic file sample submissions.
-- **What can be collected:** Copies of suspicious files.
-- **Benefit of turning it off:** Small: the data is technical and used to protect you and everyone else.
-- **What you lose:** New and fast-spreading malware is caught much later, sometimes not at all.
-- **Possible problems:** Turning this off weakens Microsoft Defender. BLOB never changes Defender settings; you can review them in Windows Security.
-- **Change:** information only, no switch
-
-## 19. Microsoft Copilot and Windows AI
+## 17. Microsoft Copilot and Windows AI
 
 ### Windows Copilot
 
@@ -1797,17 +1571,6 @@ Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
 - **What you lose:** The taskbar button.
 - **Possible problems:** None.
 - **Change:** `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\ShowCopilotButton = 0`
-
-### Copilot keyboard key
-
-**OPTIONAL** - privacy impact **Low**
-
-- **What it does:** The Copilot key on new keyboards opens Copilot.
-- **What can be collected:** Nothing until used.
-- **Benefit of turning it off:** Remap it in Settings > Personalization > Text input > "Customize Copilot key".
-- **What you lose:** One-press Copilot.
-- **Possible problems:** Remapping is a personal setting; listed for information.
-- **Change:** information only, no switch
 
 ### Image Creator in Microsoft Paint
 
@@ -1875,7 +1638,7 @@ Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
 - **Possible problems:** Applies on builds that support it.
 - **Change:** `HKCU\Software\Policies\Microsoft\Windows\Explorer\HideAIActionsMenu = 1`
 
-## 20. Mobile Devices
+## 18. Mobile Devices
 
 ### Phone Link
 
@@ -1921,18 +1684,7 @@ Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
 - **Possible problems:** None.
 - **Change:** `HKCU\Software\Microsoft\Windows\CurrentVersion\Mobility\OptedIn = 0`
 
-### Mobile-device notifications
-
-**OPTIONAL** - privacy impact **Medium**
-
-- **What it does:** Shows your phone notifications on the PC through Phone Link.
-- **What can be collected:** Phone notifications.
-- **Benefit of turning it off:** Turning Phone Link off (above) stops it; or change it in the Phone Link app.
-- **What you lose:** Phone notifications on the PC.
-- **Possible problems:** Managed in Phone Link; listed for information.
-- **Change:** information only, no switch
-
-## 21. Miscellaneous
+## 19. Miscellaneous
 
 ### Feedback reminders
 
@@ -1967,17 +1719,6 @@ Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
 - **Possible problems:** None.
 - **Change:** `HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent\DisableSoftLanding = 1`
 
-### Activation checks
-
-**KEEP ENABLED** - privacy impact **Low**
-
-- **What it does:** Windows checks that its licence is valid.
-- **What can be collected:** Your product key or digital licence and hardware ID.
-- **Benefit of turning it off:** None worth the risk.
-- **What you lose:** Windows would show as not activated and lose personalisation.
-- **Possible problems:** Blocking activation is a licensing violation and can break updates. BLOB does not offer a switch.
-- **Change:** information only, no switch
-
 ### Promotional Windows features
 
 **DISABLE** - privacy impact **Low**
@@ -2000,7 +1741,7 @@ Totals - DISABLE: 103, OPTIONAL: 61, KEEP ENABLED: 9, NOT APPLICABLE: 6.
 - **Possible problems:** Fully honoured on Enterprise/Education; partly on Home and Pro.
 - **Change:** `HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent\DisableWindowsConsumerFeatures = 1`, `HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent\DisableConsumerAccountStateContent = 1`
 
-## 22. Gaming
+## 20. Gaming
 
 ### Xbox Game Bar
 

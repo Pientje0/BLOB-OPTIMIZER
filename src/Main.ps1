@@ -26,7 +26,9 @@ function Invoke-BlobSelfTest {
             foreach ($op in $t.Registry) { if ($op.Path -notmatch '^(HKCU|HKLM):\\') { throw "bad path in $($t.Id): $($op.Path)" } }
             foreach ($f in 'Does', 'Data', 'Benefit', 'Lose', 'Issues') { if (-not $t.Privacy[$f]) { throw "$($t.Id) has no '$f' text" } }
         }
-        "- $($pc.Count) settings in $($Blob.PrivacyGroups.Count) sections, $(@($pc | Where-Object InfoOnly).Count) information only"
+        $noop = @($pc | Where-Object InfoOnly)
+        if ($noop) { throw "settings without a switch: $(($noop | ForEach-Object Id) -join ', ')" }
+        "- $($pc.Count) settings in $($Blob.PrivacyGroups.Count) sections, every one switchable"
     }
     & $check 'Tweak states'    { $st = @($Blob.Tweaks | ForEach-Object { Get-BlobTweakState $_ }); "- $(@($st | Where-Object { $_ -eq 'Applied' }).Count) applied" }
     & $check 'Presets'         { $p = @(Get-BlobPresets); foreach ($x in $p) { foreach ($id in $x.Ids) { if (-not (Get-BlobTweak $id)) { throw "preset $($x.Name) references unknown tweak '$id'" } } }; "- $(($p | ForEach-Object { "$($_.Name)=$($_.Ids.Count)" }) -join ' ')" }

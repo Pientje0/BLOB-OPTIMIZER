@@ -1,25 +1,25 @@
 # ============================================================================
 #  BLOB OPTIMIZER - PrivacyCenter.ps1
-#  The privacy catalogue: 22 sections, every item explained with
+#  The privacy catalogue: every item explained with
 #    what it does / what is collected / benefit of turning it off /
 #    what you lose / possible issues / recommendation / privacy impact.
-#  Items use only documented policy or settings values. Items that would
-#  weaken security (Defender, security updates, activation) or that have no
-#  reliable switch are listed for information only, without a toggle.
+#  Every item has a real switch that uses a documented policy or settings
+#  value. Things BLOB cannot or will not change (Defender, security updates,
+#  activation, settings without a reliable switch) are not listed.
 #  O&O ShutUp10++ IDs are shown where they were provided; none are invented.
 # ============================================================================
 
 $Blob.PrivacyGroups = @(
     'Privacy', 'Telemetry and User Behavior', 'App Privacy', 'Cortana and Input Personalisation', 'Location Services', 'Search',
-    'Synchronisation of Windows Settings', 'Security', 'Windows Update', 'Microsoft Edge Chromium', 'Microsoft Edge Legacy',
+    'Synchronisation of Windows Settings', 'Security', 'Windows Update', 'Microsoft Edge Chromium',
     'Microsoft Office', 'Microsoft 365', 'Windows Explorer', 'Lock Screen', 'Taskbar', 'Activity History and Clipboard',
-    'Microsoft Defender and SpyNet', 'Microsoft Copilot and Windows AI', 'Mobile Devices', 'Miscellaneous', 'Gaming')
+    'Microsoft Copilot and Windows AI', 'Mobile Devices', 'Miscellaneous', 'Gaming')
 
 # Ops are compact strings:  'HKLM:\path|ValueName|Value[|Type]'  or  'svc:ServiceName=Disabled'
 function Add-BlobPrivacyItem {
     param([string]$Group, [string]$Id, [string]$Name, [string]$Oo,
-          [ValidateSet('Disable', 'Optional', 'Keep', 'N/A')][string]$Rec, [ValidateSet('Low', 'Medium', 'High')][string]$Impact,
-          [string[]]$Ops = @(), [string]$Does, [string]$Data, [string]$Benefit, [string]$Lose, [string]$Issues)
+          [ValidateSet('Disable', 'Optional', 'Keep')][string]$Rec, [ValidateSet('Low', 'Medium', 'High')][string]$Impact,
+          [Parameter(Mandatory)][string[]]$Ops, [string]$Does, [string]$Data, [string]$Benefit, [string]$Lose, [string]$Issues)
     $reg = @(); $svc = @()
     foreach ($o in $Ops) {
         if (-not $o) { continue }

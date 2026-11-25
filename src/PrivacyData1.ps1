@@ -157,30 +157,16 @@ Add-BlobPrivacyItem $g 'winloc' 'Windows location functionality' '' 'Optional' '
 Add-BlobPrivacyItem $g 'lfsvc' 'Windows Geolocation Service' 'L005' 'Optional' 'High' @('svc:lfsvc=Disabled') `
     'The service that provides location to Windows and apps.' 'Your location while the service runs.' `
     'The location provider cannot start.' 'All location features.' 'Same effect as turning Windows location off; reversible from Restore.'
-Add-BlobPrivacyItem $g 'lochistory' 'Location history' '' 'Optional' 'Medium' @() `
-    'Windows keeps the last 24 hours of device location so apps with permission can read it.' `
-    'Recent positions of the device.' `
-    'Turning Windows location off (above) stops the history. You can clear it any time in Settings > Privacy & security > Location.' `
-    'Nothing beyond location itself.' 'No separate switch exists on current Windows, so BLOB lists this for information.'
 Add-BlobPrivacyItem $g 'locsensors' 'Location sensors' '' 'Optional' 'Medium' @("$pcLoc|DisableSensors|1") `
     'Turns off sensors (like GPS and ambient sensors) used for location.' 'Sensor readings that can reveal position and movement.' `
     'Sensor-based tracking stops.' 'Auto-rotate and brightness may stop on devices that use these sensors.' 'Screen auto-rotation can stop working on tablets.'
 Add-BlobPrivacyItem $g 'locscript' 'Location scripting' '' 'Disable' 'Low' @("$pcLoc|DisableLocationScripting|1") `
     'Lets scripts query your location through the Windows location API.' 'Your location, to scripts running on the PC.' `
     'Scripts cannot read your location.' 'Nothing for normal use.' 'None.'
-Add-BlobPrivacyItem $g 'geofence' 'Geofencing' '' 'Optional' 'Medium' @() `
-    'Lets apps trigger actions when you enter or leave an area.' 'Your movements in and out of defined areas.' `
-    'Covered by turning off app location access or Windows location above.' 'Location-based reminders.' 'No separate switch on current Windows; listed for information.'
-Add-BlobPrivacyItem $g 'locads' 'Location-based advertising' '' 'Disable' 'Medium' @() `
-    'Ads chosen using where you are.' 'Location combined with your advertising ID.' `
-    'Covered by turning off the advertising ID (Privacy section) and app location access.' 'Local ads.' 'No separate switch; listed for information.'
 Add-BlobPrivacyItem $g 'findmy' 'Find My Device' 'L008' 'Optional' 'Medium' @('HKLM:\SOFTWARE\Policies\Microsoft\FindMyDevice|AllowFindMyDevice|0') `
     'Periodically sends the location of the PC to your Microsoft account so you can find it if it is lost.' `
     'Device location, linked to your account.' 'Your location is no longer stored with Microsoft.' `
     'You cannot locate or lock the PC remotely if it is lost or stolen.' 'Weakens theft recovery; keep it on for laptops you carry around.'
-Add-BlobPrivacyItem $g 'locoverride' 'Location override' 'P098' 'Optional' 'Low' @() `
-    'Lets you set a default location that apps use when the real one is unavailable.' 'A location you choose.' `
-    'Set or clear it in Settings > Privacy & security > Location > Default location.' 'Nothing.' 'No documented switch; listed for information.'
 
 # ---- 6. Search ----------------------------------------------------------------
 $g = 'Search'

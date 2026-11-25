@@ -1,13 +1,13 @@
 # ============================================================================
 #  BLOB OPTIMIZER - GuiPrivacy.ps1
-#  The Privacy page: 22 sections from the privacy catalogue, each item with
+#  The Privacy page: every section of the privacy catalogue, each item with
 #  a switch (on = that Windows feature is turned off), privacy impact,
 #  recommendation, state and a full explanation on hover.
 #  Uses the same choose-then-apply flow as the Tweaks page.
 # ============================================================================
 
 $Blob.GuiShared.PrivacyTip = { param($el) New-BlobPrivacyTooltip (Get-BlobTweak $el.DataContext) }
-$Blob.PcRecFilters = [ordered]@{ All = 'All'; Disable = 'Recommended off'; Optional = 'Your choice'; Keep = 'Keep on'; 'N/A' = 'Not applicable' }
+$Blob.PcRecFilters = [ordered]@{ All = 'All'; Disable = 'Recommended off'; Optional = 'Your choice'; Keep = 'Better kept on' }
 
 function New-BlobPrivacyTooltip {
     param($Tweak)
@@ -28,7 +28,7 @@ function New-BlobPrivacyTooltip {
         [void]$s.Children.Add((New-BlobText $r[0].ToUpper() 11 'Ink3' 'Normal' '0,4,0,1' -Display))
         [void]$s.Children.Add((New-BlobText $r[1] 12.5 'Ink' 'Normal' '0,0,0,4'))
     }
-    $recWord = switch ($p.Rec) { 'Disable' { 'DISABLE - good privacy benefit, minimal downside' } 'Optional' { 'OPTIONAL - depends on how you use the PC' } 'Keep' { 'KEEP ENABLED - important for security or everyday use' } default { 'NOT APPLICABLE on current Windows' } }
+    $recWord = switch ($p.Rec) { 'Disable' { 'DISABLE - good privacy benefit, minimal downside' } 'Optional' { 'OPTIONAL - depends on how you use the PC' } default { 'KEEP ENABLED - important for security or everyday use' } }
     $line = New-BlobStack 'Horizontal' '0,6,0,0'
     [void]$line.Children.Add((New-BlobText 'RECOMMENDATION  ' 11 'Ink3' 'Normal' '0,1,0,0' -Display))
     [void]$line.Children.Add((New-BlobText $recWord 12.5 $(if ($p.Rec -eq 'Keep') { 'SignalText' } else { 'Ink' }) 'SemiBold'))
@@ -37,15 +37,11 @@ function New-BlobPrivacyTooltip {
     [void]$line2.Children.Add((New-BlobText 'PRIVACY IMPACT  ' 11 'Ink3' 'Normal' '0,1,0,0' -Display))
     [void]$line2.Children.Add((New-BlobText $p.Impact.ToUpper() 12.5 $(if ($p.Impact -eq 'High') { 'SignalText' } else { 'Ink' }) 'SemiBold'))
     [void]$s.Children.Add($line2)
-    if (-not $Tweak.InfoOnly) {
-        [void]$s.Children.Add((New-BlobText 'EXACT CHANGE (CURRENT -> NEW)' 11 'Ink3' 'Normal' '0,10,0,3' -Display))
-        foreach ($m in @(Get-BlobTweakPreview @($Tweak) | Select-Object -Skip 1 | Where-Object { $_ -match '^\{(Gray|DarkGray)\} {4}' -and $_ -notmatch 'Note:' })) {
-            [void]$s.Children.Add((ConvertTo-BlobTextBlock $m -Mono -Size 11.5))
-        }
-        [void]$s.Children.Add((New-BlobText 'The original value is saved first; undo it here or on the Restore page.' 12 'Ink2' 'Normal' '0,6,0,0'))
-    } else {
-        [void]$s.Children.Add((New-BlobText 'Listed for information only: BLOB offers no switch for this.' 12 'Ink2' 'Normal' '0,8,0,0'))
+    [void]$s.Children.Add((New-BlobText 'EXACT CHANGE (CURRENT -> NEW)' 11 'Ink3' 'Normal' '0,10,0,3' -Display))
+    foreach ($m in @(Get-BlobTweakPreview @($Tweak) | Select-Object -Skip 1 | Where-Object { $_ -match '^\{(Gray|DarkGray)\} {4}' -and $_ -notmatch 'Note:' })) {
+        [void]$s.Children.Add((ConvertTo-BlobTextBlock $m -Mono -Size 11.5))
     }
+    [void]$s.Children.Add((New-BlobText 'The original value is saved first; undo it here or on the Restore page.' 12 'Ink2' 'Normal' '0,6,0,0'))
     return $s
 }
 
@@ -181,7 +177,7 @@ function Update-BlobGuiPrivacyList {
     $switchAll = @($items | Where-Object { -not $_.InfoOnly })
     $offAll = @($switchAll | Where-Object { $states[$_.Id] -eq 'Applied' }).Count
     $dot = [string][char]0x00B7
-    $Blob.Gui.CardCount.Text = "$($list.Count) shown  $dot  $offAll of $($switchAll.Count) turned off  $dot  $($items.Count - $switchAll.Count) information only  $dot  $($Blob.Gui.Pending.Count) waiting"
+    $Blob.Gui.CardCount.Text = "$($list.Count) shown  $dot  $offAll of $($switchAll.Count) turned off  $dot  $($Blob.Gui.Pending.Count) waiting"
     Update-BlobGuiPendingBar
     $Blob.Gui.PageScroll.UpdateLayout(); $Blob.Gui.PageScroll.ScrollToVerticalOffset($offset)
 }
@@ -247,7 +243,7 @@ function New-BlobGuiPrivacy {
     $list = New-BlobStack
     $Blob.Gui.CardGrid = $list
     [void]$root.Children.Add($list)
-    [void]$root.Children.Add((New-BlobText 'Switches use only documented Windows and app policies. Defender, security updates and activation are explained but never switched off. O&O ShutUp10++ IDs are shown where known.' 12 'Ink3' 'Normal' '0,24,0,0'))
+    [void]$root.Children.Add((New-BlobText 'Every switch uses a documented Windows, Edge or Office policy or setting. Microsoft Defender, security updates and Windows activation are never changed. O&O ShutUp10++ IDs are shown where known.' 12 'Ink3' 'Normal' '0,24,0,0'))
 
     Set-BlobGuiPageActions @(
         (New-BlobButton 'Choose all recommended' {

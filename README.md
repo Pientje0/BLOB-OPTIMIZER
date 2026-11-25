@@ -19,28 +19,28 @@ Open **PowerShell**, **Windows Terminal** or plain **cmd**. It does not need to 
 PowerShell / Windows Terminal:
 
 ```powershell
-irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.2.0/BLOB.ps1 | iex
+irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.2.1/BLOB.ps1 | iex
 ```
 
 cmd.exe:
 
 ```cmd
-powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.2.0/BLOB.ps1 | iex"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.2.1/BLOB.ps1 | iex"
 ```
 
 **Terminal-only interface** (keyboard UI inside PowerShell):
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.2.0/BLOB.ps1))) -Tui
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.2.1/BLOB.ps1))) -Tui
 ```
 
 **Dry run** shows every change it would make without modifying anything:
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.2.0/BLOB.ps1))) -DryRun
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.2.1/BLOB.ps1))) -DryRun
 ```
 
-> Pinning a version tag (`v2.2.0`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
+> Pinning a version tag (`v2.2.1`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
 
 **Administrator rights.** BLOB OPTIMIZER requests administrator rights at start-up through the standard Windows UAC prompt. It never bypasses or suppresses that prompt. If you choose *No*, it continues in read-only mode: you can browse everything and apply per-user settings. Add `-NoElevate` (or set `$env:BLOB_NOELEVATE = '1'`) to skip the prompt.
 
@@ -63,17 +63,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\BLOB.ps1 -Tui     # termin
 **Tweaks.** All 55 tweaks as dense ruled rows, grouped by area (FPS & Latency, Performance, Network, Quality of Life, Privacy & Security) and filterable by area, **risk level** (Low, Medium, High, Preference) and search. Each row has an on/off switch, the name and a one-line description, a three-bar **risk meter** (HIGH in orange), the current state and a **?** with the full explanation.
 - **Choose first, apply after.** A switch only records what you want. The row turns orange with *→ ON* or *→ OFF*, and a black bar appears at the bottom: "2 to activate, 1 to deactivate. Nothing has been changed yet." **Review and apply** opens one dialog listing every exact change, with the restore-point option. **Discard** forgets your choices, and closing the window with choices waiting asks first.
 
-**Privacy: 179 settings in 22 sections.** Privacy, telemetry, app permissions, Cortana and input, location, search, settings sync, security, Windows Update, Edge, Office and Microsoft 365, Explorer, the lock screen, the taskbar, activity and clipboard, Defender, Copilot and Windows AI, mobile devices, miscellaneous and gaming. Every setting comes with:
+**Privacy: 156 settings in 20 sections, every one switchable.** Privacy, telemetry, app permissions, Cortana and input, location, search, settings sync, security, Windows Update, Edge, Office and Microsoft 365, Explorer, the lock screen, the taskbar, activity and clipboard, Copilot and Windows AI, mobile devices, miscellaneous and gaming. Every setting comes with:
 - a plain explanation of what it does and what Windows or Microsoft can collect;
 - the benefit of turning it off, what you lose, and any problems it can cause;
 - a recommendation (**DISABLE**, **OPTIONAL**, **KEEP ENABLED**) and a **privacy impact** rating (Low / Medium / High);
-- the O&O ShutUp10++ ID where known (U008, L005, L008, P098, M029-M031, M103, W010, E157, F020, F021, P099, C208-C211).
+- the O&O ShutUp10++ ID where known (U008, L005, L008, M029-M031, M103, W010, E157, F020, F021, P099, C208-C211).
 
-Filter by section, by advice and by search (including O&O IDs). **Choose all recommended** marks every DISABLE item. It uses the same choose-then-apply flow, backups and undo as Tweaks. Switches use only documented Windows, Edge and Office policy or settings values.
-- **Information only:** Defender/SpyNet, automatic security updates, activation and Bluetooth pairing are explained but have **no switch**, because turning them off weakens security or breaks hardware.
-- **Not applicable:** Edge Legacy items are marked this way, because that browser was removed from Windows in 2021.
-
-The full text of all 179 entries is in [docs/PRIVACY-SETTINGS.md](docs/PRIVACY-SETTINGS.md).
+Filter by section, by advice and by search (including O&O IDs). **Choose all recommended** marks every DISABLE item. It uses the same choose-then-apply flow, backups and undo as Tweaks. Only settings BLOB can actually change are listed. Microsoft Defender, automatic security updates and Windows activation are never changed and are not shown. The full text of all entries is in [docs/PRIVACY-SETTINGS.md](docs/PRIVACY-SETTINGS.md).
 
 **Apps: complete removal.** Every installed program (86 on a typical PC) and Microsoft Store app, with size, install date, search and sorting. **Uninstall** removes an app completely, in three steps:
 1. **Its own uninstaller runs first.** The program undoes its own drivers, services and file associations the way its maker intended. Store apps are removed by Windows together with their app data.

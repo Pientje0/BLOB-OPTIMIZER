@@ -1,6 +1,6 @@
 # ============================================================================
 #  BLOB OPTIMIZER - PrivacyData2.ps1
-#  Privacy catalogue, sections 8-14.
+#  Privacy catalogue, sections 8-13.
 # ============================================================================
 
 # ---- 8. Security ----------------------------------------------------------------
@@ -29,10 +29,6 @@ Add-BlobPrivacyItem $g 'cellular' 'Cellular broadband' '' 'Optional' 'Low' @("$p
 Add-BlobPrivacyItem $g 'wifidirect2' 'Wi-Fi Direct' '' 'Optional' 'Low' @("$pcCS\wiFiDirect|Value|Deny") `
     'Same switch as Wi-Fi Direct in App Privacy: direct Wi-Fi connections from apps to other devices.' 'Device discovery data.' `
     'Apps cannot open Wi-Fi Direct connections.' 'Wi-Fi Direct printing and casting from apps.' 'None for most users.'
-Add-BlobPrivacyItem $g 'btpair' 'Bluetooth pairing' '' 'Keep' 'Low' @() `
-    'Pairing lets keyboards, mice, headsets and controllers connect to the PC.' 'Device names and addresses of paired devices, stored locally.' `
-    'Little privacy gain; turn Bluetooth off in Settings when you do not use it.' 'All Bluetooth devices would stop working.' `
-    'Disabling pairing breaks wireless peripherals, so BLOB does not offer a switch.'
 
 # ---- 9. Windows Update ----------------------------------------------------------
 $g = 'Windows Update'
@@ -54,10 +50,6 @@ Add-BlobPrivacyItem $g 'preview' 'Preview updates' '' 'Disable' 'Low' @("$pcWU|M
 Add-BlobPrivacyItem $g 'deferfeature' 'Feature upgrade delays' '' 'Optional' 'Low' @("$pcWU|DeferFeatureUpdates|1", "$pcWU|DeferFeatureUpdatesPeriodInDays|180") `
     'Delays big yearly feature upgrades by 180 days (security updates still arrive).' 'Nothing extra.' `
     'You get feature upgrades after early problems are fixed.' 'New features arrive six months later.' 'Windows Home may ignore this policy.'
-Add-BlobPrivacyItem $g 'autoupdate' 'Automatic update behaviour' '' 'Keep' 'Low' @() `
-    'Windows downloads and installs security updates automatically.' 'Update checks send device and version details.' `
-    'Very little privacy gain.' 'Security patches would arrive late or not at all.' `
-    'Turning automatic updates off leaves the PC exposed to known attacks, so BLOB does not offer a switch.'
 Add-BlobPrivacyItem $g 'storeupdate' 'Automatic Microsoft Store app updates' '' 'Optional' 'Low' @('HKLM:\SOFTWARE\Policies\Microsoft\WindowsStore|AutoDownload|2') `
     'Lets the Store update apps automatically in the background.' 'Your app list, as part of update checks.' `
     'Apps update only when you choose.' 'Automatic app fixes, including security fixes for apps.' 'Apps can fall behind on security updates; update them in the Store regularly.'
@@ -83,7 +75,6 @@ $pcEdgeItems = @(
     @('m365icon', 'Microsoft 365 Copilot Chat icon', '', 'Disable', 'Low', 'Microsoft365CopilotChatIconEnabled|0', 'Shows the Microsoft 365 Copilot Chat icon in the toolbar.', 'Nothing until used.', 'A cleaner toolbar.', 'The shortcut icon.'),
     @('settingsrec', 'Settings recommendations', '', 'Disable', 'Low', 'ShowRecommendationsEnabled|0', 'Shows recommendations and notifications about Edge features.', 'Feature usage.', 'No feature nags.', 'Feature tips.'),
     @('topsites', 'Default top sites', '', 'Disable', 'Low', 'NewTabPageHideDefaultTopSites|1', 'Fills the new tab page with sponsored and default sites.', 'Clicks on those tiles.', 'No sponsored tiles.', 'Default site shortcuts.'),
-    @('securenet', 'Edge Secure Network', '', 'Optional', 'Medium', '', 'A free VPN-like proxy for public Wi-Fi run with Cloudflare.', 'Traffic is routed through the proxy provider when used.', 'Turn it off in Edge Settings > Privacy if you do not want traffic routed through a proxy.', 'Encrypted browsing on public Wi-Fi.'),
     @('startboost', 'Fast Startup', '', 'Disable', 'Low', 'StartupBoostEnabled|0', 'Preloads Edge at sign-in so it opens faster.', 'Nothing extra; uses memory in the background.', 'Edge does not run until you open it.', 'Edge opens a little slower.'),
     @('acrobat', 'Adobe Acrobat subscription button', '', 'Disable', 'Low', 'ShowAcrobatSubscriptionButton|0', 'Shows an Adobe Acrobat offer in the PDF viewer.', 'Clicks on the offer.', 'No upsell button.', 'Nothing.'),
     @('edgespotlight', 'Spotlight experiences and recommendations', '', 'Disable', 'Low', 'SpotlightExperiencesAndRecommendationsEnabled|0', 'Shows personalised background images and suggestions.', 'Usage for personalisation.', 'No personalised suggestions.', 'Spotlight backgrounds.'),
@@ -92,21 +83,11 @@ $pcEdgeItems = @(
     @('suggest', 'Address-bar suggestions', '', 'Optional', 'Medium', 'SearchSuggestEnabled|0', 'Sends what you type in the address bar to the search engine for suggestions.', 'Every keystroke in the address bar.', 'Typing is not sent before you press Enter.', 'Live search suggestions.'),
     @('msbing', 'Microsoft Search in Bing', '', 'Disable', 'Medium', 'AddressBarMicrosoftSearchInBingProviderEnabled|0', 'Adds work/school results from Microsoft Search to the address bar.', 'Searches matched against your organisation content.', 'No work search in the address bar.', 'Work results in the address bar.'))
 foreach ($e in $pcEdgeItems) {
-    $ops = if ($e[5]) { @("$pcEdge|$($e[5])") } else { @() }
-    Add-BlobPrivacyItem $g $e[0] $e[1] $e[2] $e[3] $e[4] $ops $e[6] $e[7] $e[8] $e[9] `
-        $(if ($e[5]) { 'None. Edge shows "Your browser is managed by your organisation" for policies.' } else { 'No dependable policy; listed for information.' })
+    Add-BlobPrivacyItem $g $e[0] $e[1] $e[2] $e[3] $e[4] @("$pcEdge|$($e[5])") $e[6] $e[7] $e[8] $e[9] `
+        'None. Edge shows "Your browser is managed by your organisation" for policies.'
 }
 
-# ---- 11. Microsoft Edge Legacy ---------------------------------------------------
-$g = 'Microsoft Edge Legacy'
-foreach ($e in @(@('legtrack', 'Web tracking'), @('legform', 'Form suggestions'), @('leghist', 'Search history'), @('legbar', 'Edge Bar'),
-                  @('legpers', 'Personalised suggestions'), @('legdata', 'Browser data collection'))) {
-    Add-BlobPrivacyItem $g $e[0] $e[1] '' 'N/A' 'Low' @() `
-        "Setting of the old Microsoft Edge (EdgeHTML), which Microsoft removed from Windows in 2021." 'Nothing - the browser no longer exists on current Windows.' `
-        'No benefit: there is nothing left to turn off.' 'Nothing.' 'Not applicable. The Chromium-based Edge settings are in the section above.'
-}
-
-# ---- 12. Microsoft Office -------------------------------------------------------
+# ---- 11. Microsoft Office -------------------------------------------------------
 $g = 'Microsoft Office'
 Add-BlobPrivacyItem $g 'offanalytics' 'Connected experiences with content analytics' '' 'Disable' 'High' @("$pcOff\common\privacy|usercontentdisabled|2") `
     'Office features that analyse your document content in the cloud (Designer, Editor, translation).' 'Content of your documents sent for analysis.' `
@@ -123,7 +104,7 @@ Add-BlobPrivacyItem $g 'offsignin' 'Office sign-in' 'F021' 'Optional' 'Medium' @
     'Lets you sign in to Office with a Microsoft or work account.' 'Your account and documents in OneDrive.' `
     'Office cannot be tied to an online account.' 'OneDrive saving, co-authoring and Microsoft 365 activation.' 'Microsoft 365 subscriptions need sign-in to activate; only use this with standalone Office.'
 
-# ---- 13. Microsoft 365 ------------------------------------------------------------
+# ---- 12. Microsoft 365 ------------------------------------------------------------
 $g = 'Microsoft 365'
 Add-BlobPrivacyItem $g 'm365cloud' 'Cloud-connected Office features' '' 'Optional' 'Medium' @("$pcOff\common\privacy|controllerconnectedservicesenabled|2") `
     'Optional connected experiences such as LinkedIn features, 3D maps and online video.' 'Data these services need, for example search terms.' `
@@ -133,20 +114,14 @@ Add-BlobPrivacyItem $g 'm365download' 'Connected experiences' '' 'Optional' 'Med
     'Office does not fetch online content.' 'Online templates, stock images and icons.' 'None.'
 Add-BlobPrivacyItem $g 'm365diag' 'Usage and diagnostic data sharing' '' 'Disable' 'Medium' @("$pcOff\common\clienttelemetry|SendTelemetry|3") `
     'Same as Office diagnostic data: usage and diagnostics from Microsoft 365 apps.' 'App usage and errors.' 'Optional data is not sent.' 'Nothing you will notice.' 'None.'
-Add-BlobPrivacyItem $g 'm365promo' 'Promotional features' '' 'Disable' 'Low' @() `
-    'Promotional messages and upgrade offers inside Microsoft 365 apps.' 'Interaction with offers.' `
-    'Turning off connected experiences (above) removes most of them.' 'Nothing.' 'No separate documented switch; listed for information.'
 
-# ---- 14. Windows Explorer ---------------------------------------------------------
+# ---- 13. Windows Explorer ---------------------------------------------------------
 $g = 'Windows Explorer'
 Add-BlobPrivacyItem $g 'onedrive' 'OneDrive integration' '' 'Optional' 'High' @('HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive|DisableFileSyncNGSC|1') `
     'Lets OneDrive sync files and back up Desktop, Documents and Pictures.' 'Your files, stored in the cloud.' `
     'No files are uploaded through OneDrive.' 'OneDrive sync and backup entirely.' 'Files that only exist in OneDrive stay online; download what you need first.'
 Add-BlobPrivacyItem $g 'odpromo' 'OneDrive promotional content' '' 'Disable' 'Low' @("$pcAdv|ShowSyncProviderNotifications|0") `
     'Shows OneDrive and Microsoft 365 offers inside File Explorer.' 'Clicks on offers.' 'No offers in Explorer.' 'Nothing.' 'None.'
-Add-BlobPrivacyItem $g 'odnotify' 'OneDrive notifications' '' 'Optional' 'Low' @() `
-    'OneDrive app notifications about sync, memories and storage.' 'Nothing extra.' `
-    'Turn them off in OneDrive Settings > Notifications.' 'OneDrive alerts.' 'Managed inside OneDrive; listed for information.'
 Add-BlobPrivacyItem $g 'odprelogin' 'OneDrive network access before login' '' 'Disable' 'Low' @('HKLM:\SOFTWARE\Microsoft\OneDrive|PreventNetworkTrafficPreUserSignIn|1') `
     'Lets OneDrive contact Microsoft before anyone signs in.' 'Network traffic from the PC before sign-in.' 'No OneDrive traffic until you sign in.' 'Nothing.' 'None.'
 Add-BlobPrivacyItem $g 'startsugg' 'Start menu app suggestions' '' 'Disable' 'Low' @("$pcCDM|SystemPaneSuggestionsEnabled|0") `

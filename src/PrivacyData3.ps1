@@ -1,9 +1,9 @@
 # ============================================================================
 #  BLOB OPTIMIZER - PrivacyData3.ps1
-#  Privacy catalogue, sections 15-22.
+#  Privacy catalogue, sections 14-20.
 # ============================================================================
 
-# ---- 15. Lock Screen --------------------------------------------------------------
+# ---- 14. Lock Screen --------------------------------------------------------------
 $g = 'Lock Screen'
 Add-BlobPrivacyItem $g 'spotlight' 'Windows Spotlight' '' 'Optional' 'Low' @("$pcCCU|DisableWindowsSpotlightFeatures|1") `
     'Downloads daily background pictures and facts from Bing for the lock screen and desktop.' 'Your region and how you react to the images.' `
@@ -19,7 +19,7 @@ Add-BlobPrivacyItem $g 'thirdparty' 'Promotional recommendations' '' 'Disable' '
     'Lets Windows show suggestions from third-party publishers in Spotlight and other places.' 'Interaction with suggestions.' `
     'No third-party promotions.' 'Nothing.' 'None.'
 
-# ---- 16. Taskbar -------------------------------------------------------------------
+# ---- 15. Taskbar -------------------------------------------------------------------
 $g = 'Taskbar'
 Add-BlobPrivacyItem $g 'widgets' 'Windows Widgets' '' 'Disable' 'Medium' @('HKLM:\SOFTWARE\Policies\Microsoft\Dsh|AllowNewsAndInterests|0') `
     'The Widgets board with news, weather and stocks.' 'Your interests, location for weather, and what you read.' `
@@ -35,7 +35,7 @@ Add-BlobPrivacyItem $g 'taskbarrec' 'Taskbar recommendations' '' 'Disable' 'Low'
     'Shows account notifications and promoted recommendations in Start and the taskbar.' 'Account status and usage.' `
     'No account nags or promotions.' 'Backup and account reminders.' 'None.'
 
-# ---- 17. Activity History and Clipboard ---------------------------------------------
+# ---- 16. Activity History and Clipboard ---------------------------------------------
 $g = 'Activity History and Clipboard'
 Add-BlobPrivacyItem $g 'actsend' 'Sending activity history to Microsoft' '' 'Disable' 'High' @("$pcSys|UploadUserActivities|0") `
     'Uploads the list of apps, files and sites you used to your Microsoft account.' 'Detailed activity history.' `
@@ -54,30 +54,13 @@ Add-BlobPrivacyItem $g 'clipshare' 'Sharing clipboard data across devices' '' 'D
     'Your personal switch for clipboard sync (Settings > System > Clipboard).' 'Copied content uploaded for sync.' `
     'Clipboard sync off for your account.' 'Cross-device paste.' 'None.'
 
-# ---- 18. Microsoft Defender and SpyNet (information only) ---------------------------
-$g = 'Microsoft Defender and SpyNet'
-foreach ($e in @(
-        @('defsamples', 'Automatic file sample submissions', 'Sends suspicious files to Microsoft for analysis.', 'Copies of suspicious files; Defender asks before sending files likely to contain personal data.'),
-        @('spynet', 'Microsoft SpyNet participation', 'Cloud-delivered protection (formerly SpyNet/MAPS): Defender asks the cloud about unknown files.', 'File hashes, file names and detection details.'),
-        @('malreport', 'Malware infection reporting', 'Reports detected malware to Microsoft.', 'Detection names and affected file paths.'),
-        @('defcloud', 'Cloud-based Defender information sharing', 'Shares threat information with Microsoft to block new threats within seconds.', 'Threat metadata from your PC.'),
-        @('defsample2', 'Automatic sample submission', 'Same as automatic file sample submissions.', 'Copies of suspicious files.'))) {
-    Add-BlobPrivacyItem $g $e[0] $e[1] '' 'Keep' 'Low' @() $e[2] $e[3] `
-        'Small: the data is technical and used to protect you and everyone else.' `
-        'New and fast-spreading malware is caught much later, sometimes not at all.' `
-        'Turning this off weakens Microsoft Defender. BLOB never changes Defender settings; you can review them in Windows Security.'
-}
-
-# ---- 19. Microsoft Copilot and Windows AI ------------------------------------------
+# ---- 17. Microsoft Copilot and Windows AI ------------------------------------------
 $g = 'Microsoft Copilot and Windows AI'
 Add-BlobPrivacyItem $g 'copilot' 'Windows Copilot' '' 'Disable' 'High' @('HKCU:\Software\Policies\Microsoft\Windows\WindowsCopilot|TurnOffWindowsCopilot|1', 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot|TurnOffWindowsCopilot|1') `
     'The Copilot assistant built into Windows.' 'Your prompts, and screen or file content you share with it.' `
     'Copilot cannot run from Windows.' 'Copilot in Windows (newer Copilot app versions may ignore the policy).' 'The separate Copilot app can still be uninstalled from the Apps page.'
 Add-BlobPrivacyItem $g 'copilotbtn' 'Copilot taskbar button' '' 'Disable' 'Low' @("$pcAdv|ShowCopilotButton|0") `
     'Shows the Copilot button on the taskbar.' 'Nothing until used.' 'No accidental Copilot launches.' 'The taskbar button.' 'None.'
-Add-BlobPrivacyItem $g 'copilotkey' 'Copilot keyboard key' '' 'Optional' 'Low' @() `
-    'The Copilot key on new keyboards opens Copilot.' 'Nothing until used.' `
-    'Remap it in Settings > Personalization > Text input > "Customize Copilot key".' 'One-press Copilot.' 'Remapping is a personal setting; listed for information.'
 Add-BlobPrivacyItem $g 'paintcreator' 'Image Creator in Microsoft Paint' '' 'Disable' 'Medium' @('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint|DisableImageCreator|1') `
     'Creates images in Paint from a text prompt using a cloud service.' 'Your prompts, linked to your account.' 'Prompts are not sent.' 'AI image creation in Paint.' 'None.'
 Add-BlobPrivacyItem $g 'paintfill' 'AI image filling in Paint' '' 'Disable' 'Medium' @('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint|DisableGenerativeFill|1', 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint|DisableGenerativeErase|1') `
@@ -94,7 +77,7 @@ Add-BlobPrivacyItem $g 'explorerai' 'AI actions in File Explorer' 'C211' 'Disabl
     'AI actions in the right-click menu of files (for example blur background, summarise).' 'Files you run actions on.' `
     'Files are not sent to AI features from Explorer.' 'AI actions in the context menu.' 'Applies on builds that support it.'
 
-# ---- 20. Mobile Devices ---------------------------------------------------------------
+# ---- 18. Mobile Devices ---------------------------------------------------------------
 $g = 'Mobile Devices'
 Add-BlobPrivacyItem $g 'phonelink' 'Phone Link' '' 'Optional' 'High' @("$pcSys|EnableMmx|0") `
     'Links an Android or iPhone to the PC for messages, calls, photos and notifications.' 'Messages, contacts, photos and notifications from your phone.' `
@@ -106,11 +89,8 @@ Add-BlobPrivacyItem $g 'mobileaccess' 'Mobile device access' '' 'Optional' 'Medi
     'The phone does not appear in Windows features.' 'Phone access from Explorer and Start.' 'None.'
 Add-BlobPrivacyItem $g 'mobilesugg' 'Suggestions for connecting mobile devices' '' 'Disable' 'Low' @('HKCU:\Software\Microsoft\Windows\CurrentVersion\Mobility|OptedIn|0') `
     'Suggests linking your phone in Settings and notifications.' 'Nothing extra.' 'No phone-linking nags.' 'Nothing.' 'None.'
-Add-BlobPrivacyItem $g 'mobilenotify' 'Mobile-device notifications' '' 'Optional' 'Medium' @() `
-    'Shows your phone notifications on the PC through Phone Link.' 'Phone notifications.' `
-    'Turning Phone Link off (above) stops it; or change it in the Phone Link app.' 'Phone notifications on the PC.' 'Managed in Phone Link; listed for information.'
 
-# ---- 21. Miscellaneous ----------------------------------------------------------------
+# ---- 19. Miscellaneous ----------------------------------------------------------------
 $g = 'Miscellaneous'
 Add-BlobPrivacyItem $g 'feedback2' 'Feedback reminders' '' 'Disable' 'Low' @('HKCU:\Software\Microsoft\Siuf\Rules|NumberOfSIUFInPeriod|0', "$pcDC|DoNotShowFeedbackNotifications|1") `
     'Same as Feedback requests: Windows asking for your opinion.' 'Your answers.' 'No reminders.' 'Nothing.' 'None.'
@@ -119,17 +99,13 @@ Add-BlobPrivacyItem $g 'autoinstall' 'Automatic installation of recommended Stor
     'No apps appear without your consent.' 'Nothing.' 'Apps already installed stay; remove them on the Apps page.'
 Add-BlobPrivacyItem $g 'wintips' 'Windows tips and suggestions' '' 'Disable' 'Low' @("$pcCC|DisableSoftLanding|1") `
     'Policy that turns off Windows tips everywhere.' 'Feature usage for targeting.' 'No tips.' 'Hints about new features.' 'None.'
-Add-BlobPrivacyItem $g 'activation' 'Activation checks' '' 'Keep' 'Low' @() `
-    'Windows checks that its licence is valid.' 'Your product key or digital licence and hardware ID.' `
-    'None worth the risk.' 'Windows would show as not activated and lose personalisation.' `
-    'Blocking activation is a licensing violation and can break updates. BLOB does not offer a switch.'
 Add-BlobPrivacyItem $g 'promofeatures' 'Promotional Windows features' '' 'Disable' 'Low' @('HKCU:\Software\Microsoft\Windows\CurrentVersion\UserProfileEngagement|ScoobeSystemSettingEnabled|0') `
     'Full-screen "finish setting up your device" prompts promoting Microsoft services.' 'Which offers you accept.' 'No setup nags.' 'Nothing.' 'None.'
 Add-BlobPrivacyItem $g 'consumer' 'Consumer experience features' '' 'Disable' 'Medium' @("$pcCC|DisableWindowsConsumerFeatures|1", "$pcCC|DisableConsumerAccountStateContent|1") `
     'Microsoft consumer experiences: suggested apps, account promotions and third-party offers.' 'Usage and account state.' `
     'Fewer promotions everywhere.' 'Nothing.' 'Fully honoured on Enterprise/Education; partly on Home and Pro.'
 
-# ---- 22. Gaming ------------------------------------------------------------------------
+# ---- 20. Gaming ------------------------------------------------------------------------
 $g = 'Gaming'
 Add-BlobPrivacyItem $g 'gamebar' 'Xbox Game Bar' '' 'Optional' 'Low' @('HKCU:\Software\Microsoft\GameBar|UseNexusForGameBarEnabled|0', 'HKCU:\Software\Microsoft\GameBar|ShowStartupPanel|0') `
     'The Win+G overlay with widgets, chat and performance stats.' 'Game and party chat data when used.' `

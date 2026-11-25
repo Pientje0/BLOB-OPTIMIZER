@@ -14,14 +14,14 @@ $out = Join-Path $root 'docs\PRIVACY-SETTINGS.md'
     param($srcDir, $out)
     foreach ($m in 'Core', 'UI', 'Engine', 'TweakDetails', 'PrivacyCenter', 'PrivacyData1', 'PrivacyData2', 'PrivacyData3') { . (Join-Path $srcDir "$m.ps1") }
     $items = @(Get-BlobPrivacyItems)
-    $recWord = @{ Disable = 'DISABLE'; Optional = 'OPTIONAL'; Keep = 'KEEP ENABLED'; 'N/A' = 'NOT APPLICABLE' }
+    $recWord = @{ Disable = 'DISABLE'; Optional = 'OPTIONAL'; Keep = 'KEEP ENABLED' }
     $sb = New-Object System.Text.StringBuilder
     $nl = "`n"
     [void]$sb.Append("# Privacy settings reference$nl$nl")
     [void]$sb.Append("Generated from the BLOB OPTIMIZER privacy catalogue ($($items.Count) settings in $($Blob.PrivacyGroups.Count) sections). ")
     [void]$sb.Append("Every entry answers the same questions: what it does, what can be collected, the benefit of turning it off, what you lose, possible problems, a recommendation and a privacy impact rating.$nl$nl")
-    [void]$sb.Append("**Recommendations:** DISABLE = good privacy benefit with minimal disadvantages. OPTIONAL = depends on how you use the PC. KEEP ENABLED = important for security, stability or everyday use. NOT APPLICABLE = the feature no longer exists on current Windows.$nl$nl")
-    [void]$sb.Append("**How BLOB changes them:** only documented Windows, Edge and Office policy or settings values (shown under *Change*). Every original value is saved first and can be restored. Items marked *information only* have no switch, either because no reliable switch exists or because turning them off would weaken security (Microsoft Defender, security updates, activation). O&O ShutUp10++ IDs are given where known; none are guessed.$nl$nl")
+    [void]$sb.Append("**Recommendations:** DISABLE = good privacy benefit with minimal disadvantages. OPTIONAL = depends on how you use the PC. KEEP ENABLED = important for security, stability or everyday use.$nl$nl")
+    [void]$sb.Append("**How BLOB changes them:** only documented Windows, Edge and Office policy or settings values (shown under *Change*). Every setting listed here can be switched in BLOB; every original value is saved first and can be restored. Microsoft Defender, security updates and Windows activation are never changed. O&O ShutUp10++ IDs are given where known; none are guessed.$nl$nl")
     $counts = $items | Group-Object { $_.Privacy.Rec } | ForEach-Object { "$($recWord[$_.Name]): $($_.Count)" }
     [void]$sb.Append("Totals - $($counts -join ', ').$nl$nl## Sections$nl$nl")
     for ($i = 0; $i -lt $Blob.PrivacyGroups.Count; $i++) {
@@ -42,11 +42,8 @@ $out = Join-Path $root 'docs\PRIVACY-SETTINGS.md'
             [void]$sb.Append("- **Benefit of turning it off:** $($p.Benefit)$nl")
             [void]$sb.Append("- **What you lose:** $($p.Lose)$nl")
             [void]$sb.Append("- **Possible problems:** $($p.Issues)$nl")
-            if ($t.InfoOnly) { [void]$sb.Append("- **Change:** information only, no switch$nl") }
-            else {
-                $chg = @($t.Registry | ForEach-Object { '`' + (Format-BlobRegPath $_.Path $_.Name) + ' = ' + $_.Value + '`' }) + @($t.Services | ForEach-Object { "service ``$($_.Name)`` startup = $($_.Startup)" })
-                [void]$sb.Append("- **Change:** $($chg -join ', ')$nl")
-            }
+            $chg = @($t.Registry | ForEach-Object { '`' + (Format-BlobRegPath $_.Path $_.Name) + ' = ' + $_.Value + '`' }) + @($t.Services | ForEach-Object { "service ``$($_.Name)`` startup = $($_.Startup)" })
+            [void]$sb.Append("- **Change:** $($chg -join ', ')$nl")
         }
     }
     [IO.File]::WriteAllText($out, $sb.ToString(), (New-Object Text.UTF8Encoding($false)))
