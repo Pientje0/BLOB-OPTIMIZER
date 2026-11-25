@@ -19,28 +19,28 @@ Open **PowerShell**, **Windows Terminal** or plain **cmd**. It does not need to 
 PowerShell / Windows Terminal:
 
 ```powershell
-irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.3.0/BLOB.ps1 | iex
+irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.4.0/BLOB.ps1 | iex
 ```
 
 cmd.exe:
 
 ```cmd
-powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.3.0/BLOB.ps1 | iex"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.4.0/BLOB.ps1 | iex"
 ```
 
 **Terminal-only interface** (keyboard UI inside PowerShell):
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.3.0/BLOB.ps1))) -Tui
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.4.0/BLOB.ps1))) -Tui
 ```
 
 **Dry run** shows every change it would make without modifying anything:
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.3.0/BLOB.ps1))) -DryRun
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.4.0/BLOB.ps1))) -DryRun
 ```
 
-> Pinning a version tag (`v2.3.0`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
+> Pinning a version tag (`v2.4.0`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
 
 **Administrator rights.** BLOB OPTIMIZER requests administrator rights at start-up through the standard Windows UAC prompt. It never bypasses or suppresses that prompt. If you choose *No*, it continues in read-only mode: you can browse everything and apply per-user settings. Add `-NoElevate` (or set `$env:BLOB_NOELEVATE = '1'`) to skip the prompt.
 
