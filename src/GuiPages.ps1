@@ -8,7 +8,7 @@ function Get-BlobGuiPages {
     @(
         @{ Key = 'dashboard'; Label = 'Home'; Icon = 0xE80F; Subtitle = 'System overview and quick actions'; Build = { New-BlobGuiDashboard } }
         @{ Key = 'presets'; Label = 'Presets'; Icon = 0xE734; Subtitle = 'MINIMAL, STANDARD or ADVANCED - every change is listed before it is applied'; Build = { New-BlobGuiPresets } }
-        @{ Key = 'optimize'; Label = 'Optimizations'; Icon = 0xEC4A; Subtitle = 'Every setting as a card. Flip the switch to activate (with a full preview) or deactivate (restores the original).'; Build = { New-BlobGuiOptimizations } }
+        @{ Key = 'optimize'; Label = 'Optimizations'; Icon = 0xEC4A; Subtitle = 'Flip the switches to choose what you want, then press Apply changes. Nothing changes before that.'; Build = { New-BlobGuiOptimizations } }
         @{ Key = 'services'; Label = 'Services'; Icon = 0xE912; Gap = $true; Subtitle = 'Startup types only - services are never deleted, critical ones are protected'; Build = { New-BlobGuiServices } }
         @{ Key = 'startup'; Label = 'Startup'; Icon = 0xE7B5; Subtitle = 'Programs that launch at sign-in. Disabled the same way Task Manager does it.'; Build = { New-BlobGuiStartup } }
         @{ Key = 'cleanup'; Label = 'Cleanup'; Icon = 0xE74D; Subtitle = 'Temporary files and caches with a size preview. Deleted files cannot be restored.'; Build = { New-BlobGuiCleanup } }
@@ -203,9 +203,12 @@ function Invoke-BlobGuiPreset {
 # ---------------------------------------------------------------------------
 $Blob.GuiCategories = @('All', 'FPS & Latency', 'Performance', 'Network', 'Quality of Life', 'Privacy & Security')
 
+$Blob.GuiRiskFilters = [ordered]@{ All = 'All'; Minimal = 'Low risk'; Standard = 'Medium risk'; Advanced = 'High risk'; Optional = 'Preference' }
+
 function Get-BlobGuiFilteredTweaks {
     $list = @($Blob.Tweaks)
     if ($Blob.Gui.OptFilter -and $Blob.Gui.OptFilter -ne 'All') { $list = @($list | Where-Object { $_.Category -eq $Blob.Gui.OptFilter }) }
+    if ($Blob.Gui.OptRisk -and $Blob.Gui.OptRisk -ne 'All') { $list = @($list | Where-Object { $_.Risk -eq $Blob.Gui.OptRisk }) }
     $q = [string]$Blob.Gui.OptSearch
     if ($q.Trim()) {
         $q = $q.Trim()
@@ -217,9 +220,9 @@ function Get-BlobGuiFilteredTweaks {
 function New-BlobChip {
     param([string]$Text)
     $b = [Windows.Controls.Border]::new()
-    $b.Background = Get-BlobBrush '#062A10'; $b.CornerRadius = 0; $b.Padding = '8,2'
+    $b.Background = Get-BlobBrush '#061C33'; $b.CornerRadius = 0; $b.Padding = '8,2'
     $b.HorizontalAlignment = 'Left'; $b.VerticalAlignment = 'Center'
-    $b.Child = New-BlobText $Text 11 '#2EDB55' 'SemiBold'
+    $b.Child = New-BlobText $Text 11 '#3A9BE0' 'SemiBold'
     return $b
 }
 
@@ -236,58 +239,51 @@ function New-BlobGlyph {
 }
 
 function New-BlobTweakCard {
-    param($Tweak, [string]$State, [bool]$Selected)
+    param($Tweak, [string]$State, [string]$Pending)
     $state = $State
-    $selected = $Selected
+    $wantOn = if ($Pending) { $Pending -eq 'On' } else { $state -eq 'Applied' }
     $card = [Windows.Controls.Border]::new()
-    $card.Background = Get-BlobBrush '#000000'; $card.CornerRadius = 0; $card.Padding = '16,14,16,12'; $card.Margin = '0,0,12,12'
-    $card.BorderThickness = 1
-    $card.BorderBrush = if ($selected) { Get-BlobBrush 'Cyan' } elseif ($state -eq 'Applied') { Get-BlobBrush '#0F6A24' } else { Get-BlobBrush '#0F6A24' }
+    $card.Background = Get-BlobBrush 'Black'; $card.CornerRadius = 0; $card.Padding = '16,14,16,12'; $card.Margin = '0,0,12,12'
+    $card.BorderThickness = $(if ($Pending) { 2 } else { 1 })
+    $card.BorderBrush = if ($Pending) { Get-BlobBrush 'Cyan' } else { Get-BlobBrush 'DarkCyan' }
     $card.MinHeight = 190
     $dock = [Windows.Controls.DockPanel]::new()
     $dock.LastChildFill = $true
 
-    # Bottom row: + ? ! ...... label switch
+    # Bottom row: ? ! ADMIN ...... state label + switch
     $bottom = [Windows.Controls.DockPanel]::new()
     $bottom.Margin = '0,12,0,0'
     [Windows.Controls.DockPanel]::SetDock($bottom, 'Bottom')
     $right = New-BlobStack 'Horizontal'
     [Windows.Controls.DockPanel]::SetDock($right, 'Right')
-    $labelText = switch ($state) { 'Applied' { 'Deactivate' } 'Partial' { 'Partly on' } default { 'Activate' } }
-    $labelColor = switch ($state) { 'Applied' { 'White' } 'Partial' { 'Yellow' } default { 'Gray' } }
-    [void]$right.Children.Add((New-BlobText $labelText 12.5 $labelColor 'Normal' '0,0,10,0'))
-    $right.Children[0].VerticalAlignment = 'Center'
+    $labelText = if ($Pending -eq 'On') { 'WILL ACTIVATE' } elseif ($Pending -eq 'Off') { 'WILL DEACTIVATE' }
+                 else { switch ($state) { 'Applied' { 'Active' } 'Partial' { 'Partly on' } default { 'Off' } } }
+    $label = New-BlobText $labelText 12.5 $(if ($Pending -or $state -eq 'Applied') { 'White' } else { 'Gray' }) $(if ($Pending) { 'Bold' } else { 'Normal' }) '0,0,10,0'
+    $label.VerticalAlignment = 'Center'
+    [void]$right.Children.Add($label)
     $sw = [Windows.Controls.CheckBox]::new()
     $sw.Style = $Blob.Gui.Window.FindResource('Switch')
-    $sw.IsChecked = ($state -eq 'Applied')
+    $sw.IsChecked = $wantOn
     $sw.VerticalAlignment = 'Center'
-    $card.Tag = $sw          # lets a reused card reset its switch after a cancelled click
+    $card.Tag = $sw
     if ($Tweak.Admin -and -not $Blob.IsAdmin) {
         $sw.IsEnabled = $false
         $holder = [Windows.Controls.Border]::new()
         $holder.Background = [Windows.Media.Brushes]::Transparent
         $holder.Child = $sw
-        Set-BlobTooltip $holder (New-BlobTooltipPanel -Title 'Administrator required' -Paragraphs @('This is a machine-wide setting. Restart BLOB OPTIMIZER from an administrator terminal to change it.'))
+        Set-BlobTooltip $holder (New-BlobTooltipPanel -Title 'Administrator required' -Paragraphs @('This is a machine-wide setting. Start BLOB OPTIMIZER again and choose Yes in the Windows permission prompt to change it.'))
         [void]$right.Children.Add($holder)
     } else {
         $sw.DataContext = $Tweak.Id
+        $sw.ToolTip = 'Choose on or off. Nothing changes until you press Apply changes.'
         Register-BlobClick $sw $Blob.GuiShared.SwitchClick
         [void]$right.Children.Add($sw)
     }
     [void]$bottom.Children.Add($right)
     $left = New-BlobStack 'Horizontal'
-    $plus = [Windows.Controls.Button]::new()
-    $plus.Style = $Blob.Gui.Window.FindResource('IconButton')
-    $plus.Content = $(if ($selected) { '[x]' } else { '[+]' })
-    $plus.Width = 34
-    if ($selected) { $plus.Foreground = Get-BlobBrush 'Cyan' }
-    $plus.ToolTip = if ($selected) { 'Selected - click to unselect' } else { 'Select for batch apply / undo' }
-    $plus.DataContext = $Tweak.Id
-    Register-BlobClick $plus $Blob.GuiShared.SelectClick
-    [void]$left.Children.Add($plus)
     $help = New-BlobHelpIcon -Builder $Blob.GuiShared.TweakTip
     $help.DataContext = $Tweak.Id
-    $help.Margin = '4,0,0,0'
+    $help.Margin = '0'
     [void]$left.Children.Add($help)
     if ($Tweak.Risk -eq 'Advanced') {
         $warn = New-BlobGlyph 0xE7BA 'Yellow' 15
@@ -298,7 +294,7 @@ function New-BlobTweakCard {
         [void]$left.Children.Add($warn)
     }
     if ($Tweak.Admin) {
-        $lock = New-BlobGlyph 0xE72E $(if ($Blob.IsAdmin) { 'DarkGray' } else { 'Yellow' }) 13
+        $lock = New-BlobGlyph 0xE72E $(if ($Blob.IsAdmin) { 'DarkGray' } else { 'Yellow' }) 12
         $lock.Margin = '10,0,0,0'
         Set-BlobTooltip $lock (New-BlobTooltipPanel -Title 'Administrator setting' -Paragraphs @('Machine-wide setting: needs administrator rights.'))
         [void]$left.Children.Add($lock)
@@ -317,7 +313,7 @@ function New-BlobTweakCard {
 
     $body = New-BlobStack
     [void]$body.Children.Add((New-BlobText $Tweak.Name 15 'White' 'SemiBold' '0,12,0,6'))
-    $desc = New-BlobText $Tweak.Description 12.5 '#2EDB55'
+    $desc = New-BlobText $Tweak.Description 12.5 'Gray'
     $desc.MaxHeight = 70; $desc.TextTrimming = 'CharacterEllipsis'
     [void]$body.Children.Add($desc)
     [void]$dock.Children.Add($body)
@@ -326,61 +322,124 @@ function New-BlobTweakCard {
 }
 
 # Returns the card for a tweak, reusing the cached element when its state and
-# selection are unchanged (so switching, searching and filtering stay instant).
+# pending choice are unchanged (so switching, searching and filtering stay instant).
 function Get-BlobGuiCard {
     param($Tweak, [string]$State)
     if (-not $Blob.Gui.CardCache) { $Blob.Gui.CardCache = @{} }
-    $sel = [bool]$Blob.Gui.Selected[$Tweak.Id]
+    $pend = [string]$Blob.Gui.Pending[$Tweak.Id]
     $c = $Blob.Gui.CardCache[$Tweak.Id]
-    if (-not ($c -and $c.State -eq $State -and $c.Selected -eq $sel)) {
-        $c = @{ Element = (New-BlobTweakCard $Tweak $State $sel); State = $State; Selected = $sel }
+    if (-not ($c -and $c.State -eq $State -and $c.Pending -eq $pend)) {
+        $c = @{ Element = (New-BlobTweakCard $Tweak $State $pend); State = $State; Pending = $pend }
         $Blob.Gui.CardCache[$Tweak.Id] = $c
     }
     $el = $c.Element
     if ($el.Parent -is [Windows.Controls.Panel]) { $el.Parent.Children.Remove($el) }
-    if ($el.Tag -is [Windows.Controls.CheckBox]) { $el.Tag.IsChecked = ($State -eq 'Applied') }
+    if ($el.Tag -is [Windows.Controls.CheckBox]) { $el.Tag.IsChecked = $(if ($pend) { $pend -eq 'On' } else { $State -eq 'Applied' }) }
     return $el
 }
 
 function Update-BlobGuiCardGrid {
     $g = $Blob.Gui.CardGrid
     if (-not $g) { return }
+    $offset = $Blob.Gui.PageScroll.VerticalOffset
     $g.Children.Clear()
     $states = @{}
     foreach ($t in $Blob.Tweaks) { $states[$t.Id] = Get-BlobTweakState $t }
     $list = @(Get-BlobGuiFilteredTweaks)
     foreach ($t in $list) { [void]$g.Children.Add((Get-BlobGuiCard $t $states[$t.Id])) }
     $active = @($states.Values | Where-Object { $_ -eq 'Applied' }).Count
-    $Blob.Gui.CardCount.Text = "$($list.Count) shown  -  $active of $($Blob.Tweaks.Count) active  -  $(@($Blob.Gui.Selected.Keys).Count) selected"
-    $n = @($Blob.Gui.Selected.Keys).Count
-    if ($Blob.Gui.ApplySelBtn) { $Blob.Gui.ApplySelBtn.Content = $(if ($n) { "Apply selected ($n)" } else { 'Apply selected' }) }
+    $n = $Blob.Gui.Pending.Count
+    $Blob.Gui.CardCount.Text = "$($list.Count) shown  -  $active of $($Blob.Tweaks.Count) active  -  $n change(s) waiting to be applied"
+    if ($Blob.Gui.ApplySelBtn) { $Blob.Gui.ApplySelBtn.Content = $(if ($n) { "Apply changes ($n)" } else { 'Apply changes' }) }
     Update-BlobGuiCardColumns
-}
-
-function Get-BlobGuiSelectedTweaks { return @($Blob.Gui.Selected.Keys | ForEach-Object { Get-BlobTweak $_ } | Where-Object { $_ }) }
-
-function Switch-BlobGuiSelect {
-    param([string]$Id)
-    if ($Blob.Gui.Selected.ContainsKey($Id)) { $Blob.Gui.Selected.Remove($Id) } else { $Blob.Gui.Selected[$Id] = $true }
-    $offset = $Blob.Gui.PageScroll.VerticalOffset
-    Update-BlobGuiCardGrid
     $Blob.Gui.PageScroll.UpdateLayout(); $Blob.Gui.PageScroll.ScrollToVerticalOffset($offset)
 }
 
-# Switch on a card: activate (apply with preview) or deactivate (restore original).
+# A switch only records what you want; nothing changes until Apply changes.
 function Switch-BlobGuiTweak {
     param([string]$Id)
     $t = Get-BlobTweak $Id
     if (-not $t) { return }
-    $done = if ((Get-BlobTweakState $t) -eq 'Applied') { Invoke-BlobGuiUndo @($t) } else { Invoke-BlobGuiApply -Tweaks @($t) -Tag $t.Id }
-    if (-not $done) { Update-BlobGuiPage }   # cancelled: put the switch back
+    $state = Get-BlobTweakState $t
+    $cur = $Blob.Gui.Pending[$Id]
+    $isOn = if ($cur) { $cur -eq 'On' } else { $state -eq 'Applied' }
+    if (-not $isOn) {
+        if ($state -eq 'Applied') { $Blob.Gui.Pending.Remove($Id) } else { $Blob.Gui.Pending[$Id] = 'On' }
+    } else {
+        if ($state -eq 'Applied') { $Blob.Gui.Pending[$Id] = 'Off' } else { $Blob.Gui.Pending.Remove($Id) }
+    }
+    Update-BlobGuiCardGrid
+}
+
+# Applies every pending choice: activations get the full preview and backup,
+# deactivations restore the original values saved before the change.
+function Invoke-BlobGuiApplyPending {
+    $on = @($Blob.Gui.Pending.Keys | Where-Object { $Blob.Gui.Pending[$_] -eq 'On' } | ForEach-Object { Get-BlobTweak $_ } | Where-Object { $_ })
+    $off = @($Blob.Gui.Pending.Keys | Where-Object { $Blob.Gui.Pending[$_] -eq 'Off' } | ForEach-Object { Get-BlobTweak $_ } | Where-Object { $_ })
+    if ($on.Count + $off.Count -eq 0) {
+        Show-BlobGuiMessage -Title 'Nothing to apply' -Lines @('{Gray}Flip the switches of the settings you want to change first.', '{Gray}Nothing changes until you press Apply changes.')
+        return
+    }
+    $lines = @()
+    if ($on.Count) {
+        $lines += "{Cyan}ACTIVATE ($($on.Count))"
+        $lines += @(Get-BlobTweakPreview $on | Select-Object -SkipLast 2)
+    }
+    $undo = $null
+    if ($off.Count) {
+        $undo = Get-BlobUndoPlan $off
+        $lines += "{Cyan}DEACTIVATE ($($off.Count)) - restore the values saved before they were changed"
+        $lines += $undo.Lines
+        $lines += ''
+    }
+    $lines += '{Gray}Original values are saved to the change journal before anything is modified.'
+    $total = $on.Count + $off.Count
+    $danger = @($on | Where-Object { $_.Risk -eq 'Advanced' }).Count -gt 0
+    $canRp = $Blob.IsAdmin -and -not $Blob.DryRun
+    $rpText = if ($canRp) { 'Create a System Restore point first (recommended)' } elseif ($Blob.DryRun) { 'Create a System Restore point first (not available in dry run)' } else { 'Create a System Restore point first (requires administrator)' }
+    $ok = Show-BlobGuiDialog -Title "Apply $total change(s)?" -Subtitle 'These exact settings will change.' -Lines $lines -Danger:$danger `
+        -OkText "Apply $total change(s)" -CheckText $rpText -CheckDefault $canRp -CheckEnabled $canRp
+    if (-not $ok) { return }
+    if ($Blob.Gui.DialogCheck) { Invoke-BlobGuiRestorePointStep 'BLOB OPTIMIZER - before applying changes' }
+    $needsExplorer = $false
+    if ($on.Count) {
+        Start-BlobGuiTask "Activating $($on.Count) setting(s)"
+        $out = Invoke-BlobTweakCore -Tweaks $on -Tag 'changes' -Log { param($m) Add-BlobGuiLog $m }
+        Add-BlobGuiLog "{Cyan}$($out.Summary)"
+        $needsExplorer = $out.NeedsExplorer
+    }
+    if ($undo -and $undo.Records.Count) {
+        Start-BlobGuiTask "Deactivating $($off.Count) setting(s)"
+        $a, $b = Invoke-BlobRestoreCore -Records $undo.Records -Log { param($m) Add-BlobGuiLog $m }
+        Add-BlobGuiLog ("{Cyan}Deactivated: {0} value(s) restored, {1} not restored." -f $a, $b)
+        if (@($off | Where-Object { $_.RestartExplorer }).Count) { $needsExplorer = $true }
+    }
+    $Blob.Gui.Pending.Clear()
+    if ($needsExplorer -and -not $Blob.DryRun) {
+        if (Show-BlobGuiDialog -Title 'Restart Windows Explorer now?' -OkText 'Restart Explorer' -CancelText 'Later' -Lines @(
+                '{Gray}Some changes appear only after Explorer restarts.',
+                '{Gray}The taskbar and open Explorer windows close and reopen. Choose Later to restart or sign out yourself.')) {
+            Restart-BlobExplorer; Add-BlobGuiLog '{Green}Explorer restarted.'
+        }
+    }
+    Update-BlobGuiPage
+}
+
+function New-BlobGuiFilterChip {
+    param([string]$Text, [bool]$Active, [scriptblock]$Action)
+    $b = [Windows.Controls.Button]::new()
+    $b.Style = $Blob.Gui.Window.FindResource('ChipButton')
+    $b.Content = $Text
+    if ($Active) { $b.Background = Get-BlobBrush 'Cyan'; $b.BorderBrush = Get-BlobBrush 'Cyan'; $b.Foreground = Get-BlobBrush 'Black' }
+    Register-BlobClick $b $Action
+    return $b
 }
 
 function New-BlobGuiOptimizations {
     $root = New-BlobStack
-    # Filter chips + search
+    # Category chips + search
     $bar = [Windows.Controls.DockPanel]::new()
-    $bar.Margin = '0,0,0,6'
+    $bar.Margin = '0,0,0,2'
     $sbox = [Windows.Controls.Grid]::new()
     $sbox.Width = 250; $sbox.VerticalAlignment = 'Top'
     $search = [Windows.Controls.TextBox]::new()
@@ -401,27 +460,27 @@ function New-BlobGuiOptimizations {
         })
     [void]$bar.Children.Add($sbox)
     $chips = [Windows.Controls.WrapPanel]::new()
+    [void]$chips.Children.Add((New-BlobText 'CATEGORY' 11 'DarkGray' 'Bold' '0,7,10,0'))
     foreach ($c in $Blob.GuiCategories) {
         $count = if ($c -eq 'All') { $Blob.Tweaks.Count } else { @($Blob.Tweaks | Where-Object { $_.Category -eq $c }).Count }
-        $b = [Windows.Controls.Button]::new()
-        $b.Style = $Blob.Gui.Window.FindResource('ChipButton')
-        $b.Content = "$c  $count"
-        if ($Blob.Gui.OptFilter -eq $c) { $b.Background = Get-BlobBrush '#062A10'; $b.BorderBrush = Get-BlobBrush 'Cyan'; $b.Foreground = Get-BlobBrush 'Cyan' }
-        Register-BlobClick $b ([scriptblock]::Create("`$Blob.Gui.OptFilter = '$c'; Show-BlobGuiPage 'optimize' -Rebuild"))
-        [void]$chips.Children.Add($b)
+        [void]$chips.Children.Add((New-BlobGuiFilterChip "$c  $count" ($Blob.Gui.OptFilter -eq $c) ([scriptblock]::Create("`$Blob.Gui.OptFilter = '$c'; Show-BlobGuiPage 'optimize' -Rebuild"))))
     }
     [void]$bar.Children.Add($chips)
     [void]$root.Children.Add($bar)
 
-    $info = [Windows.Controls.DockPanel]::new()
-    $info.Margin = '0,0,0,12'
-    $Blob.Gui.CardCount = New-BlobText '' 12 'DarkGray'
-    $legend = New-BlobStack 'Horizontal'
-    [Windows.Controls.DockPanel]::SetDock($legend, 'Right')
-    foreach ($k in @('Minimal', 'Standard', 'Advanced', 'Optional')) { $rb = New-BlobRiskBadge $k; [void]$legend.Children.Add($rb) }
-    [void]$info.Children.Add($legend)
-    [void]$info.Children.Add($Blob.Gui.CardCount)
-    [void]$root.Children.Add($info)
+    # Risk level chips
+    $riskRow = [Windows.Controls.WrapPanel]::new()
+    $riskRow.Margin = '0,0,0,4'
+    [void]$riskRow.Children.Add((New-BlobText 'RISK    ' 11 'DarkGray' 'Bold' '0,7,10,0'))
+    if (-not $Blob.Gui.OptRisk) { $Blob.Gui.OptRisk = 'All' }
+    foreach ($k in $Blob.GuiRiskFilters.Keys) {
+        $count = if ($k -eq 'All') { $Blob.Tweaks.Count } else { @($Blob.Tweaks | Where-Object { $_.Risk -eq $k }).Count }
+        [void]$riskRow.Children.Add((New-BlobGuiFilterChip "$($Blob.GuiRiskFilters[$k])  $count" ($Blob.Gui.OptRisk -eq $k) ([scriptblock]::Create("`$Blob.Gui.OptRisk = '$k'; Show-BlobGuiPage 'optimize' -Rebuild"))))
+    }
+    [void]$root.Children.Add($riskRow)
+
+    $Blob.Gui.CardCount = New-BlobText '' 12 'DarkGray' 'Normal' '0,4,0,12'
+    [void]$root.Children.Add($Blob.Gui.CardCount)
 
     $grid = [Windows.Controls.Primitives.UniformGrid]::new()
     $grid.Columns = 3
@@ -444,13 +503,15 @@ function New-BlobGuiOptimizations {
     foreach ($d in $toolDefs) { $tb = New-BlobButton $d[0] $d[1]; $tb.Margin = '0,0,8,8'; [void]$tools.Children.Add($tb) }
     [void]$root.Children.Add((New-BlobCard $tools))
 
-    $Blob.Gui.ApplySelBtn = New-BlobButton 'Apply selected' {
-        $sel = Get-BlobGuiSelectedTweaks
-        if (Invoke-BlobGuiApply -Tweaks $sel -Tag 'selection') { $Blob.Gui.Selected.Clear(); Update-BlobGuiPage } } 'Accent' -Margin '0'
+    $Blob.Gui.ApplySelBtn = New-BlobButton 'Apply changes' { Invoke-BlobGuiApplyPending } 'Accent' -Margin '0'
     Set-BlobGuiPageActions @(
-        (New-BlobButton 'Select shown' { foreach ($t in (Get-BlobGuiFilteredTweaks)) { $Blob.Gui.Selected[$t.Id] = $true }; Update-BlobGuiCardGrid }),
-        (New-BlobButton 'Clear selection' { $Blob.Gui.Selected.Clear(); Update-BlobGuiCardGrid }),
-        (New-BlobButton 'Undo selected' { $null = Invoke-BlobGuiUndo (Get-BlobGuiSelectedTweaks) } -ToolTip 'Restore the original values saved by BLOB OPTIMIZER'),
+        (New-BlobButton 'Activate all shown' {
+                foreach ($t in (Get-BlobGuiFilteredTweaks)) {
+                    if ($t.Admin -and -not $Blob.IsAdmin) { continue }
+                    if ((Get-BlobTweakState $t) -ne 'Applied') { $Blob.Gui.Pending[$t.Id] = 'On' } elseif ($Blob.Gui.Pending[$t.Id] -eq 'Off') { $Blob.Gui.Pending.Remove($t.Id) }
+                }
+                Update-BlobGuiCardGrid } -ToolTip 'Mark every setting currently shown to be activated (nothing changes yet)'),
+        (New-BlobButton 'Discard changes' { $Blob.Gui.Pending.Clear(); Update-BlobGuiCardGrid } -ToolTip 'Forget all choices that were not applied yet'),
         $Blob.Gui.ApplySelBtn)
     Update-BlobGuiCardGrid
     return $root

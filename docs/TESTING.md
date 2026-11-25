@@ -36,9 +36,11 @@ Run this on a test VM or a spare PC before tagging a release. Test **Windows Pow
 - [ ] After changing a setting, Home, Presets and Restore show the new state when opened
 - [ ] After closing the window, no extra PowerShell threads or processes remain (Task Manager)
 - [ ] Optimizations: the category chips filter the cards, search filters as you type, and the count line updates
-- [ ] Flipping a card switch on shows the preview dialog. Cancel puts the switch back. Apply turns it on and the label changes to Deactivate
-- [ ] Flipping an active switch off restores the original. A setting with no saved original explains why it cannot be restored
-- [ ] **+** selects cards (cyan border). *Apply selected (n)* and *Undo selected* work on the selection
+- [ ] Flipping a switch only marks the card (WILL ACTIVATE / WILL DEACTIVATE, thicker border) and updates *Apply changes (N)*. Nothing is changed and no dialog opens
+- [ ] *Apply changes* lists all activations and deactivations, with the restore-point checkbox. Cancel keeps the choices, and Apply applies all of them and clears the list
+- [ ] Deactivating restores the saved original. A setting with no saved original is listed as not restorable
+- [ ] *Discard changes* clears all choices. Closing the window with choices pending asks for confirmation
+- [ ] The risk filter (Low / Medium / High / Preference) combines with the category filter and search
 - [ ] Admin-only cards show a lock icon, and their switch is disabled for standard users
 - [ ] Every setting shows a risk label (card corner and legend)
 - [ ] Hovering **?** on a setting, cleanup location or preset shows the detailed tooltip with exact changes
@@ -46,7 +48,7 @@ Run this on a test VM or a spare PC before tagging a release. Test **Windows Pow
 - [ ] With the box ticked, the log shows the restore point as OK, or as SKIP (24 h limit) with an explanation
 - [ ] External Tools: **Launch** shows the source URL first. WinUtil opens in a new admin window after the UAC prompt
 - [ ] ShutUp10++ downloads, the log shows "Signature valid (… O&O Software …)", and it starts. Cancelling UAC is logged as SKIP
-- [ ] The whole window is black and green, with square corners and no shadows (tooltips, dialogs, drop-downs)
+- [ ] The whole window is black and blue, with square corners and no shadows (tooltips, dialogs, drop-downs)
 - [ ] From a non-admin PowerShell, Windows Terminal and **cmd**, the launch command shows the UAC prompt. **Yes** opens an administrator window, and the first console says it can be closed
 - [ ] Choosing **No** at the UAC prompt continues in read-only mode with a message
 - [ ] `-NoElevate` starts without the prompt. `-DryRun` and `-Tui` are kept after elevation

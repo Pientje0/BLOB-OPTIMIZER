@@ -11,13 +11,12 @@ $Blob.GuiShared = @{
     RiskTip     = { param($el) New-BlobTooltipPanel -Title $Blob.RiskInfo[$el.DataContext].Label -Paragraphs @($Blob.RiskInfo[$el.DataContext].Text) }
     TweakTip    = { param($el) New-BlobTweakTooltip (Get-BlobTweak $el.DataContext) }
     SwitchClick = { Switch-BlobGuiTweak $Blob.Gui.Sender.DataContext }
-    SelectClick = { Switch-BlobGuiSelect $Blob.Gui.Sender.DataContext }
-}
+    }
 
-# Black and green only. Severity is shown with words and inverted badges.
+# Black and blue only. Severity is shown with words and inverted badges.
 $Blob.GuiColors = @{
-    Cyan = '#3DFF6A'; DarkCyan = '#0F6A24'; White = '#3DFF6A'; Gray = '#2EDB55'; DarkGray = '#1E9A3E'
-    Green = '#3DFF6A'; Yellow = '#3DFF6A'; Red = '#3DFF6A'; DarkYellow = '#2EDB55'; Magenta = '#3DFF6A'; Black = '#000000'
+    Cyan = '#4DB8FF'; DarkCyan = '#134C80'; White = '#4DB8FF'; Gray = '#3A9BE0'; DarkGray = '#2873B8'
+    Green = '#4DB8FF'; Yellow = '#4DB8FF'; Red = '#4DB8FF'; DarkYellow = '#3A9BE0'; Magenta = '#4DB8FF'; Black = '#000000'
 }
 
 function Test-BlobGuiSupported {
@@ -116,7 +115,7 @@ function Invoke-BlobGuiAction {
 function New-BlobCard {
     param($Child, [string]$Margin = '0,0,0,12', [string]$Padding = '18,14', [double]$Width = [double]::NaN)
     $c = [Windows.Controls.Border]::new()
-    $c.Background = Get-BlobBrush '#000000'; $c.BorderBrush = Get-BlobBrush '#0F6A24'
+    $c.Background = Get-BlobBrush '#000000'; $c.BorderBrush = Get-BlobBrush '#134C80'
     $c.BorderThickness = 1; $c.CornerRadius = 0; $c.Padding = $Padding; $c.Margin = $Margin
     if (-not [double]::IsNaN($Width)) { $c.Width = $Width }
     $c.Child = $Child
@@ -219,13 +218,13 @@ function New-BlobHelpIcon {
     param($Tooltip, [scriptblock]$Builder)
     $b = [Windows.Controls.Border]::new()
     $b.Width = 20; $b.Height = 20; $b.CornerRadius = 0
-    $b.BorderThickness = 1.5; $b.BorderBrush = Get-BlobBrush '#1E9A3E'; $b.Background = Get-BlobBrush '#000000'
+    $b.BorderThickness = 1.5; $b.BorderBrush = Get-BlobBrush '#2873B8'; $b.Background = Get-BlobBrush '#000000'
     $b.Margin = '8,0,0,0'; $b.VerticalAlignment = 'Center'; $b.Cursor = [Windows.Input.Cursors]::Help
     $t = New-BlobText '?' 12 'Gray' 'Bold'
     $t.HorizontalAlignment = 'Center'; $t.VerticalAlignment = 'Center'; $t.Margin = '0,-1,0,0'
     $b.Child = $t
     $b.Add_MouseEnter({ param($s, $e) $s.BorderBrush = Get-BlobBrush 'Cyan'; $s.Child.Foreground = Get-BlobBrush 'Cyan' })
-    $b.Add_MouseLeave({ param($s, $e) $s.BorderBrush = Get-BlobBrush '#1E9A3E'; $s.Child.Foreground = Get-BlobBrush 'Gray' })
+    $b.Add_MouseLeave({ param($s, $e) $s.BorderBrush = Get-BlobBrush '#2873B8'; $s.Child.Foreground = Get-BlobBrush 'Gray' })
     if ($Builder) { Set-BlobLazyTooltip $b $Builder } else { Set-BlobTooltip $b $Tooltip }
     return $b
 }
@@ -450,7 +449,7 @@ function Show-BlobGuiPage {
     foreach ($p in $Blob.Gui.Pages) {
         $btn = $Blob.Gui.Nav[$p.Key]
         if ($p.Key -eq $Key) { $btn.Foreground = Get-BlobBrush 'Cyan'; $btn.BorderBrush = Get-BlobBrush 'Cyan' }
-        else { $btn.Foreground = Get-BlobBrush '#2EDB55'; $btn.BorderBrush = [Windows.Media.Brushes]::Transparent }
+        else { $btn.Foreground = Get-BlobBrush '#3A9BE0'; $btn.BorderBrush = [Windows.Media.Brushes]::Transparent }
     }
     $Blob.Gui.PageTitle.Text = $page.Label
     $Blob.Gui.PageSubtitle.Text = $page.Subtitle
@@ -559,9 +558,9 @@ function Initialize-BlobGuiWindow {
     $w.Title = "BLOB OPTIMIZER $($Blob.Version)"
     $Blob.Gui.TitleVersion.Text = "v$($Blob.Version)"
     if ($Blob.IsAdmin) {
-        $Blob.Gui.AdminBadge.Background = Get-BlobBrush '#062A10'; $Blob.Gui.AdminBadgeText.Text = 'ADMINISTRATOR'; $Blob.Gui.AdminBadgeText.Foreground = Get-BlobBrush 'Green'
+        $Blob.Gui.AdminBadge.Background = Get-BlobBrush '#061C33'; $Blob.Gui.AdminBadgeText.Text = 'ADMINISTRATOR'; $Blob.Gui.AdminBadgeText.Foreground = Get-BlobBrush 'Green'
     } else {
-        $Blob.Gui.AdminBadge.Background = Get-BlobBrush '#062A10'; $Blob.Gui.AdminBadgeText.Text = 'STANDARD USER - READ ONLY FOR SYSTEM SETTINGS'; $Blob.Gui.AdminBadgeText.Foreground = Get-BlobBrush 'Yellow'
+        $Blob.Gui.AdminBadge.Background = Get-BlobBrush '#061C33'; $Blob.Gui.AdminBadgeText.Text = 'STANDARD USER - READ ONLY FOR SYSTEM SETTINGS'; $Blob.Gui.AdminBadgeText.Foreground = Get-BlobBrush 'Yellow'
     }
     if ($Blob.DryRun) { $Blob.Gui.DryRunBadge.Visibility = 'Visible' }
     $Blob.Gui.StatusRight.Text = "$($Blob.SysInfo.Host)  -  PowerShell $($PSVersionTable.PSVersion.Major).$($PSVersionTable.PSVersion.Minor)  -  No installation, nothing left running  -  Backups: $($Blob.DataRoot)"
@@ -599,6 +598,8 @@ function Initialize-BlobGuiWindow {
     }
     $Blob.Gui.PageScroll.Add_SizeChanged({ Update-BlobGuiCardColumns })
     $Blob.Gui.Selected = @{}
+    $Blob.Gui.Pending = @{}          # tweak id -> 'On' / 'Off', applied only with Apply changes
+    if (-not $Blob.Gui.OptRisk) { $Blob.Gui.OptRisk = 'All' }
     $Blob.Gui.Cache = @{}
     $Blob.Gui.PreloadDone = $false
     $Blob.Gui.PreloadTimer = $null
@@ -619,6 +620,16 @@ function Start-BlobGui {
     Start-BlobPrefetch                      # slow system data, collected on a background thread
     Show-BlobGuiPage 'dashboard'
     $Blob.Gui.Window.Add_ContentRendered({ Start-BlobGuiPreload })
+    $Blob.Gui.Window.Add_Closing({
+            param($s, $e)
+            $n = $Blob.Gui.Pending.Count
+            if ($n -gt 0) {
+                $close = Show-BlobGuiDialog -Title "Close with $n unapplied change(s)?" -OkText 'Close without applying' -CancelText 'Go back' -Lines @(
+                    '{Gray}You flipped switches but did not press Apply changes.',
+                    '{Gray}Closing now leaves those settings exactly as they are.')
+                if (-not $close) { $e.Cancel = $true }
+            }
+        })
     $Blob.Gui.Window.Add_Closed({
             if ($Blob.Gui.PreloadTimer) { $Blob.Gui.PreloadTimer.Stop() }
             Stop-BlobPrefetch

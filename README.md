@@ -19,28 +19,28 @@ Open **PowerShell**, **Windows Terminal** or plain **cmd**. It does not need to 
 PowerShell / Windows Terminal:
 
 ```powershell
-irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.4.0/BLOB.ps1 | iex
+irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.5.0/BLOB.ps1 | iex
 ```
 
 cmd.exe:
 
 ```cmd
-powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.4.0/BLOB.ps1 | iex"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.5.0/BLOB.ps1 | iex"
 ```
 
 **Terminal-only interface** (keyboard UI inside PowerShell):
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.4.0/BLOB.ps1))) -Tui
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.5.0/BLOB.ps1))) -Tui
 ```
 
 **Dry run** shows every change it would make without modifying anything:
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.4.0/BLOB.ps1))) -DryRun
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.5.0/BLOB.ps1))) -DryRun
 ```
 
-> Pinning a version tag (`v1.4.0`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
+> Pinning a version tag (`v1.5.0`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
 
 **Administrator rights.** BLOB OPTIMIZER requests administrator rights at start-up through the standard Windows UAC prompt. It never bypasses or suppresses that prompt. If you choose *No*, it continues in read-only mode: you can browse everything and apply per-user settings. Add `-NoElevate` (or set `$env:BLOB_NOELEVATE = '1'`) to skip the prompt.
 
@@ -54,17 +54,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\BLOB.ps1 -Tui     # termin
 
 ## Interfaces
 
-**Look.** Very basic black and green: pure black background, green text and 1-pixel green lines, a monospace font, square corners and no shadows. Severity is shown with words and inverted badges (HIGH RISK). The terminal interface uses the same black and green.
+**Look.** Very basic black and blue: pure black background, blue text and 1-pixel blue lines, a monospace font, square corners and no shadows. Severity is shown with words and inverted badges (HIGH RISK). The terminal interface uses the same black and blue.
 
 **Window (default).** A WPF window with tabs across the top (Home, Presets, Optimizations, Services, Startup, Cleanup, Network, Power, Restore, Tools, Info), sortable tables, a live activity log, and a confirmation dialog that lists every exact change before anything is applied.
 
 **Instant tabs.** Every tab preloads in the background a few seconds after the window opens, so switching tabs is instant. Slow system information (network, disks, security status, services, cleanup sizes) is collected on three parallel background threads inside the same PowerShell process; these threads are closed when the window closes. After you change something, the current tab refreshes immediately, other affected tabs refresh quietly in the background, and all data is read live again.
 
-**Optimizations tab.** All 55 settings as cards, filterable by category (FPS & Latency, Performance, Network, Quality of Life, Privacy & Security) and searchable. Each card shows its category, risk level and description, plus:
-- an **Activate / Deactivate** switch. Activating shows the exact changes and a restore-point option first, and deactivating restores the saved original value;
-- **+** to select cards for a batch *Apply selected* or *Undo selected*;
-- **?** for detailed help;
-- a warning icon on higher-risk settings and a lock icon on settings that need administrator rights. WPF is part of Windows, so nothing is downloaded or installed. The PowerShell console stays open behind the window, and closing the window ends the tool. If WPF is unavailable (Server Core, or a non-STA session), BLOB OPTIMIZER falls back to the terminal interface automatically.
+**Optimizations tab.** All 55 settings as cards, filterable by **category** (FPS & Latency, Performance, Network, Quality of Life, Privacy & Security), by **risk level** (Low, Medium, High, Preference) and by search. Each card shows its category, risk level, description and current state.
+- **Choose first, apply after.** Flipping a card's switch only marks it as *WILL ACTIVATE* or *WILL DEACTIVATE*. Nothing changes until you press **Apply changes (N)**. That opens one dialog listing every exact change (activations with current → new values, deactivations with the values that will be restored) and the restore-point checkbox. **Discard changes** forgets your choices, and closing the window with unapplied choices asks first.
+- **?** shows detailed help, **!** marks higher-risk settings and **ADMIN** marks machine-wide ones.
 
 **Risk and help on every setting.** Each setting shows a risk label: LOW RISK, MEDIUM RISK, HIGH RISK or PREFERENCE. Hover the **?** next to it for a detailed explanation: what it does, why you might want it, the trade-off, the exact registry or service change (current → new), whether it needs admin rights, and how to undo it.
 

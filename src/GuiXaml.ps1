@@ -11,16 +11,16 @@ $Blob.GuiTheme = @'
   <SolidColorBrush x:Key="Bg" Color="#000000"/>
   <SolidColorBrush x:Key="Panel" Color="#000000"/>
   <SolidColorBrush x:Key="Card" Color="#000000"/>
-  <SolidColorBrush x:Key="CardHover" Color="#062A10"/>
-  <SolidColorBrush x:Key="Line" Color="#0F6A24"/>
-  <SolidColorBrush x:Key="Accent" Color="#3DFF6A"/>
-  <SolidColorBrush x:Key="AccentDim" Color="#062A10"/>
-  <SolidColorBrush x:Key="Text" Color="#3DFF6A"/>
-  <SolidColorBrush x:Key="Sub" Color="#2EDB55"/>
-  <SolidColorBrush x:Key="Muted" Color="#1E9A3E"/>
-  <SolidColorBrush x:Key="Good" Color="#3DFF6A"/>
-  <SolidColorBrush x:Key="Warn" Color="#3DFF6A"/>
-  <SolidColorBrush x:Key="Bad" Color="#3DFF6A"/>
+  <SolidColorBrush x:Key="CardHover" Color="#061C33"/>
+  <SolidColorBrush x:Key="Line" Color="#134C80"/>
+  <SolidColorBrush x:Key="Accent" Color="#4DB8FF"/>
+  <SolidColorBrush x:Key="AccentDim" Color="#061C33"/>
+  <SolidColorBrush x:Key="Text" Color="#4DB8FF"/>
+  <SolidColorBrush x:Key="Sub" Color="#3A9BE0"/>
+  <SolidColorBrush x:Key="Muted" Color="#2873B8"/>
+  <SolidColorBrush x:Key="Good" Color="#4DB8FF"/>
+  <SolidColorBrush x:Key="Warn" Color="#4DB8FF"/>
+  <SolidColorBrush x:Key="Bad" Color="#4DB8FF"/>
 
   <Style TargetType="TextBlock">
     <Setter Property="Foreground" Value="{StaticResource Text}"/>
@@ -61,7 +61,7 @@ $Blob.GuiTheme = @'
   </Style>
   <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
     <Setter Property="Foreground" Value="{StaticResource Bad}"/>
-    <Setter Property="BorderBrush" Value="#0F6A24"/>
+    <Setter Property="BorderBrush" Value="#134C80"/>
   </Style>
   <Style x:Key="NavButton" TargetType="Button">
     <Setter Property="Foreground" Value="{StaticResource Sub}"/>
@@ -77,7 +77,7 @@ $Blob.GuiTheme = @'
             <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
           </Border>
           <ControlTemplate.Triggers>
-            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="#062A10"/></Trigger>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="#061C33"/></Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
       </Setter.Value>
@@ -119,7 +119,7 @@ $Blob.GuiTheme = @'
             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
           <ControlTemplate.Triggers>
-            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="#062A10"/></Trigger>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="#061C33"/></Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
       </Setter.Value>
@@ -128,7 +128,7 @@ $Blob.GuiTheme = @'
   <Style x:Key="ChipButton" TargetType="Button">
     <Setter Property="Foreground" Value="{StaticResource Sub}"/>
     <Setter Property="Background" Value="#000000"/>
-    <Setter Property="BorderBrush" Value="#0F6A24"/>
+    <Setter Property="BorderBrush" Value="#134C80"/>
     <Setter Property="FontSize" Value="12.5"/>
     <Setter Property="Cursor" Value="Hand"/>
     <Setter Property="Margin" Value="0,0,8,8"/>
@@ -140,7 +140,7 @@ $Blob.GuiTheme = @'
             <ContentPresenter VerticalAlignment="Center"/>
           </Border>
           <ControlTemplate.Triggers>
-            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="BorderBrush" Value="#3DFF6A"/></Trigger>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="BorderBrush" Value="#4DB8FF"/></Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
       </Setter.Value>
@@ -151,16 +151,16 @@ $Blob.GuiTheme = @'
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="CheckBox">
-          <Border x:Name="Track" Width="44" Height="20" Background="#000000" BorderBrush="#0F6A24" BorderThickness="1">
-            <Rectangle x:Name="Thumb" Width="16" Height="14" Fill="#1E9A3E" HorizontalAlignment="Left" Margin="2,0"/>
+          <Border x:Name="Track" Width="44" Height="20" Background="#000000" BorderBrush="#134C80" BorderThickness="1">
+            <Rectangle x:Name="Thumb" Width="16" Height="14" Fill="#2873B8" HorizontalAlignment="Left" Margin="2,0"/>
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsChecked" Value="True">
-              <Setter TargetName="Track" Property="BorderBrush" Value="#3DFF6A"/>
-              <Setter TargetName="Thumb" Property="Fill" Value="#3DFF6A"/>
+              <Setter TargetName="Track" Property="BorderBrush" Value="#4DB8FF"/>
+              <Setter TargetName="Thumb" Property="Fill" Value="#4DB8FF"/>
               <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/>
             </Trigger>
-            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Track" Property="BorderBrush" Value="#3DFF6A"/></Trigger>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Track" Property="BorderBrush" Value="#4DB8FF"/></Trigger>
             <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Track" Property="Opacity" Value="0.35"/></Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -180,7 +180,7 @@ $Blob.GuiTheme = @'
             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
           <ControlTemplate.Triggers>
-            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="#062A10"/></Trigger>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="#061C33"/></Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
       </Setter.Value>
@@ -196,7 +196,7 @@ $Blob.GuiTheme = @'
         <ControlTemplate TargetType="CheckBox">
           <Grid Background="Transparent">
             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-            <Border x:Name="Box" Width="18" Height="18" CornerRadius="0" Background="#000000" BorderBrush="#0F6A24"
+            <Border x:Name="Box" Width="18" Height="18" CornerRadius="0" Background="#000000" BorderBrush="#134C80"
                     BorderThickness="1.5" VerticalAlignment="Top" Margin="0,2,10,0">
               <Path x:Name="Mark" Data="M3,8 L7,12 L14,4" Stroke="#000000" StrokeThickness="2.2" Visibility="Collapsed"/>
             </Border>
@@ -224,7 +224,7 @@ $Blob.GuiTheme = @'
         <ControlTemplate TargetType="ScrollBar">
           <Track x:Name="PART_Track" IsDirectionReversed="True">
             <Track.Thumb><Thumb><Thumb.Template><ControlTemplate TargetType="Thumb">
-              <Border CornerRadius="0" Background="#1E9A3E" Margin="2"/>
+              <Border CornerRadius="0" Background="#2873B8" Margin="2"/>
             </ControlTemplate></Thumb.Template></Thumb></Track.Thumb>
           </Track>
         </ControlTemplate>
@@ -240,7 +240,7 @@ $Blob.GuiTheme = @'
             <ControlTemplate TargetType="ScrollBar">
               <Track x:Name="PART_Track">
                 <Track.Thumb><Thumb><Thumb.Template><ControlTemplate TargetType="Thumb">
-                  <Border CornerRadius="0" Background="#1E9A3E" Margin="2"/>
+                  <Border CornerRadius="0" Background="#2873B8" Margin="2"/>
                 </ControlTemplate></Thumb.Template></Thumb></Track.Thumb>
               </Track>
             </ControlTemplate>
@@ -253,7 +253,7 @@ $Blob.GuiTheme = @'
   <Style TargetType="TextBox">
     <Setter Property="Background" Value="#000000"/>
     <Setter Property="Foreground" Value="{StaticResource Text}"/>
-    <Setter Property="BorderBrush" Value="#0F6A24"/>
+    <Setter Property="BorderBrush" Value="#134C80"/>
     <Setter Property="CaretBrush" Value="{StaticResource Accent}"/>
     <Setter Property="Padding" Value="8,6"/>
     <Setter Property="FontSize" Value="13"/>
@@ -272,12 +272,12 @@ $Blob.GuiTheme = @'
                           IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
               <ToggleButton.Template>
                 <ControlTemplate TargetType="ToggleButton">
-                  <Border x:Name="Bd" Background="#000000" BorderBrush="#0F6A24" BorderThickness="1" CornerRadius="0">
+                  <Border x:Name="Bd" Background="#000000" BorderBrush="#134C80" BorderThickness="1" CornerRadius="0">
                     <Path HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0" Data="M0,0 L4,4 L8,0"
-                          Stroke="#2EDB55" StrokeThickness="1.6"/>
+                          Stroke="#3A9BE0" StrokeThickness="1.6"/>
                   </Border>
                   <ControlTemplate.Triggers>
-                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="BorderBrush" Value="#3DFF6A"/></Trigger>
+                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="BorderBrush" Value="#4DB8FF"/></Trigger>
                   </ControlTemplate.Triggers>
                 </ControlTemplate>
               </ToggleButton.Template>
@@ -285,7 +285,7 @@ $Blob.GuiTheme = @'
             <ContentPresenter IsHitTestVisible="False" Margin="10,0,30,0" VerticalAlignment="Center"
                               Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"/>
             <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True" Focusable="False">
-              <Border Background="#000000" BorderBrush="#0F6A24" BorderThickness="1" CornerRadius="0" Margin="0,2,0,0"
+              <Border Background="#000000" BorderBrush="#134C80" BorderThickness="1" CornerRadius="0" Margin="0,2,0,0"
                       MinWidth="{TemplateBinding ActualWidth}" MaxHeight="320">
                 <ScrollViewer><ItemsPresenter/></ScrollViewer>
               </Border>
@@ -302,7 +302,7 @@ $Blob.GuiTheme = @'
         <ControlTemplate TargetType="ComboBoxItem">
           <Border x:Name="Bd" Padding="10,6" Background="Transparent"><ContentPresenter/></Border>
           <ControlTemplate.Triggers>
-            <Trigger Property="IsHighlighted" Value="True"><Setter TargetName="Bd" Property="Background" Value="#062A10"/></Trigger>
+            <Trigger Property="IsHighlighted" Value="True"><Setter TargetName="Bd" Property="Background" Value="#061C33"/></Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
       </Setter.Value>
@@ -369,7 +369,7 @@ $Blob.GuiTheme = @'
     </Setter>
     <Style.Triggers>
       <Trigger Property="IsSelected" Value="True">
-        <Setter Property="Background" Value="#062A10"/>
+        <Setter Property="Background" Value="#061C33"/>
         <Setter Property="Foreground" Value="White"/>
       </Trigger>
     </Style.Triggers>
@@ -382,7 +382,7 @@ $Blob.GuiTheme = @'
       <Setter.Value>
         <ControlTemplate TargetType="ProgressBar">
           <Grid>
-            <Border x:Name="PART_Track" Background="#062A10" CornerRadius="0"/>
+            <Border x:Name="PART_Track" Background="#061C33" CornerRadius="0"/>
             <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{TemplateBinding Foreground}" CornerRadius="0"/>
           </Grid>
         </ControlTemplate>
@@ -396,7 +396,7 @@ $Blob.GuiTheme = @'
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ToolTip">
-          <Border Background="#000000" BorderBrush="#0F6A24" BorderThickness="1" CornerRadius="0" Padding="14,12" MaxWidth="520">
+          <Border Background="#000000" BorderBrush="#134C80" BorderThickness="1" CornerRadius="0" Padding="14,12" MaxWidth="520">
             <ContentPresenter/>
           </Border>
         </ControlTemplate>
@@ -416,7 +416,7 @@ $Blob.GuiXaml = @'
     <WindowChrome CaptionHeight="46" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="0"/>
   </WindowChrome.WindowChrome>
   <!--THEME-->
-  <Border x:Name="RootBorder" BorderBrush="#0F6A24" BorderThickness="1">
+  <Border x:Name="RootBorder" BorderBrush="#134C80" BorderThickness="1">
     <Grid>
       <Grid.RowDefinitions>
         <RowDefinition Height="46"/>
@@ -429,15 +429,15 @@ $Blob.GuiXaml = @'
       <!-- Title bar -->
       <Grid Grid.Row="0" Background="#000000">
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="18,0,0,0">
-          <TextBlock Text="&gt;_" FontWeight="Bold" FontSize="15" Foreground="#3DFF6A" Margin="0,0,10,0" VerticalAlignment="Center"/>
-          <TextBlock Text="BLOB" FontWeight="Bold" FontSize="15" Foreground="#3DFF6A" VerticalAlignment="Center"/>
+          <TextBlock Text="&gt;_" FontWeight="Bold" FontSize="15" Foreground="#4DB8FF" Margin="0,0,10,0" VerticalAlignment="Center"/>
+          <TextBlock Text="BLOB" FontWeight="Bold" FontSize="15" Foreground="#4DB8FF" VerticalAlignment="Center"/>
           <TextBlock Text=" OPTIMIZER" FontWeight="SemiBold" FontSize="15" VerticalAlignment="Center"/>
-          <TextBlock x:Name="TitleVersion" Foreground="#1E9A3E" FontSize="12" Margin="10,0,0,0" VerticalAlignment="Center"/>
+          <TextBlock x:Name="TitleVersion" Foreground="#2873B8" FontSize="12" Margin="10,0,0,0" VerticalAlignment="Center"/>
           <Border x:Name="AdminBadge" CornerRadius="0" Padding="8,2" Margin="14,0,0,0" VerticalAlignment="Center">
             <TextBlock x:Name="AdminBadgeText" FontSize="11" FontWeight="SemiBold"/>
           </Border>
-          <Border x:Name="DryRunBadge" CornerRadius="0" Padding="8,2" Margin="8,0,0,0" Background="#062A10" VerticalAlignment="Center" Visibility="Collapsed">
-            <TextBlock Text="DRY RUN" FontSize="11" FontWeight="SemiBold" Foreground="#3DFF6A"/>
+          <Border x:Name="DryRunBadge" CornerRadius="0" Padding="8,2" Margin="8,0,0,0" Background="#061C33" VerticalAlignment="Center" Visibility="Collapsed">
+            <TextBlock Text="DRY RUN" FontSize="11" FontWeight="SemiBold" Foreground="#4DB8FF"/>
           </Border>
         </StackPanel>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
@@ -448,7 +448,7 @@ $Blob.GuiXaml = @'
       </Grid>
 
       <!-- Tab bar -->
-      <Border Grid.Row="1" Background="#000000" BorderBrush="#0F6A24" BorderThickness="0,1,0,1">
+      <Border Grid.Row="1" Background="#000000" BorderBrush="#134C80" BorderThickness="0,1,0,1">
         <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="10,0">
           <StackPanel x:Name="NavPanel" Orientation="Horizontal"/>
         </ScrollViewer>
@@ -465,7 +465,7 @@ $Blob.GuiXaml = @'
             <StackPanel x:Name="PageActions" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center"/>
             <StackPanel>
               <TextBlock x:Name="PageTitle" FontSize="24" FontWeight="SemiBold"/>
-              <TextBlock x:Name="PageSubtitle" FontSize="13" Foreground="#2EDB55" Margin="0,4,0,0"/>
+              <TextBlock x:Name="PageSubtitle" FontSize="13" Foreground="#3A9BE0" Margin="0,4,0,0"/>
             </StackPanel>
           </DockPanel>
         </Border>
@@ -475,12 +475,12 @@ $Blob.GuiXaml = @'
       </Grid>
 
       <!-- Activity log -->
-      <Border Grid.Row="3" Background="#000000" BorderBrush="#0F6A24" BorderThickness="0,1,0,0">
+      <Border Grid.Row="3" Background="#000000" BorderBrush="#134C80" BorderThickness="0,1,0,0">
         <DockPanel>
           <DockPanel DockPanel.Dock="Top" Margin="18,6,12,2">
             <Button x:Name="BtnToggleLog" DockPanel.Dock="Right" Content="Hide" Padding="10,3" Margin="0" FontSize="11"/>
             <Button x:Name="BtnClearLog" DockPanel.Dock="Right" Content="Clear" Padding="10,3" FontSize="11"/>
-            <TextBlock Text="ACTIVITY" FontSize="11" FontWeight="Bold" Foreground="#1E9A3E" VerticalAlignment="Center"/>
+            <TextBlock Text="ACTIVITY" FontSize="11" FontWeight="Bold" Foreground="#2873B8" VerticalAlignment="Center"/>
           </DockPanel>
           <ScrollViewer x:Name="LogScroll" Height="86" VerticalScrollBarVisibility="Auto" Padding="18,0,12,6">
             <StackPanel x:Name="LogPanel"/>
@@ -489,10 +489,10 @@ $Blob.GuiXaml = @'
       </Border>
 
       <!-- Status bar -->
-      <Border Grid.Row="4" Background="#000000" BorderBrush="#0F6A24" BorderThickness="0,1,0,0">
+      <Border Grid.Row="4" Background="#000000" BorderBrush="#134C80" BorderThickness="0,1,0,0">
         <DockPanel Margin="18,0">
-          <TextBlock x:Name="StatusRight" DockPanel.Dock="Right" Foreground="#1E9A3E" FontSize="11" VerticalAlignment="Center"/>
-          <TextBlock x:Name="StatusText" Foreground="#2EDB55" FontSize="11" VerticalAlignment="Center" Text="Ready"/>
+          <TextBlock x:Name="StatusRight" DockPanel.Dock="Right" Foreground="#2873B8" FontSize="11" VerticalAlignment="Center"/>
+          <TextBlock x:Name="StatusText" Foreground="#3A9BE0" FontSize="11" VerticalAlignment="Center" Text="Ready"/>
         </DockPanel>
       </Border>
     </Grid>
@@ -509,15 +509,15 @@ $Blob.GuiDialogXaml = @'
     <WindowChrome CaptionHeight="56" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="0"/>
   </WindowChrome.WindowChrome>
   <!--THEME-->
-  <Border x:Name="DlgBorder" BorderBrush="#3DFF6A" BorderThickness="1">
+  <Border x:Name="DlgBorder" BorderBrush="#4DB8FF" BorderThickness="1">
     <DockPanel>
-      <Border DockPanel.Dock="Top" Padding="24,16,24,12" BorderBrush="#0F6A24" BorderThickness="0,0,0,1">
+      <Border DockPanel.Dock="Top" Padding="24,16,24,12" BorderBrush="#134C80" BorderThickness="0,0,0,1">
         <StackPanel>
           <TextBlock x:Name="DlgTitle" FontSize="18" FontWeight="SemiBold"/>
-          <TextBlock x:Name="DlgSub" FontSize="12" Foreground="#2EDB55" Margin="0,4,0,0"/>
+          <TextBlock x:Name="DlgSub" FontSize="12" Foreground="#3A9BE0" Margin="0,4,0,0"/>
         </StackPanel>
       </Border>
-      <Border DockPanel.Dock="Bottom" Padding="24,12" BorderBrush="#0F6A24" BorderThickness="0,1,0,0" Background="#000000">
+      <Border DockPanel.Dock="Bottom" Padding="24,12" BorderBrush="#134C80" BorderThickness="0,1,0,0" Background="#000000">
         <DockPanel>
           <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
             <Button x:Name="DlgCancel" Content="Cancel" MinWidth="96"/>

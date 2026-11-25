@@ -2,6 +2,16 @@
 
 All notable changes to BLOB OPTIMIZER are documented here. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.5.0] - 2026-11-25
+
+### Changed
+- **Choose first, then apply.** The switches on the Optimizations cards only record what you want (*WILL ACTIVATE* / *WILL DEACTIVATE*). **Apply changes (N)** applies everything in one go after a single preview dialog with the restore-point option. Activations are backed up first, and deactivations restore the saved originals. **Discard changes** clears your choices, and closing the window with unapplied choices asks first.
+- **Black and blue** instead of black and green (window and terminal UI).
+
+### Added
+- **Risk level filter** (Low, Medium, High, Preference) next to the category filter and search.
+- *Activate all shown* marks every shown setting to be activated (still applied only with Apply changes).
+
 ## [1.4.0] - 2026-11-25
 
 ### Changed
