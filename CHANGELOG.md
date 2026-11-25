@@ -2,6 +2,19 @@
 
 All notable changes to BLOB OPTIMIZER are documented here. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [2.0.0] - 2026-11-25
+
+### Changed - complete visual redesign
+- **New design language:** an engineering spec sheet. Warm paper and near-black ink with one signal colour (international orange) for pending changes, higher risk and the active page. Bahnschrift for structure and numbers, Segoe UI for reading, monospace only for technical values. Hairline rules instead of boxes, with no gradients, shadows or glow.
+- **Navigation:** a numbered table of contents (01-11) with an orange marker, large page titles with page numbers, and plainer page names (Overview, Tweaks, External tools, System).
+- **Overview:** large readouts (tweaks on, memory, disk, restorable changes), a *This PC* spec table and a *Start here* action list.
+- **Presets:** three columns divided by rules, each with a risk meter, a count of what is already on, and the full list of included tweaks (filled = already on, outline = will change, orange = higher risk).
+- **Tweaks:** dense ruled rows grouped by area, with a rectangular switch, a three-bar risk meter, a state column (*→ ON* / *→ OFF* in orange while waiting) and **?** help. Area and risk filters are text tabs; search is an underline field.
+- **Pending bar:** a global black bar with *Discard* and *Review and apply N* that appears whenever choices are waiting.
+- **Log drawer:** the activity log is now a one-line strip that opens on demand.
+- **Dialogs:** paper surface with a stripe that turns orange for risky actions, and proper pluralisation.
+- **Terminal UI:** white and grey text with yellow accents and inverted selection.
+
 ## [1.5.0] - 2026-11-25
 
 ### Changed

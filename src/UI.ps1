@@ -55,18 +55,18 @@ function Restore-BlobConsole {
 # ---------------------------------------------------------------------------
 #  Low-level drawing
 # ---------------------------------------------------------------------------
-# Black and blue only: every colour is mapped to Blue / DarkCyan, and any
-# highlighted background becomes inverted black-on-blue.
+# Terminal palette: white and grey for text, yellow for structure and warnings,
+# red only for failures; the selected row is inverted (black on white).
 $Blob.TuiFg = @{
-    Cyan = 'Blue'; White = 'Blue'; Green = 'Blue'; Yellow = 'Blue'; Red = 'Blue'; Magenta = 'Blue'
-    Gray = 'DarkCyan'; DarkGray = 'DarkCyan'; DarkCyan = 'DarkCyan'; DarkYellow = 'DarkCyan'; Black = 'Black'
+    Cyan = 'Yellow'; White = 'White'; Green = 'White'; Yellow = 'Yellow'; Red = 'Red'; Magenta = 'Yellow'
+    Gray = 'Gray'; DarkGray = 'DarkGray'; DarkCyan = 'DarkGray'; DarkYellow = 'DarkYellow'; Black = 'Black'
 }
 
 function Write-BlobAt {
     param([int]$X, [int]$Y, [string]$Text, [ConsoleColor]$Fg = 'White', [ConsoleColor]$Bg = 'Black')
     if ($Text.Length -eq 0) { return }
     try { [Console]::SetCursorPosition($X, $Y) } catch { return }
-    if ($Bg -ne 'Black') { $Bg = 'Blue'; $Fg = 'Black' }
+    if ($Bg -ne 'Black') { $Bg = 'White'; $Fg = 'Black' }
     elseif ($Blob.TuiFg.ContainsKey([string]$Fg)) { $Fg = [ConsoleColor]$Blob.TuiFg[[string]$Fg] }
     [Console]::ForegroundColor = $Fg
     [Console]::BackgroundColor = $Bg

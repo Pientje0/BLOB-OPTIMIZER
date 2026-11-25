@@ -6,18 +6,24 @@
 # ============================================================================
 
 # Shared, pre-compiled handlers: per-element data lives in DataContext, so
-# building many cards does not compile a new script block for each one.
+# building many rows does not compile a new script block for each one.
 $Blob.GuiShared = @{
     RiskTip     = { param($el) New-BlobTooltipPanel -Title $Blob.RiskInfo[$el.DataContext].Label -Paragraphs @($Blob.RiskInfo[$el.DataContext].Text) }
     TweakTip    = { param($el) New-BlobTweakTooltip (Get-BlobTweak $el.DataContext) }
     SwitchClick = { Switch-BlobGuiTweak $Blob.Gui.Sender.DataContext }
-    }
-
-# Black and blue only. Severity is shown with words and inverted badges.
-$Blob.GuiColors = @{
-    Cyan = '#4DB8FF'; DarkCyan = '#134C80'; White = '#4DB8FF'; Gray = '#3A9BE0'; DarkGray = '#2873B8'
-    Green = '#4DB8FF'; Yellow = '#4DB8FF'; Red = '#4DB8FF'; DarkYellow = '#3A9BE0'; Magenta = '#4DB8FF'; Black = '#000000'
 }
+
+# Palette: paper, ink and one signal colour. The old colour-tag names used in
+# log/preview lines map onto it: Cyan marks structure (signal), Yellow/Magenta
+# warn (signal text), Red is reserved for failures.
+$Blob.GuiColors = @{
+    Paper = '#EFECE6'; Surface = '#F7F5F1'; Hover = '#E4E0D8'; Rule = '#D6D2CA'
+    Ink = '#141414'; Ink2 = '#57544E'; Ink3 = '#8A867E'; Ghost = '#B8B3A9'
+    Signal = '#FF4F00'; SignalText = '#B83A00'; SignalSoft = '#FBE4D7'; Error = '#B3261E'
+    Cyan = '#B83A00'; DarkCyan = '#D6D2CA'; White = '#141414'; Gray = '#57544E'; DarkGray = '#8A867E'
+    Green = '#141414'; Yellow = '#B83A00'; Red = '#B3261E'; DarkYellow = '#8A867E'; Magenta = '#B83A00'; Black = '#141414'
+}
+$Blob.GuiFonts = @{ Display = 'Bahnschrift, Segoe UI'; Mono = 'Cascadia Mono, Consolas'; Body = 'Segoe UI' }
 
 function Test-BlobGuiSupported {
     if ([Threading.Thread]::CurrentThread.GetApartmentState() -ne 'STA') { return 'PowerShell is not running in STA mode (required by WPF).' }
@@ -43,13 +49,15 @@ function Get-BlobBrush {
     return $Blob.GuiBrushCache[$hex]
 }
 
+function Get-BlobFont { param([string]$Kind) return [Windows.Media.FontFamily]::new($Blob.GuiFonts[$Kind]) }
+
 # Turns a colour-tagged line ("{Gray}a {White}b") into a TextBlock of Runs.
 function ConvertTo-BlobTextBlock {
     param([string]$Markup, [double]$Size = 13, [switch]$Mono, [string]$Default = 'White')
     $tb = [Windows.Controls.TextBlock]::new()
     $tb.FontSize = $Size
     $tb.TextWrapping = 'Wrap'
-    if ($Mono) { $tb.FontFamily = [Windows.Media.FontFamily]::new('Consolas') }
+    if ($Mono) { $tb.FontFamily = Get-BlobFont 'Mono' }
     $parts = [regex]::Split($Markup, $Blob.ColorTag)
     $color = $Default
     for ($i = 0; $i -lt $parts.Count; $i++) {
@@ -67,19 +75,22 @@ function ConvertTo-BlobTextBlock {
 #  Control factories
 # ---------------------------------------------------------------------------
 function New-BlobText {
-    param([string]$Text, [double]$Size = 13, [string]$Color = 'White', [string]$Weight = 'Normal', [string]$Margin = '0')
+    param([string]$Text, [double]$Size = 13, [string]$Color = 'Ink', [string]$Weight = 'Normal', [string]$Margin = '0', [switch]$Display, [switch]$Mono)
     $t = [Windows.Controls.TextBlock]::new()
     $t.Text = $Text; $t.FontSize = $Size; $t.Foreground = Get-BlobBrush $Color
     $t.FontWeight = $Weight; $t.Margin = $Margin; $t.TextWrapping = 'Wrap'
+    if ($Display) { $t.FontFamily = Get-BlobFont 'Display' }
+    if ($Mono) { $t.FontFamily = Get-BlobFont 'Mono' }
     return $t
 }
 
 function New-BlobButton {
-    param([string]$Label, [scriptblock]$Action, [ValidateSet('Normal', 'Accent', 'Danger')][string]$Kind = 'Normal', [string]$ToolTip, [string]$Margin)
+    param([string]$Label, [scriptblock]$Action, [ValidateSet('Normal', 'Accent', 'Danger', 'Link')][string]$Kind = 'Normal', [string]$ToolTip, [string]$Margin)
     $b = [Windows.Controls.Button]::new()
     $b.Content = $Label
     if ($Kind -eq 'Accent') { $b.Style = $Blob.Gui.Window.FindResource('AccentButton') }
     if ($Kind -eq 'Danger') { $b.Style = $Blob.Gui.Window.FindResource('DangerButton') }
+    if ($Kind -eq 'Link') { $b.Style = $Blob.Gui.Window.FindResource('ChipButton'); $b.Foreground = Get-BlobBrush 'Ink'; $b.BorderBrush = Get-BlobBrush 'Ink' }
     if ($ToolTip) { $b.ToolTip = $ToolTip }
     if ($Margin) { $b.Margin = $Margin }
     Register-BlobClick $b $Action
@@ -112,23 +123,24 @@ function Invoke-BlobGuiAction {
     }
 }
 
+# A section on paper: hairline border, no rounding, no shadow.
 function New-BlobCard {
-    param($Child, [string]$Margin = '0,0,0,12', [string]$Padding = '18,14', [double]$Width = [double]::NaN)
+    param($Child, [string]$Margin = '0,0,0,18', [string]$Padding = '18,14', [double]$Width = [double]::NaN)
     $c = [Windows.Controls.Border]::new()
-    $c.Background = Get-BlobBrush '#000000'; $c.BorderBrush = Get-BlobBrush '#134C80'
-    $c.BorderThickness = 1; $c.CornerRadius = 0; $c.Padding = $Padding; $c.Margin = $Margin
+    $c.Background = Get-BlobBrush 'Surface'; $c.BorderBrush = Get-BlobBrush 'Rule'
+    $c.BorderThickness = 1; $c.Padding = $Padding; $c.Margin = $Margin
     if (-not [double]::IsNaN($Width)) { $c.Width = $Width }
     $c.Child = $Child
     return $c
 }
 
 function New-BlobBadge {
-    param([string]$Text, [string]$Color = 'Gray')
+    param([string]$Text, [string]$Color = 'Ink2')
     $b = [Windows.Controls.Border]::new()
-    $b.CornerRadius = 0; $b.Padding = '7,1'; $b.Margin = '8,0,0,0'; $b.VerticalAlignment = 'Center'
-    $b.BorderBrush = Get-BlobBrush $Color; $b.BorderThickness = 1
-    $t = New-BlobText $Text 10.5 $Color 'SemiBold'
-    $b.Child = $t
+    $b.Padding = '6,0,6,1'; $b.Margin = '8,0,0,0'; $b.VerticalAlignment = 'Center'
+    $b.BorderBrush = Get-BlobBrush $(if ($Color -in @('Gray', 'DarkGray', 'Ink2', 'Ink3')) { 'Rule' } else { $Color })
+    $b.BorderThickness = 1
+    $b.Child = New-BlobText $Text 11 $Color 'Normal' -Display
     return $b
 }
 
@@ -139,16 +151,20 @@ function New-BlobStack {
     return $s
 }
 
+# Section heading: Bahnschrift capitals over a hairline.
 function New-BlobHeading {
-    param([string]$Text, [string]$Margin = '0,6,0,10')
-    return (New-BlobText $Text.ToUpper() 11.5 'DarkGray' 'Bold' $Margin)
+    param([string]$Text, [string]$Margin = '0,10,0,10')
+    $b = [Windows.Controls.Border]::new()
+    $b.BorderBrush = Get-BlobBrush 'Ink'; $b.BorderThickness = '0,0,0,1'; $b.Margin = $Margin; $b.Padding = '0,0,0,5'
+    $b.Child = New-BlobText $Text.ToUpper() 12.5 'Ink' 'SemiBold' -Display
+    return $b
 }
 
 function New-BlobBar {
     param([double]$Fraction, [double]$Width = 260)
     $p = [Windows.Controls.ProgressBar]::new()
     $p.Minimum = 0; $p.Maximum = 1; $p.Value = [Math]::Min(1, [Math]::Max(0, $Fraction)); $p.Width = $Width
-    $p.Foreground = if ($Fraction -ge 0.9) { Get-BlobBrush 'Red' } elseif ($Fraction -ge 0.75) { Get-BlobBrush 'Yellow' } else { Get-BlobBrush 'Cyan' }
+    $p.Foreground = if ($Fraction -ge 0.9) { Get-BlobBrush 'Signal' } else { Get-BlobBrush 'Ink' }
     return $p
 }
 
@@ -157,7 +173,7 @@ function New-BlobCombo {
     $c = [Windows.Controls.ComboBox]::new()
     foreach ($i in $Items) { [void]$c.Items.Add($i) }
     if ($Items.Count -gt 0) { $c.SelectedIndex = [Math]::Max(0, $Selected) }
-    $c.Width = $Width; $c.Margin = '0,0,8,0'
+    $c.Width = $Width; $c.Margin = '0,0,16,0'
     return $c
 }
 
@@ -168,7 +184,7 @@ function New-BlobGrid {
     $g.Height = $Height
     foreach ($col in $Columns) {
         $c = [Windows.Controls.DataGridTextColumn]::new()
-        $c.Header = $col.Header
+        $c.Header = $col.Header.ToUpper()
         $c.Binding = New-Object Windows.Data.Binding $col.Path
         if ($col.Width) { $c.Width = New-Object Windows.Controls.DataGridLength($col.Width, $(if ($col.Width -le 1) { 'Star' } else { 'Pixel' })) }
         else { $c.Width = New-Object Windows.Controls.DataGridLength(1, 'Star') }
@@ -177,29 +193,29 @@ function New-BlobGrid {
     return $g
 }
 
-# Lines of markup rendered in a card (used for info pages).
+# Lines of markup rendered in a section (used for info pages).
 function New-BlobInfoCard {
     param([string[]]$Lines, [switch]$Mono)
     $s = New-BlobStack
-    foreach ($l in $Lines) { [void]$s.Children.Add((ConvertTo-BlobTextBlock $l -Mono:$Mono -Size 13)) }
+    foreach ($l in $Lines) { [void]$s.Children.Add((ConvertTo-BlobTextBlock $l -Mono:$Mono -Size 12.5)) }
     return (New-BlobCard $s)
 }
 
 # ---------------------------------------------------------------------------
-#  Help ("?") icons, rich tooltips and risk badges
+#  Help marks, tooltips and the risk meter
 # ---------------------------------------------------------------------------
 function New-BlobTooltipPanel {
     param([string]$Title, [string[]]$Paragraphs = @(), [string[]]$Mono = @(), [string]$MonoTitle = '')
     $s = New-BlobStack
     $s.MaxWidth = 490
-    [void]$s.Children.Add((New-BlobText $Title 14 'White' 'SemiBold' '0,0,0,6'))
+    [void]$s.Children.Add((New-BlobText $Title 16 'Ink' 'SemiBold' '0,0,0,8' -Display))
     foreach ($p in $Paragraphs) {
         if (-not $p) { continue }
         [void]$s.Children.Add((ConvertTo-BlobTextBlock $p -Size 12.5 -Default 'Gray'))
         $s.Children[$s.Children.Count - 1].Margin = '0,0,0,6'
     }
     if ($Mono.Count -gt 0) {
-        if ($MonoTitle) { [void]$s.Children.Add((New-BlobText $MonoTitle.ToUpper() 10.5 'DarkGray' 'Bold' '0,4,0,4')) }
+        if ($MonoTitle) { [void]$s.Children.Add((New-BlobText $MonoTitle.ToUpper() 11 'Ink3' 'Normal' '0,6,0,4' -Display)) }
         foreach ($m in $Mono) { [void]$s.Children.Add((ConvertTo-BlobTextBlock $m -Mono -Size 11.5)) }
     }
     return $s
@@ -208,28 +224,28 @@ function New-BlobTooltipPanel {
 function Set-BlobTooltip {
     param($Element, $Content)
     $Element.ToolTip = $Content
-    [Windows.Controls.ToolTipService]::SetInitialShowDelay($Element, 120)
+    [Windows.Controls.ToolTipService]::SetInitialShowDelay($Element, 150)
     [Windows.Controls.ToolTipService]::SetShowDuration($Element, 120000)
     [Windows.Controls.ToolTipService]::SetPlacement($Element, 'Bottom')
 }
 
-# A round "?" icon that shows detailed help when hovered.
+# A small circled "?" that shows detailed help when hovered.
 function New-BlobHelpIcon {
     param($Tooltip, [scriptblock]$Builder)
     $b = [Windows.Controls.Border]::new()
-    $b.Width = 20; $b.Height = 20; $b.CornerRadius = 0
-    $b.BorderThickness = 1.5; $b.BorderBrush = Get-BlobBrush '#2873B8'; $b.Background = Get-BlobBrush '#000000'
+    $b.Width = 18; $b.Height = 18; $b.CornerRadius = 9
+    $b.BorderThickness = 1.2; $b.BorderBrush = Get-BlobBrush 'Ink3'; $b.Background = [Windows.Media.Brushes]::Transparent
     $b.Margin = '8,0,0,0'; $b.VerticalAlignment = 'Center'; $b.Cursor = [Windows.Input.Cursors]::Help
-    $t = New-BlobText '?' 12 'Gray' 'Bold'
+    $t = New-BlobText '?' 11.5 'Ink2' 'SemiBold' -Display
     $t.HorizontalAlignment = 'Center'; $t.VerticalAlignment = 'Center'; $t.Margin = '0,-1,0,0'
     $b.Child = $t
-    $b.Add_MouseEnter({ param($s, $e) $s.BorderBrush = Get-BlobBrush 'Cyan'; $s.Child.Foreground = Get-BlobBrush 'Cyan' })
-    $b.Add_MouseLeave({ param($s, $e) $s.BorderBrush = Get-BlobBrush '#2873B8'; $s.Child.Foreground = Get-BlobBrush 'Gray' })
+    $b.Add_MouseEnter({ param($s, $e) $s.BorderBrush = Get-BlobBrush 'Ink'; $s.Child.Foreground = Get-BlobBrush 'Ink' })
+    $b.Add_MouseLeave({ param($s, $e) $s.BorderBrush = Get-BlobBrush 'Ink3'; $s.Child.Foreground = Get-BlobBrush 'Ink2' })
     if ($Builder) { Set-BlobLazyTooltip $b $Builder } else { Set-BlobTooltip $b $Tooltip }
     return $b
 }
 
-# Tooltip content built on first hover (keeps pages with many cards fast).
+# Tooltip content built on first hover (keeps long lists fast).
 function Set-BlobLazyTooltip {
     param($Element, [scriptblock]$Builder)
     Set-BlobTooltip $Element 'Loading...'
@@ -237,31 +253,44 @@ function Set-BlobLazyTooltip {
     $Element.Add_ToolTipOpening({ param($s, $e) if ($s.Tag -is [scriptblock]) { $sb = $s.Tag; $s.Tag = $null; $s.ToolTip = & $sb $s } })
 }
 
+# Risk meter: three small bars and a word. HIGH is the only one in signal orange.
+$Blob.RiskMeter = @{
+    Minimal  = @{ Level = 1; Word = 'LOW' }
+    Standard = @{ Level = 2; Word = 'MED' }
+    Advanced = @{ Level = 3; Word = 'HIGH' }
+    Optional = @{ Level = 0; Word = 'PREF' }
+}
+
 function New-BlobRiskBadge {
     param([string]$Risk)
-    $r = $Blob.RiskInfo[$Risk]
-    $badge = New-BlobBadge $r.Label $r.Color
-    if ($Risk -eq 'Advanced') {    # inverted so higher risk stands out without extra colours
-        $badge.Background = Get-BlobBrush 'Green'; $badge.Child.Foreground = Get-BlobBrush 'Black'
+    $m = $Blob.RiskMeter[$Risk]
+    $sp = New-BlobStack 'Horizontal'
+    $sp.VerticalAlignment = 'Center'; $sp.Background = [Windows.Media.Brushes]::Transparent; $sp.Cursor = [Windows.Input.Cursors]::Help
+    $fill = if ($Risk -eq 'Advanced') { Get-BlobBrush 'Signal' } else { Get-BlobBrush 'Ink' }
+    for ($i = 1; $i -le 3; $i++) {
+        $bar = [Windows.Shapes.Rectangle]::new()
+        $bar.Width = 5; $bar.Height = 4 + 3 * $i; $bar.Margin = '0,0,2,0'; $bar.VerticalAlignment = 'Bottom'
+        $bar.Fill = if ($i -le $m.Level) { $fill } else { Get-BlobBrush 'Rule' }
+        [void]$sp.Children.Add($bar)
     }
-    $badge.DataContext = $Risk
-    Set-BlobLazyTooltip $badge $Blob.GuiShared.RiskTip
-    return $badge
+    $word = New-BlobText $m.Word 11.5 $(if ($Risk -eq 'Advanced') { 'SignalText' } else { 'Ink2' }) 'SemiBold' '6,0,0,0' -Display
+    $word.VerticalAlignment = 'Bottom'
+    [void]$sp.Children.Add($word)
+    $sp.DataContext = $Risk
+    Set-BlobLazyTooltip $sp $Blob.GuiShared.RiskTip
+    return $sp
 }
 
 function New-BlobRiskLegend {
     $wrap = [Windows.Controls.WrapPanel]::new()
-    [void]$wrap.Children.Add((New-BlobText 'Risk levels:' 12.5 'Gray' 'Normal' '0,2,4,0'))
     foreach ($k in @('Minimal', 'Standard', 'Advanced', 'Optional')) {
-        $r = $Blob.RiskInfo[$k]
-        $item = New-BlobStack 'Horizontal' '0,0,14,0'
+        $item = New-BlobStack 'Horizontal' '0,0,22,0'
         [void]$item.Children.Add((New-BlobRiskBadge $k))
-        $short = switch ($k) { 'Minimal' { 'safe, minor' } 'Standard' { 'changes a feature' } 'Advanced' { 'test afterwards' } default { 'looks / taste' } }
-        [void]$item.Children.Add((New-BlobText $short 12 'DarkGray' 'Normal' '6,2,0,0'))
+        $short = switch ($k) { 'Minimal' { 'safe, minor' } 'Standard' { 'changes a feature' } 'Advanced' { 'test afterwards' } default { 'taste only' } }
+        [void]$item.Children.Add((New-BlobText $short 12 'Ink3' 'Normal' '8,0,0,0'))
         [void]$wrap.Children.Add($item)
     }
-    [void]$wrap.Children.Add((New-BlobText 'Hover any ? for full details.' 12 'DarkGray' 'Normal' '0,2,0,0'))
-    return (New-BlobCard $wrap '0,0,0,14' '16,10')
+    return $wrap
 }
 
 # Restore point step used before applying changes from the window.
@@ -286,6 +315,7 @@ function Add-BlobGuiLog {
     $stamp = '{DarkGray}' + (Get-Date -Format 'HH:mm:ss') + '  '
     [void]$panel.Children.Add((ConvertTo-BlobTextBlock ($stamp + $Markup) -Mono -Size 12))
     $Blob.Gui.LogScroll.ScrollToEnd()
+    $Blob.Gui.LogLast.Text = (Get-BlobPlainText $Markup).Trim()
     Update-BlobGui
 }
 
@@ -315,9 +345,10 @@ function Show-BlobGuiDialog {
     $ok = $d.FindName('DlgOk'); $cancel = $d.FindName('DlgCancel')
     $ok.Content = $OkText
     $cancel.Content = $CancelText
-    $accent = switch ($Kind) { 'Error' { 'Red' } 'Warning' { 'Yellow' } 'Success' { 'Green' } default { 'Cyan' } }
-    if ($Danger) { $accent = 'Red'; $ok.Background = Get-BlobBrush 'Red'; $ok.BorderBrush = Get-BlobBrush 'Red' }
-    $d.FindName('DlgBorder').BorderBrush = Get-BlobBrush $accent
+    # The stripe on top carries the mood: ink normally, signal for risky or failed things.
+    $stripe = if ($Danger -or $Kind -in @('Error', 'Warning')) { 'Signal' } else { 'Ink' }
+    $d.FindName('DlgStripe').Background = Get-BlobBrush $stripe
+    if ($Danger) { $ok.Background = Get-BlobBrush 'Signal'; $ok.BorderBrush = Get-BlobBrush 'Signal'; $ok.Foreground = Get-BlobBrush 'Ink' }
     if ($InfoOnly) { $cancel.Visibility = 'Collapsed' }
     $check = $d.FindName('DlgCheck')
     if ($CheckText) {
@@ -446,10 +477,17 @@ function Show-BlobGuiPage {
 
     $Blob.Gui.Current = $Key
     foreach ($n in $Blob.GuiPageState) { $Blob.Gui[$n] = $entry[$n] }
-    foreach ($p in $Blob.Gui.Pages) {
+    for ($i = 0; $i -lt $Blob.Gui.Pages.Count; $i++) {
+        $p = $Blob.Gui.Pages[$i]
         $btn = $Blob.Gui.Nav[$p.Key]
-        if ($p.Key -eq $Key) { $btn.Foreground = Get-BlobBrush 'Cyan'; $btn.BorderBrush = Get-BlobBrush 'Cyan' }
-        else { $btn.Foreground = Get-BlobBrush '#3A9BE0'; $btn.BorderBrush = [Windows.Media.Brushes]::Transparent }
+        if ($p.Key -eq $Key) {
+            $btn.Foreground = Get-BlobBrush 'Ink'; $btn.BorderBrush = Get-BlobBrush 'Signal'; $btn.FontWeight = 'SemiBold'
+            $Blob.Gui.NavNum[$p.Key].Foreground = Get-BlobBrush 'SignalText'
+            $Blob.Gui.PageNumber.Text = '{0:D2}' -f ($i + 1)
+        } else {
+            $btn.Foreground = Get-BlobBrush 'Ink2'; $btn.BorderBrush = [Windows.Media.Brushes]::Transparent; $btn.FontWeight = 'Normal'
+            $Blob.Gui.NavNum[$p.Key].Foreground = Get-BlobBrush 'Ink3'
+        }
     }
     $Blob.Gui.PageTitle.Text = $page.Label
     $Blob.Gui.PageSubtitle.Text = $page.Subtitle
@@ -534,62 +572,82 @@ function Invoke-BlobGuiPreloadTick {
 # Card grids use as many columns as fit (about 300 px per card).
 function Update-BlobGuiCardColumns {
     $g = $Blob.Gui.CardGrid
-    if (-not $g) { return }
+    if (-not ($g -is [Windows.Controls.Primitives.UniformGrid])) { return }
     $w = $Blob.Gui.PageScroll.ViewportWidth
     if (-not $w -or $w -le 0) { $w = $Blob.Gui.Window.ActualWidth - 60 }
     if (-not $w -or $w -le 0) { $w = $Blob.Gui.Window.Width - 60 }
     $g.Columns = [Math]::Max(1, [int][Math]::Floor($w / 300))
 }
 
+# The black bar at the bottom appears whenever choices are waiting to be applied.
+function Update-BlobGuiPendingBar {
+    $n = $Blob.Gui.Pending.Count
+    if ($n -gt 0) {
+        $on = @($Blob.Gui.Pending.Values | Where-Object { $_ -eq 'On' }).Count
+        $off = $n - $on
+        $parts = @()
+        if ($on) { $parts += "$on to activate" }
+        if ($off) { $parts += "$off to deactivate" }
+        $Blob.Gui.PendingText.Text = "$($parts -join ', ').  Nothing has been changed yet."
+        $Blob.Gui.PendingApply.Content = "Review and apply $n"
+        $Blob.Gui.PendingBar.Visibility = 'Visible'
+    } else { $Blob.Gui.PendingBar.Visibility = 'Collapsed' }
+}
+
 function Initialize-BlobGuiWindow {
     $w = New-BlobGuiWindow $Blob.GuiXaml
-    $Blob.Gui = @{ Window = $w; Busy = $false; Current = $null; Nav = @{}; LogVisible = $true }
-    foreach ($n in @('TitleVersion', 'AdminBadge', 'AdminBadgeText', 'DryRunBadge', 'BtnMin', 'BtnMax', 'BtnClose', 'NavPanel',
-                     'PageActions', 'PageTitle', 'PageSubtitle', 'PageScroll', 'PageHost', 'BtnToggleLog', 'BtnClearLog',
-                     'LogScroll', 'LogPanel', 'StatusText', 'StatusRight', 'RootBorder')) {
+    $Blob.Gui = @{ Window = $w; Busy = $false; Current = $null; Nav = @{}; NavNum = @{}; LogVisible = $false }
+    foreach ($n in @('TitleVersion', 'AdminBadge', 'AdminBadgeText', 'DryRunBadge', 'BtnMin', 'BtnMax', 'BtnClose', 'CloseGlyph', 'NavPanel',
+                     'PageActions', 'PageNumber', 'PageTitle', 'PageSubtitle', 'PageScroll', 'PageHost', 'BtnToggleLog', 'BtnClearLog',
+                     'LogScroll', 'LogPanel', 'LogLast', 'StatusText', 'StatusRight', 'RootBorder',
+                     'PendingBar', 'PendingText', 'PendingDiscard', 'PendingApply')) {
         $Blob.Gui[$n] = $w.FindName($n)
     }
     # Fit the window to the screen (taller when there is room, so the whole sidebar shows).
     try {
         $wa = [Windows.SystemParameters]::WorkArea
         $w.Height = [Math]::Max($w.MinHeight, [Math]::Min(880, $wa.Height - 40))
-        $w.Width = [Math]::Max($w.MinWidth, [Math]::Min(1240, $wa.Width - 40))
+        $w.Width = [Math]::Max($w.MinWidth, [Math]::Min(1320, $wa.Width - 40))
     } catch { }
     $w.Title = "BLOB OPTIMIZER $($Blob.Version)"
-    $Blob.Gui.TitleVersion.Text = "v$($Blob.Version)"
+    $Blob.Gui.TitleVersion.Text = $Blob.Version
     if ($Blob.IsAdmin) {
-        $Blob.Gui.AdminBadge.Background = Get-BlobBrush '#061C33'; $Blob.Gui.AdminBadgeText.Text = 'ADMINISTRATOR'; $Blob.Gui.AdminBadgeText.Foreground = Get-BlobBrush 'Green'
+        $Blob.Gui.AdminBadge.BorderBrush = Get-BlobBrush 'Ink'; $Blob.Gui.AdminBadgeText.Text = 'ADMINISTRATOR'; $Blob.Gui.AdminBadgeText.Foreground = Get-BlobBrush 'Ink'
     } else {
-        $Blob.Gui.AdminBadge.Background = Get-BlobBrush '#061C33'; $Blob.Gui.AdminBadgeText.Text = 'STANDARD USER - READ ONLY FOR SYSTEM SETTINGS'; $Blob.Gui.AdminBadgeText.Foreground = Get-BlobBrush 'Yellow'
+        $Blob.Gui.AdminBadge.BorderBrush = Get-BlobBrush 'SignalText'; $Blob.Gui.AdminBadgeText.Text = 'LIMITED  -  SYSTEM SETTINGS READ-ONLY'; $Blob.Gui.AdminBadgeText.Foreground = Get-BlobBrush 'SignalText'
     }
     if ($Blob.DryRun) { $Blob.Gui.DryRunBadge.Visibility = 'Visible' }
-    $Blob.Gui.StatusRight.Text = "$($Blob.SysInfo.Host)  -  PowerShell $($PSVersionTable.PSVersion.Major).$($PSVersionTable.PSVersion.Minor)  -  No installation, nothing left running  -  Backups: $($Blob.DataRoot)"
+    $Blob.Gui.StatusRight.Text = "$($Blob.SysInfo.Host)   PowerShell $($PSVersionTable.PSVersion.Major).$($PSVersionTable.PSVersion.Minor)   backups $($Blob.DataRoot)"
 
     $Blob.Gui.BtnMin.Add_Click({ $Blob.Gui.Window.WindowState = 'Minimized' })
     $Blob.Gui.BtnMax.Add_Click({ $win = $Blob.Gui.Window; if ($win.WindowState -eq 'Maximized') { $win.WindowState = 'Normal' } else { $win.WindowState = 'Maximized' } })
     $Blob.Gui.BtnClose.Add_Click({ $Blob.Gui.Window.Close() })
+    $Blob.Gui.BtnClose.Add_MouseEnter({ $Blob.Gui.CloseGlyph.Stroke = Get-BlobBrush 'Paper' })
+    $Blob.Gui.BtnClose.Add_MouseLeave({ $Blob.Gui.CloseGlyph.Stroke = Get-BlobBrush 'Ink' })
     # A chromeless maximised window overhangs the screen edge; pad it.
     $w.Add_StateChanged({
             $win = $Blob.Gui.Window
-            if ($win.WindowState -eq 'Maximized') { $Blob.Gui.RootBorder.Margin = '7'; $Blob.Gui.BtnMax.Content = '[-]' }
-            else { $Blob.Gui.RootBorder.Margin = '0'; $Blob.Gui.BtnMax.Content = '[ ]' }
+            $Blob.Gui.RootBorder.Margin = if ($win.WindowState -eq 'Maximized') { '7' } else { '0' }
         })
     $Blob.Gui.BtnClearLog.Add_Click({ $Blob.Gui.LogPanel.Children.Clear() })
     $Blob.Gui.BtnToggleLog.Add_Click({
             $Blob.Gui.LogVisible = -not $Blob.Gui.LogVisible
             $Blob.Gui.LogScroll.Visibility = if ($Blob.Gui.LogVisible) { 'Visible' } else { 'Collapsed' }
-            $Blob.Gui.BtnToggleLog.Content = if ($Blob.Gui.LogVisible) { 'Hide' } else { 'Show' }
+            $Blob.Gui.BtnToggleLog.Content = if ($Blob.Gui.LogVisible) { 'Hide log' } else { 'Show log' }
         })
 
-    $Blob.Gui.Pages = Get-BlobGuiPages
+    $Blob.Gui.Pages = [System.Collections.ArrayList]@(Get-BlobGuiPages)
     foreach ($p in $Blob.Gui.Pages) {
         $btn = [Windows.Controls.Button]::new()
-        $btn.Style = $w.FindResource('TabButton')
+        $btn.Style = $w.FindResource('NavButton')
         $sp = New-BlobStack 'Horizontal'
+        $num = New-BlobText ('{0:D2}' -f ($Blob.Gui.Pages.IndexOf($p) + 1)) 13 'Ink3' 'Normal' '0,1,12,0' -Display
+        $num.Width = 22; $num.VerticalAlignment = 'Center'
+        $Blob.Gui.NavNum[$p.Key] = $num
         $label = [Windows.Controls.TextBlock]::new()
-        $label.Text = $p.Label.ToUpper(); $label.VerticalAlignment = 'Center'
+        $label.Text = $p.Label; $label.VerticalAlignment = 'Center'
         $label.SetBinding([Windows.Controls.TextBlock]::ForegroundProperty, (New-Object Windows.Data.Binding 'Foreground' -Property @{ Source = $btn })) | Out-Null
-        [void]$sp.Children.Add($label)
+        [void]$sp.Children.Add($num); [void]$sp.Children.Add($label)
         $btn.Content = $sp
         $btn.Tag = $p.Key
         $btn.Add_Click({ param($s, $e) if (-not $Blob.Gui.Busy) { Show-BlobGuiPage $s.Tag } })
@@ -607,9 +665,16 @@ function Initialize-BlobGuiWindow {
     $Blob.Gui.CardQueue = $null
     $Blob.Gui.CardCache = @{}
     if (-not $Blob.Gui.OptFilter) { $Blob.Gui.OptFilter = 'All' }
+    Register-BlobClick $Blob.Gui.PendingApply { Invoke-BlobGuiApplyPending }
+    Register-BlobClick $Blob.Gui.PendingDiscard {
+        $Blob.Gui.Pending.Clear()
+        if ($Blob.Gui.Current -eq 'optimize') { Update-BlobGuiCardGrid }
+        elseif ($Blob.Gui.Cache.ContainsKey('optimize')) { $Blob.Gui.Cache['optimize'].Stale = $true }
+        Update-BlobGuiPendingBar
+    }
 
     $w.Add_ContentRendered({
-            Add-BlobGuiLog "{Cyan}BLOB OPTIMIZER $($Blob.Version) {Gray}started. Every change is previewed first and can be undone from Restore."
+            Add-BlobGuiLog "{White}BLOB OPTIMIZER $($Blob.Version) {Gray}started. Every change is previewed first and can be undone from Restore."
             if (-not $Blob.IsAdmin) { Add-BlobGuiLog '{Yellow}Running without administrator rights: machine-wide settings are read-only.' }
             if ($Blob.DryRun) { Add-BlobGuiLog '{Magenta}Dry run: nothing will be modified.' }
         })

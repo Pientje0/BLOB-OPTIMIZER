@@ -19,28 +19,28 @@ Open **PowerShell**, **Windows Terminal** or plain **cmd**. It does not need to 
 PowerShell / Windows Terminal:
 
 ```powershell
-irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.5.0/BLOB.ps1 | iex
+irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.0.0/BLOB.ps1 | iex
 ```
 
 cmd.exe:
 
 ```cmd
-powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.5.0/BLOB.ps1 | iex"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.0.0/BLOB.ps1 | iex"
 ```
 
 **Terminal-only interface** (keyboard UI inside PowerShell):
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.5.0/BLOB.ps1))) -Tui
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.0.0/BLOB.ps1))) -Tui
 ```
 
 **Dry run** shows every change it would make without modifying anything:
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v1.5.0/BLOB.ps1))) -DryRun
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.0.0/BLOB.ps1))) -DryRun
 ```
 
-> Pinning a version tag (`v1.5.0`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
+> Pinning a version tag (`v2.0.0`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
 
 **Administrator rights.** BLOB OPTIMIZER requests administrator rights at start-up through the standard Windows UAC prompt. It never bypasses or suppresses that prompt. If you choose *No*, it continues in read-only mode: you can browse everything and apply per-user settings. Add `-NoElevate` (or set `$env:BLOB_NOELEVATE = '1'`) to skip the prompt.
 
@@ -54,17 +54,18 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\BLOB.ps1 -Tui     # termin
 
 ## Interfaces
 
-**Look.** Very basic black and blue: pure black background, blue text and 1-pixel blue lines, a monospace font, square corners and no shadows. Severity is shown with words and inverted badges (HIGH RISK). The terminal interface uses the same black and blue.
+**Design.** BLOB looks like an engineering spec sheet rather than a "gamer app": warm paper background, near-black ink, and one signal colour (international orange) used only for what needs your attention, such as pending changes, higher-risk tweaks and the active page. Bahnschrift, the DIN-style typeface built into Windows, sets the structure and numbers; Segoe UI is for reading; a monospace face is used only for technical values. Hairline rules instead of boxes, no gradients, no shadows, almost no rounding.
 
-**Window (default).** A WPF window with tabs across the top (Home, Presets, Optimizations, Services, Startup, Cleanup, Network, Power, Restore, Tools, Info), sortable tables, a live activity log, and a confirmation dialog that lists every exact change before anything is applied.
+**Window (default).** A numbered table of contents on the left (01 Overview, 02 Presets, 03 Tweaks, Services, Startup, Cleanup, Network, Power, Restore, External tools, System), large page titles, ruled tables and a log drawer at the bottom that shows the last action and opens on demand.
 
-**Instant tabs.** Every tab preloads in the background a few seconds after the window opens, so switching tabs is instant. Slow system information (network, disks, security status, services, cleanup sizes) is collected on three parallel background threads inside the same PowerShell process; these threads are closed when the window closes. After you change something, the current tab refreshes immediately, other affected tabs refresh quietly in the background, and all data is read live again.
+**Overview.** Four large readouts (tweaks on, memory, free disk, restorable changes), a *This PC* spec table, and a *Start here* list of the next useful actions.
 
-**Optimizations tab.** All 55 settings as cards, filterable by **category** (FPS & Latency, Performance, Network, Quality of Life, Privacy & Security), by **risk level** (Low, Medium, High, Preference) and by search. Each card shows its category, risk level, description and current state.
-- **Choose first, apply after.** Flipping a card's switch only marks it as *WILL ACTIVATE* or *WILL DEACTIVATE*. Nothing changes until you press **Apply changes (N)**. That opens one dialog listing every exact change (activations with current → new values, deactivations with the values that will be restored) and the restore-point checkbox. **Discard changes** forgets your choices, and closing the window with unapplied choices asks first.
-- **?** shows detailed help, **!** marks higher-risk settings and **ADMIN** marks machine-wide ones.
+**Tweaks.** All 55 tweaks as dense ruled rows, grouped by area (FPS & Latency, Performance, Network, Quality of Life, Privacy & Security) and filterable by area, **risk level** (Low, Medium, High, Preference) and search. Each row has an on/off switch, the name and a one-line description, a three-bar **risk meter** (HIGH in orange), the current state and a **?** with the full explanation.
+- **Choose first, apply after.** A switch only records what you want. The row turns orange with *→ ON* or *→ OFF*, and a black bar appears at the bottom: "2 to activate, 1 to deactivate. Nothing has been changed yet." **Review and apply** opens one dialog listing every exact change, with the restore-point option. **Discard** forgets your choices, and closing the window with choices waiting asks first.
 
-**Risk and help on every setting.** Each setting shows a risk label: LOW RISK, MEDIUM RISK, HIGH RISK or PREFERENCE. Hover the **?** next to it for a detailed explanation: what it does, why you might want it, the trade-off, the exact registry or service change (current → new), whether it needs admin rights, and how to undo it.
+**Instant pages.** Every page preloads in the background a few seconds after the window opens, so switching is instant. Slow system information (network, disks, security status, services, cleanup sizes) is collected on three parallel background threads inside the same PowerShell process, and these threads are closed when the window closes. After you change something, the current page refreshes immediately and other affected pages refresh quietly in the background.
+
+**Help on every tweak.** Hover the **?** for what it does, why you might want it, the trade-off, the exact registry or service change (current → new), whether it needs admin rights and how to undo it. Hover the risk meter for what the level means.
 
 **Restore point on apply.** Every apply confirmation, including presets, has a *Create a System Restore point first* checkbox. It is ticked by default when running as administrator. BLOB OPTIMIZER tells you honestly if Windows skipped the restore point because one was already made in the last 24 hours.
 

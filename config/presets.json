@@ -21,7 +21,7 @@
     },
     {
       "name": "STANDARD",
-      "description": "Recommended everyday optimizations: MINIMAL plus background apps, visual effects, Game DVR, file I/O, update sharing, taskbar, privacy and browser telemetry.",
+      "description": "Everything in Minimal, plus background apps, lighter visual effects, Game DVR, file I/O, update sharing, taskbar clean-up, privacy and browser telemetry.",
       "warning": "",
       "tweaks": [
         "perf.menudelay",
@@ -61,8 +61,8 @@
     },
     {
       "name": "ADVANCED",
-      "description": "STANDARD plus CPU scheduling, power throttling, GPU and network-throttling changes and the DiagTrack service. For experienced users.",
-      "warning": "ADVANCED changes can behave differently per system (GPU scheduling, fullscreen optimizations, DiagTrack service). Read each item, create a restore point, and undo anything that does not suit you.",
+      "description": "Everything in Standard, plus CPU scheduling, power throttling, GPU and network-throttling changes and the telemetry service.",
+      "warning": "These behave differently from PC to PC. Read each item, keep the restore point option ticked, and undo anything that does not suit you.",
       "tweaks": [
         "perf.menudelay",
         "game.gamemode",

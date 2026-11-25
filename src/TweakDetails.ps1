@@ -5,8 +5,8 @@
 # ============================================================================
 
 $Blob.RiskInfo = @{
-    Minimal  = @{ Label = 'LOW RISK'; Color = 'Green'; Text = 'Low risk. A small, well-understood setting that does not affect stability, security or compatibility.' }
-    Standard = @{ Label = 'MEDIUM RISK'; Color = 'Cyan'; Text = 'Medium risk. Changes a Windows feature or default behaviour. Safe for most PCs, but you may notice a feature behaving differently.' }
+    Minimal  = @{ Label = 'LOW RISK'; Color = 'White'; Text = 'Low risk. A small, well-understood setting that does not affect stability, security or compatibility.' }
+    Standard = @{ Label = 'MEDIUM RISK'; Color = 'White'; Text = 'Medium risk. Changes a Windows feature or default behaviour. Safe for most PCs, but you may notice a feature behaving differently.' }
     Advanced = @{ Label = 'HIGH RISK'; Color = 'Yellow'; Text = 'Higher risk. Affects scheduling, drivers or system services. Results vary per PC. Create a restore point and test afterwards.' }
     Optional = @{ Label = 'PREFERENCE'; Color = 'Gray'; Text = 'Personal preference. Not an optimization: it only changes how Windows looks or behaves. Never part of a preset.' }
 }
