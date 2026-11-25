@@ -10,6 +10,7 @@ function Get-BlobGuiPages {
         @{ Key = 'presets'; Label = 'Presets'; Subtitle = 'Three tested bundles. Each one lists every value it changes before anything happens.'; Build = { New-BlobGuiPresets } }
         @{ Key = 'optimize'; Label = 'Tweaks'; Subtitle = 'Switch what you want on or off. Nothing is changed until you review and apply.'; Build = { New-BlobGuiOptimizations } }
         @{ Key = 'privacy'; Label = 'Privacy'; Subtitle = "$(@(Get-BlobPrivacyItems).Count) privacy settings in $($Blob.PrivacyGroups.Count) sections. Every one explained, rated and recommended. Nothing changes until you review and apply."; Build = { New-BlobGuiPrivacy } }
+        @{ Key = 'appearance'; Label = 'Appearance'; Subtitle = 'Dark mode, accent colour, taskbar, Start and File Explorer. Your own account only; every change can be undone.'; Build = { New-BlobGuiAppearance } }
         @{ Key = 'services'; Label = 'Services'; Subtitle = 'Startup types only. Nothing is deleted, and services Windows depends on are locked.'; Build = { New-BlobGuiServices } }
         @{ Key = 'startup'; Label = 'Startup'; Subtitle = 'Programs that start when you sign in. Disabled the same way Task Manager does it.'; Build = { New-BlobGuiStartup } }
         @{ Key = 'apps'; Label = 'Apps'; Subtitle = 'Remove programs completely: their own uninstaller first, then the leftovers you choose.'; Build = { New-BlobGuiApps } }
@@ -199,6 +200,7 @@ function New-BlobGuiDashboard {
     [void]$start.Children.Add((New-BlobActionRow 'Apply a preset' 'Minimal, Standard or Advanced. Every value is shown before it changes.' { Show-BlobGuiPage 'presets' }))
     [void]$start.Children.Add((New-BlobActionRow 'Pick individual tweaks' "$($core.Count) settings, sorted by what they affect and how risky they are." { Show-BlobGuiPage 'optimize' }))
     [void]$start.Children.Add((New-BlobActionRow 'Review your privacy' "$(@(Get-BlobPrivacyItems).Count) privacy settings in $($Blob.PrivacyGroups.Count) sections, each explained with a clear recommendation." { Show-BlobGuiPage 'privacy' }))
+    [void]$start.Children.Add((New-BlobActionRow 'Change how Windows looks' 'Dark mode, accent colour, taskbar, Start and File Explorer.' { Show-BlobGuiPage 'appearance' }))
     [void]$start.Children.Add((New-BlobActionRow 'Remove an app completely' 'Its own uninstaller, then the folders and keys it leaves behind.' { Show-BlobGuiPage 'apps' }))
     [void]$start.Children.Add((New-BlobActionRow 'Install apps' 'Popular apps in one go with winget, which is built into Windows.' { Show-BlobGuiPage 'install' }))
     [void]$start.Children.Add((New-BlobActionRow 'Measure before and after' 'Boot times from Windows itself, plus snapshots to compare.' { Show-BlobGuiPage 'measure' }))
@@ -423,6 +425,7 @@ function Update-BlobGuiCardGrid {
     $g = $Blob.Gui.CardGrid
     if (-not $g) { return }
     if ($Blob.Gui.Current -eq 'privacy') { Update-BlobGuiPrivacyList; return }
+    if ($Blob.Gui.Current -eq 'appearance') { Update-BlobGuiAppearanceList; return }
     $offset = $Blob.Gui.PageScroll.VerticalOffset
     $g.Children.Clear()
     $states = @{}
@@ -473,6 +476,14 @@ function Invoke-BlobGuiApplyPending {
         $lines += @(Get-BlobTweakPreview $on | Select-Object -SkipLast 2)
     }
     $undo = $null
+    # Settings switched off that BLOB never turned on: write their plain "off" value instead.
+    $offSet = @(foreach ($t in $off) { if (@(Get-BlobAppliedChanges -Source $t.Id).Count -eq 0) { Get-BlobOffTweak $t } })
+    $offSetIds = @($offSet | ForEach-Object { $_.Id -replace '\.off$', '' })
+    $off = @($off | Where-Object { $_.Id -notin $offSetIds })
+    if ($offSet.Count) {
+        $lines += "{Cyan}SWITCH OFF ($($offSet.Count)) - set back to the Windows default"
+        $lines += @(Get-BlobTweakPreview $offSet | Select-Object -SkipLast 2)
+    }
     if ($off.Count) {
         $undo = Get-BlobUndoPlan $off
         $lines += "{Cyan}DEACTIVATE ($($off.Count)) - restore the values saved before they were changed"
@@ -480,7 +491,7 @@ function Invoke-BlobGuiApplyPending {
         $lines += ''
     }
     $lines += '{Gray}Original values are saved to the change journal before anything is modified.'
-    $total = $on.Count + $off.Count
+    $total = $on.Count + $off.Count + $offSet.Count
     $danger = @($on | Where-Object { $_.Risk -eq 'Advanced' }).Count -gt 0
     $canRp = $Blob.IsAdmin -and -not $Blob.DryRun
     $rpText = if ($canRp) { 'Create a System Restore point first (recommended)' } elseif ($Blob.DryRun) { 'Create a System Restore point first (not available in dry run)' } else { 'Create a System Restore point first (requires administrator)' }
@@ -496,6 +507,12 @@ function Invoke-BlobGuiApplyPending {
         $out = Invoke-BlobTweakCore -Tweaks $on -Tag 'changes' -Log $Blob.GuiShared.LogCollect
         Add-BlobGuiLog "{Cyan}$($out.Summary)"
         $needsExplorer = $out.NeedsExplorer
+    }
+    if ($offSet.Count) {
+        Start-BlobGuiTask "Switching off $($offSet.Count) setting(s)"
+        $out = Invoke-BlobTweakCore -Tweaks $offSet -Tag 'changes' -Log $Blob.GuiShared.LogCollect
+        Add-BlobGuiLog "{Cyan}$($out.Summary)"
+        if ($out.NeedsExplorer) { $needsExplorer = $true }
     }
     if ($undo -and $undo.Records.Count) {
         Start-BlobGuiTask "Deactivating $($off.Count) setting(s)"

@@ -8,7 +8,7 @@ Run this on a test VM or a spare PC before tagging a release. Test **Windows Pow
 - [ ] `powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\Test-Engine.ps1` prints **All engine tests passed**
 - [ ] Self-test passes in PS 5.1: `$env:BLOB_SELFTEST='1'; Get-Content -Raw .\BLOB.ps1 | iex`
 - [ ] Self-test passes in PS 7: `$env:BLOB_SELFTEST='1'; pwsh -NoProfile -Command "Get-Content -Raw .\BLOB.ps1 | iex"`
-- [ ] The self-test line `Window UI - XAML ok, 15/15 pages built` appears
+- [ ] The self-test line `Window UI - XAML ok, 16/16 pages built` appears
 - [ ] `powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\Render-Gui.ps1 -OutDir .\screens` prints **All pages rendered**. Review the PNGs
 - [ ] After the run, `Get-Command *-Blob*` returns nothing and `$Blob` is undefined, so nothing leaked into the session
 - [ ] `%LOCALAPPDATA%\BLOB-OPTIMIZER` was **not** created by the self-test or a dry run
@@ -69,6 +69,13 @@ Run this on a test VM or a spare PC before tagging a release. Test **Windows Pow
 - [ ] Hovering **?** shows what it does, what is collected, the benefit, what you lose, possible problems, the recommendation, the impact, the O&O ID and the exact change
 - [ ] *Choose all recommended* marks only DISABLE items. *Review and apply* shows every change with the restore-point option, and undo works from Restore
 - [ ] `tests/Export-PrivacyReference.ps1` regenerates `docs/PRIVACY-SETTINGS.md` with 156 entries
+
+## 3c2. Appearance
+
+- [ ] The tile matching the current theme is marked. Choosing *Light* (or *Dark*) marks both dark-mode switches; *Review and apply* switches the theme without signing out
+- [ ] Undo from Restore returns the previous theme
+- [ ] Taskbar items (seconds, never combine, left) appear after the Explorer restart prompt
+- [ ] Turning off a setting that was on before BLOB writes the default and shows up in Restore as "...: off"
 
 ## 3d. Install, Measure, drift, search
 

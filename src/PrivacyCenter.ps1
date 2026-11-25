@@ -43,7 +43,7 @@ function Add-BlobPrivacyItem {
 }
 
 function Get-BlobPrivacyItems { return @($Blob.Tweaks | Where-Object { $_.Section -eq 'PrivacyCenter' }) }
-function Get-BlobCoreTweaks { return @($Blob.Tweaks | Where-Object { $_.Section -ne 'PrivacyCenter' }) }
+function Get-BlobCoreTweaks { return @($Blob.Tweaks | Where-Object { $_.Section -notin @('PrivacyCenter', 'Appearance') }) }
 
 # Shared registry locations used by the catalogue files.
 $pcDC   = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection'

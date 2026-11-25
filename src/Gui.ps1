@@ -429,9 +429,9 @@ function Start-BlobGuiTask {
 # page and restored when the page is shown, so pages never share state.
 $Blob.GuiPageState = @('P', 'CardGrid', 'CardCount', 'ApplySelBtn', 'SearchHint', 'PendingActions')
 # Pages that show setting / journal state: refreshed in the background after any change.
-$Blob.GuiVolatilePages = @('dashboard', 'presets', 'optimize', 'privacy', 'services', 'startup', 'apps', 'power', 'restore', 'measure')
+$Blob.GuiVolatilePages = @('dashboard', 'presets', 'optimize', 'privacy', 'appearance', 'services', 'startup', 'apps', 'power', 'restore', 'measure')
 # Preload order, and pages that wait for the background data snapshot on their first build.
-$Blob.GuiPreloadOrder = @('optimize', 'privacy', 'presets', 'startup', 'power', 'restore', 'tools', 'measure', 'services', 'apps', 'cleanup', 'network', 'sysinfo', 'install', 'dashboard')
+$Blob.GuiPreloadOrder = @('optimize', 'privacy', 'appearance', 'presets', 'startup', 'power', 'restore', 'tools', 'measure', 'services', 'apps', 'cleanup', 'network', 'sysinfo', 'install', 'dashboard')
 $Blob.GuiHeavyPages = @('services', 'apps', 'cleanup', 'network', 'sysinfo', 'install', 'dashboard')
 
 function Set-BlobGuiPageActions {
@@ -676,8 +676,8 @@ function Initialize-BlobGuiWindow {
         })
     Register-BlobClick $Blob.Gui.PendingDiscard {
         $Blob.Gui.Pending.Clear()
-        if ($Blob.Gui.Current -in @('optimize', 'privacy')) { Update-BlobGuiCardGrid }
-        foreach ($k in @('optimize', 'privacy')) { if ($k -ne $Blob.Gui.Current -and $Blob.Gui.Cache.ContainsKey($k)) { $Blob.Gui.Cache[$k].Stale = $true } }
+        if ($Blob.Gui.Current -in @('optimize', 'privacy', 'appearance')) { Update-BlobGuiCardGrid }
+        foreach ($k in @('optimize', 'privacy', 'appearance')) { if ($k -ne $Blob.Gui.Current -and $Blob.Gui.Cache.ContainsKey($k)) { $Blob.Gui.Cache[$k].Stale = $true } }
         Update-BlobGuiPendingBar
     }
 

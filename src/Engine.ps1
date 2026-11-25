@@ -135,6 +135,7 @@ function Invoke-BlobTweakCore {
     $summary = "Done: {0} changed, {1} already set, {2} skipped, {3} failed." -f $count.ok, $count.same, $count.skip, $count.fail
     if ($Blob.DryRun) { $summary = "Dry run: {0} setting(s) would change. Nothing was modified." -f $count.dry }
     if ($count.ok -gt 0) { & $Log '{Gray}Some settings apply after Explorer restarts, you sign out, or the PC restarts.' }
+    if ($count.ok -gt 0 -and @($Tweaks | Where-Object { $_.Section -eq 'Appearance' }).Count) { Send-BlobThemeChange }
     return @{ Count = $count; Summary = $summary
               NeedsExplorer = ($count.ok -gt 0 -and @($Tweaks | Where-Object { $_.RestartExplorer }).Count -gt 0) }
 }
@@ -187,6 +188,8 @@ function Invoke-BlobRestoreCore {
         & $Log (Format-BlobResult $res)
         if ($res.Status -in @('Restored', 'DryRun')) { $ok++ } else { $bad++ }
     }
+    $look = @($ordered | Where-Object { $t = Get-BlobTweak $_.Source; $t -and $t.Section -eq 'Appearance' })
+    if ($ok -gt 0 -and $look.Count) { Send-BlobThemeChange }
     return @($ok, $bad)
 }
 

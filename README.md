@@ -56,7 +56,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\BLOB.ps1 -Tui     # termin
 
 **Design.** BLOB looks like an engineering spec sheet rather than a "gamer app": warm paper background, near-black ink, and one signal colour (international orange) used only for what needs your attention, such as pending changes, higher-risk tweaks and the active page. Bahnschrift, the DIN-style typeface built into Windows, sets the structure and numbers; Segoe UI is for reading; a monospace face is used only for technical values. Hairline rules instead of boxes, no gradients, no shadows, almost no rounding.
 
-**Window (default).** A numbered table of contents on the left (01 Overview, 02 Presets, 03 Tweaks, Privacy, Services, Startup, Apps, Install, Cleanup, Network, Power, Measure, Restore, External tools, System), large page titles, ruled tables and a log drawer at the bottom that shows the last action and opens on demand.
+**Window (default).** A numbered table of contents on the left (01 Overview, 02 Presets, 03 Tweaks, Privacy, Appearance, Services, Startup, Apps, Install, Cleanup, Network, Power, Measure, Restore, External tools, System), large page titles, ruled tables and a log drawer at the bottom that shows the last action and opens on demand.
 
 **Overview.** Four large readouts (tweaks on, memory, free disk, restorable changes), a *This PC* spec table, and a *Start here* list of the next useful actions.
 
@@ -66,7 +66,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\BLOB.ps1 -Tui     # termin
 
 **What changed.** After every apply, undo, install or re-apply, a summary lists exactly what changed, what was already set and what failed. **Save as text file** keeps it for later or for someone helping you.
 
-**Tweaks.** All 55 tweaks as dense ruled rows, grouped by area (FPS & Latency, Performance, Network, Quality of Life, Privacy & Security) and filterable by area, **risk level** (Low, Medium, High, Preference) and search. Each row has an on/off switch, the name and a one-line description, a three-bar **risk meter** (HIGH in orange), the current state and a **?** with the full explanation.
+**Tweaks.** All 53 tweaks as dense ruled rows, grouped by area (FPS & Latency, Performance, Network, Quality of Life, Privacy & Security) and filterable by area, **risk level** (Low, Medium, High, Preference) and search. Each row has an on/off switch, the name and a one-line description, a three-bar **risk meter** (HIGH in orange), the current state and a **?** with the full explanation.
 - **Choose first, apply after.** A switch only records what you want. The row turns orange with *→ ON* or *→ OFF*, and a black bar appears at the bottom: "2 to switch on, 1 to switch off. Nothing has been changed yet." **Review and apply** opens one dialog listing every exact change, with the restore-point option. **Discard** forgets your choices, and closing the window with choices waiting asks first.
 
 **Privacy: 156 settings in 20 sections, every one switchable.** Privacy, telemetry, app permissions, Cortana and input, location, search, settings sync, security, Windows Update, Edge, Office and Microsoft 365, Explorer, the lock screen, the taskbar, activity and clipboard, Copilot and Windows AI, mobile devices, miscellaneous and gaming. Every setting comes with:
@@ -76,6 +76,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\BLOB.ps1 -Tui     # termin
 - the O&O ShutUp10++ ID where known (U008, L005, L008, M029-M031, M103, W010, E157, F020, F021, P099, C208-C211).
 
 Filter by section, by advice and by search (including O&O IDs). **Choose all recommended** marks every DISABLE item. It uses the same choose-then-apply flow, backups and undo as Tweaks. Only settings BLOB can actually change are listed. Microsoft Defender, automatic security updates and Windows activation are never changed and are not shown. The full text of all entries is in [docs/PRIVACY-SETTINGS.md](docs/PRIVACY-SETTINGS.md).
+
+**Appearance: how Windows looks.** Three theme tiles at the top (**Light**, **Dark**, **Mixed**: light apps with a dark taskbar) drawn as a small preview, then 16 switches in five groups:
+- *Colours and theme:* dark mode for apps, dark mode for Windows, transparency, accent colour from the wallpaper, accent colour on title bars, accent colour on Start and taskbar;
+- *Taskbar:* align left, seconds in the clock, never combine buttons;
+- *Start menu:* more pins;
+- *File Explorer:* compact view, full path in the title bar, check boxes to select files;
+- *Desktop and scrolling:* This PC on the desktop, full-quality wallpaper, always show scroll bars.
+
+Everything is per user (no administrator rights), uses the same choose-then-apply flow and undo as Tweaks, and is never part of a preset. After applying, Windows is told to refresh its colours, so dark mode switches without signing out. Switching off something that was already on before BLOB (dark mode, for example) sets the Windows default value and is recorded too, so undo returns exactly what you had. Links open Windows' own pages for a fixed accent colour, the background and themes.
 
 **Apps: complete removal.** Every installed program (86 on a typical PC) and Microsoft Store app, with size, install date, search and sorting. **Uninstall** removes an app completely, in three steps:
 1. **Its own uninstaller runs first.** The program undoes its own drivers, services and file associations the way its maker intended. Store apps are removed by Windows together with their app data.
@@ -107,6 +116,7 @@ Shared folders (`Microsoft`, `Common Files`, `WindowsApps`, `Packages` …) are 
 | **Performance** | Menu delay, startup delay, Store background apps, Edge background/startup boost, visual effects, transparency, multimedia scheduling, file I/O (last-access writes, 8.3 names), Explorer folder loading, drive optimization (TRIM/defrag), live memory/CPU view |
 | **Gaming** | Game Mode, Game DVR, mouse acceleration, Sticky Keys prompt, GPU scheduling, fullscreen optimizations, MMCSS priority, power throttling, foreground priority, Multiplane Overlay fix, Xbox services, Xbox button, network throttling, update sharing (Delivery Optimization). **No FPS gains are promised.** |
 | **Tweaks** | File Explorer (extensions, This PC, hidden files, recent files), taskbar (search, Task View, Widgets, End task, alignment), Start (recommendations, web search), classic context menu, long paths |
+| **Appearance** | Dark/light/mixed theme, accent colour, transparency, taskbar (alignment, clock seconds, button combining), Start pins, File Explorer view, desktop icon, wallpaper quality, scroll bars |
 | **Privacy** | Advertising ID, tailored experiences, suggestions and auto-installed apps, lock screen ads, diagnostic data level, feedback, inking, activity history, Recall snapshots, DiagTrack service, Firefox / Chrome / Edge telemetry policies |
 | **Services** | Curated review with explanations and recommended startup types, plus a browser of every service. Only startup types are changed, and critical services are protected |
 | **Startup** | Run keys and Startup folders. Entries are disabled with the same mechanism Task Manager uses, so nothing is deleted |
@@ -196,6 +206,7 @@ BLOB-OPTIMIZER/
 │   ├── ExternalTools.ps1    WinUtil / ShutUp10++ launchers with signature check
 │   ├── PrivacyCenter.ps1  PrivacyData1-3.ps1   privacy page engine and catalogue
 │   ├── Apps.ps1             complete app removal and leftover scan
+│   ├── Appearance.ps1       dark mode, colours, taskbar, Start and Explorer look
 │   ├── Drift.ps1            detects settings Windows changed back, re-applies them
 │   ├── Measure.ps1          boot times and before/after snapshots
 │   ├── Winget.ps1           app catalogue and winget install/upgrade

@@ -311,6 +311,7 @@ function Get-BlobSearchIndex {
     foreach ($t in (Get-BlobCoreTweaks)) { [void]$idx.Add(@{ Title = $t.Name; Where = "Tweaks - $($t.Category)"; Text = $t.Description; Key = 'optimize'; Value = $t.Name }) }
     foreach ($t in (Get-BlobPrivacyItems)) { [void]$idx.Add(@{ Title = $t.Name + $(if ($t.Privacy.Oo) { " ($($t.Privacy.Oo))" }); Where = "Privacy - $($t.Group)"; Text = $t.Privacy.Does; Key = 'privacy'; Value = $t.Name }) }
     foreach ($a in @($Blob.Gui.AppsData)) { if ($a) { [void]$idx.Add(@{ Title = $a.Name; Where = 'Apps - installed'; Text = $a.Publisher; Key = 'apps'; Value = $a.Name }) } }
+    foreach ($t in (Get-BlobAppearanceItems)) { [void]$idx.Add(@{ Title = $t.Name; Where = "Appearance - $($t.Group)"; Text = $t.Description; Key = 'appearance'; Value = $t.Name }) }
     foreach ($a in $Blob.WingetCatalog) { [void]$idx.Add(@{ Title = $a.Name; Where = "Install - $($a.Cat)"; Text = $a.Id; Key = 'install'; Value = $a.Name }) }
     return $idx.ToArray()
 }
@@ -384,4 +385,151 @@ function Show-BlobGuiSearch {
     $d.Add_ContentRendered({ param($s, $e) $s.Tag.Box.Focus() })
     $null = $d.ShowDialog()
     if ($d.Tag.Result) { Invoke-BlobSearchResult $d.Tag.Result }
+}
+
+# ---------------------------------------------------------------------------
+#  Appearance page
+# ---------------------------------------------------------------------------
+$Blob.ThemeModes = [ordered]@{
+    Light = @{ Apps = $false; System = $false; Note = 'Light apps, light taskbar' }
+    Dark  = @{ Apps = $true; System = $true; Note = 'Dark apps, dark taskbar' }
+    Mixed = @{ Apps = $false; System = $true; Note = 'Light apps, dark taskbar' }
+}
+
+# Effective dark/light for one switch, counting a pending choice.
+function Test-BlobGuiWantsOn {
+    param([string]$Id)
+    $p = [string]$Blob.Gui.Pending[$Id]
+    if ($p) { return ($p -eq 'On') }
+    return ((Get-BlobTweakState (Get-BlobTweak $Id)) -eq 'Applied')
+}
+
+function Set-BlobGuiPendingTo {
+    param([string]$Id, [bool]$On)
+    $isOn = (Get-BlobTweakState (Get-BlobTweak $Id)) -eq 'Applied'
+    if ($On -eq $isOn) { $Blob.Gui.Pending.Remove($Id) } else { $Blob.Gui.Pending[$Id] = $(if ($On) { 'On' } else { 'Off' }) }
+}
+
+function Set-BlobGuiThemeMode {
+    param([string]$Mode)
+    $m = $Blob.ThemeModes[$Mode]
+    if (-not $m) { return }
+    Set-BlobGuiPendingTo 'app.darkapps' $m.Apps
+    Set-BlobGuiPendingTo 'app.darksystem' $m.System
+    Update-BlobGuiCardGrid
+}
+
+# A small drawing of the desktop in that mode: window (apps) above a taskbar (system).
+function New-BlobThemeTile {
+    param([string]$Mode, [bool]$Selected)
+    $m = $Blob.ThemeModes[$Mode]
+    $conv = [Windows.Media.BrushConverter]::new()
+    $winBg = if ($m.Apps) { '#202020' } else { '#FFFFFF' }
+    $winBar = if ($m.Apps) { '#2B2B2B' } else { '#F0F0F0' }
+    $winLine = if ($m.Apps) { '#3D3D3D' } else { '#E2E2E2' }
+    $taskBg = if ($m.System) { '#1C1C1C' } else { '#EEEEEE' }
+    $taskIcon = if ($m.System) { '#5A5A5A' } else { '#BDBDBD' }
+
+    $tile = [Windows.Controls.Border]::new()
+    $tile.Width = 200; $tile.Margin = '0,0,16,0'; $tile.Padding = '10'; $tile.Cursor = 'Hand'
+    $tile.BorderThickness = $(if ($Selected) { '2' } else { '1' })
+    $tile.BorderBrush = Get-BlobBrush $(if ($Selected) { 'Signal' } else { 'Rule' })
+    $tile.Background = Get-BlobBrush $(if ($Selected) { 'SignalSoft' } else { 'Surface' })
+    $tile.DataContext = $Mode
+    $sp = New-BlobStack
+
+    $screen = [Windows.Controls.Grid]::new()
+    $screen.Height = 104
+    $screen.Background = $conv.ConvertFrom('#9FB4C7')
+    $win = [Windows.Controls.Border]::new()
+    $win.Width = 120; $win.Height = 62; $win.Margin = '0,10,0,0'; $win.VerticalAlignment = 'Top'; $win.HorizontalAlignment = 'Center'
+    $win.Background = $conv.ConvertFrom($winBg); $win.BorderBrush = $conv.ConvertFrom($winLine); $win.BorderThickness = '1'
+    $ws = New-BlobStack
+    $bar = [Windows.Controls.Border]::new(); $bar.Height = 12; $bar.Background = $conv.ConvertFrom($winBar)
+    [void]$ws.Children.Add($bar)
+    foreach ($w in @(84, 64, 74)) {
+        $ln = [Windows.Controls.Border]::new(); $ln.Height = 5; $ln.Width = $w; $ln.Margin = '8,7,0,0'; $ln.HorizontalAlignment = 'Left'
+        $ln.Background = $conv.ConvertFrom($winLine); [void]$ws.Children.Add($ln)
+    }
+    $win.Child = $ws
+    [void]$screen.Children.Add($win)
+    $task = [Windows.Controls.Border]::new()
+    $task.Height = 16; $task.VerticalAlignment = 'Bottom'; $task.Background = $conv.ConvertFrom($taskBg)
+    $icons = New-BlobStack 'Horizontal'
+    $icons.HorizontalAlignment = 'Center'; $icons.VerticalAlignment = 'Center'
+    for ($i = 0; $i -lt 5; $i++) { $ic = [Windows.Controls.Border]::new(); $ic.Width = 8; $ic.Height = 8; $ic.Margin = '3,0'; $ic.Background = $conv.ConvertFrom($taskIcon); [void]$icons.Children.Add($ic) }
+    $task.Child = $icons
+    [void]$screen.Children.Add($task)
+    [void]$sp.Children.Add($screen)
+
+    $label = New-BlobStack 'Horizontal'
+    $label.Margin = '0,10,0,0'
+    [void]$label.Children.Add((New-BlobText $Mode 15.5 'Ink' 'SemiBold' -Display))
+    if ($Selected) { $chk = New-BlobText ("  " + [char]0x2713) 15 'SignalText' 'SemiBold'; [void]$label.Children.Add($chk) }
+    [void]$sp.Children.Add($label)
+    [void]$sp.Children.Add((New-BlobText $m.Note 12 'Ink2' 'Normal' '0,2,0,0'))
+    $tile.Child = $sp
+    $tile.Add_MouseLeftButtonUp({ param($s, $e) if (-not $Blob.Gui.Busy) { Set-BlobGuiThemeMode ([string]$s.DataContext) } })
+    return $tile
+}
+
+function Update-BlobGuiAppearanceList {
+    $g = $Blob.Gui.CardGrid
+    if (-not $g) { return }
+    $offset = $Blob.Gui.PageScroll.VerticalOffset
+    # Theme tiles follow the switches, including choices not applied yet.
+    $tiles = $Blob.Gui.P.Tiles
+    $tiles.Children.Clear()
+    $apps = Test-BlobGuiWantsOn 'app.darkapps'; $sys = Test-BlobGuiWantsOn 'app.darksystem'
+    foreach ($k in $Blob.ThemeModes.Keys) {
+        $m = $Blob.ThemeModes[$k]
+        [void]$tiles.Children.Add((New-BlobThemeTile $k ($m.Apps -eq $apps -and $m.System -eq $sys)))
+    }
+    $Blob.Gui.P.ThemeNote.Text = if ($apps -and -not $sys) { 'Now: dark apps with a light taskbar (a custom mix). Pick a tile or use the two switches below.' } else { '' }
+    $g.Children.Clear()
+    $items = @(Get-BlobAppearanceItems)
+    $states = @{}
+    foreach ($t in $items) { $states[$t.Id] = Get-BlobTweakState $t }
+    foreach ($grp in $Blob.AppearanceGroups) {
+        $inGrp = @($items | Where-Object { $_.Group -eq $grp })
+        if ($inGrp.Count -eq 0) { continue }
+        $on = @($inGrp | Where-Object { $states[$_.Id] -eq 'Applied' }).Count
+        [void]$g.Children.Add((New-BlobGroupHeader $grp "$on of $($inGrp.Count) on"))
+        foreach ($t in $inGrp) { [void]$g.Children.Add((Get-BlobGuiCard $t $states[$t.Id])) }
+    }
+    $dot = [string][char]0x00B7
+    $onAll = @($states.Values | Where-Object { $_ -eq 'Applied' }).Count
+    $Blob.Gui.CardCount.Text = "$($items.Count) settings  $dot  $onAll on  $dot  $($Blob.Gui.Pending.Count) waiting"
+    Update-BlobGuiPendingBar
+    $Blob.Gui.PageScroll.UpdateLayout(); $Blob.Gui.PageScroll.ScrollToVerticalOffset($offset)
+}
+
+function New-BlobGuiAppearance {
+    $root = New-BlobStack
+    [void]$root.Children.Add((New-BlobHeading 'Theme' '0,0,0,10'))
+    $tiles = New-BlobStack 'Horizontal'
+    [void]$root.Children.Add($tiles)
+    $note = New-BlobText '' 12.5 'SignalText' 'Normal' '0,10,0,0'
+    [void]$root.Children.Add($note)
+    $Blob.Gui.P = @{ Tiles = $tiles; ThemeNote = $note }
+    [void]$root.Children.Add((New-BlobText 'Choosing a tile only marks the change. Review and apply in the bar below; apps that follow Windows switch at once, and undo returns your current colours.' 12.5 'Ink2' 'Normal' '0,10,0,0'))
+
+    $Blob.Gui.CardCount = New-BlobText '' 12 'Ink3' 'Normal' '0,22,0,0' -Mono
+    [void]$root.Children.Add($Blob.Gui.CardCount)
+    $list = New-BlobStack
+    $Blob.Gui.CardGrid = $list
+    [void]$root.Children.Add($list)
+
+    [void]$root.Children.Add((New-BlobHeading 'More in Windows Settings' '0,36,0,4'))
+    foreach ($d in @(
+            @('Accent colour', 'Choose a fixed accent colour (turn off the wallpaper option above first).', { Start-Process 'ms-settings:colors' }),
+            @('Background', 'Wallpaper, slideshow or Windows Spotlight.', { Start-Process 'ms-settings:personalization-background' }),
+            @('Themes and desktop icons', 'Complete themes, mouse pointers, sounds and desktop icon settings.', { Start-Process 'ms-settings:themes' }),
+            @('Restart Explorer', 'Makes taskbar, Start and desktop changes show up without signing out.', { if (Confirm-BlobGui -Title 'Restart Windows Explorer?' -OkText 'Restart Explorer' -Lines @('{Gray}The taskbar and open Explorer windows close and reopen.')) { Restart-BlobExplorer; Add-BlobGuiLog '{White}Explorer restarted.' } }))) {
+        [void]$root.Children.Add((New-BlobActionRow $d[0] $d[1] $d[2]))
+    }
+    Set-BlobGuiPageActions @(
+        (New-BlobButton 'Windows colour settings' { Start-Process 'ms-settings:colors' } -Margin '0'))
+    Update-BlobGuiAppearanceList
+    return $root
 }

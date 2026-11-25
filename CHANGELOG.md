@@ -2,6 +2,20 @@
 
 All notable changes to BLOB OPTIMIZER are documented here. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [2.4.0] - 2026-11-25
+
+### Added
+- **Appearance page** (also `A` in the terminal UI):
+  - Light / Dark / Mixed theme tiles with a small preview;
+  - 16 per-user switches: dark mode for apps and for Windows, transparency, accent colour (from wallpaper, title bars, Start and taskbar), taskbar alignment, clock seconds, never combine buttons, more Start pins, File Explorer compact view, full path and check boxes, This PC on the desktop, full-quality wallpaper, always show scroll bars;
+  - links to Windows' accent colour, background and themes pages.
+- After an appearance change, running apps are told to refresh their colours, so dark mode switches without signing out.
+- Switching off an appearance setting that was on before BLOB writes the Windows default and records it, so undo returns the original.
+- Overview: *Change how Windows looks*; search (`Ctrl+K`) finds appearance settings.
+
+### Changed
+- *Disable transparency effects* and *Align taskbar to the left* moved from Tweaks to Appearance (same ids, so history and undo are unchanged). Tweaks now lists 53 settings.
+
 ## [2.3.0] - 2026-11-25
 
 ### Added
