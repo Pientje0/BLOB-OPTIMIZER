@@ -11,6 +11,7 @@ function Get-BlobGuiPages {
         @{ Key = 'optimize'; Label = 'Tweaks'; Subtitle = 'Switch what you want on or off. Nothing is changed until you review and apply.'; Build = { New-BlobGuiOptimizations } }
         @{ Key = 'services'; Label = 'Services'; Subtitle = 'Startup types only. Nothing is deleted, and services Windows depends on are locked.'; Build = { New-BlobGuiServices } }
         @{ Key = 'startup'; Label = 'Startup'; Subtitle = 'Programs that start when you sign in. Disabled the same way Task Manager does it.'; Build = { New-BlobGuiStartup } }
+        @{ Key = 'apps'; Label = 'Apps'; Subtitle = 'Remove programs completely: their own uninstaller first, then the leftovers you choose.'; Build = { New-BlobGuiApps } }
         @{ Key = 'cleanup'; Label = 'Cleanup'; Subtitle = 'Temporary files and caches. Sizes are measured first; deleted files are gone for good.'; Build = { New-BlobGuiCleanup } }
         @{ Key = 'network'; Label = 'Network'; Subtitle = 'Adapters, DNS, diagnostics and the last-resort resets.'; Build = { New-BlobGuiNetwork } }
         @{ Key = 'power'; Label = 'Power'; Subtitle = 'Power plans, screen and sleep timers, hibernation.'; Build = { New-BlobGuiPower } }
@@ -188,6 +189,7 @@ function New-BlobGuiDashboard {
     [void]$start.Children.Add((New-BlobHeading 'Start here' '0,0,0,2'))
     [void]$start.Children.Add((New-BlobActionRow 'Apply a preset' 'Minimal, Standard or Advanced. Every value is shown before it changes.' { Show-BlobGuiPage 'presets' }))
     [void]$start.Children.Add((New-BlobActionRow 'Pick individual tweaks' "$($Blob.Tweaks.Count) settings, sorted by what they affect and how risky they are." { Show-BlobGuiPage 'optimize' }))
+    [void]$start.Children.Add((New-BlobActionRow 'Remove an app completely' 'Its own uninstaller, then the folders and keys it leaves behind.' { Show-BlobGuiPage 'apps' }))
     [void]$start.Children.Add((New-BlobActionRow 'Clear temporary files' 'Measures caches and temp folders first, then asks.' { Show-BlobGuiPage 'cleanup' }))
     [void]$start.Children.Add((New-BlobActionRow 'Make a restore point' 'A Windows-level safety net before you change anything big.' { Invoke-BlobGuiRestorePoint }))
     [void]$start.Children.Add((New-BlobActionRow 'Review or undo changes' 'Every change BLOB made, with its original value.' { Show-BlobGuiPage 'restore' }))

@@ -11,11 +11,11 @@
 $Blob.PrefetchGroups = @(
     @('Adapters', 'IPConfig', 'Profiles', 'Dns'),
     @('Firewall', 'Defender', 'PhysicalDisks', 'Video', 'BIOS', 'Board', 'Memory'),
-    @('OS', 'CPU', 'CS', 'LogicalDisks', 'Services', 'CleanupSizes')
+    @('OS', 'CPU', 'CS', 'LogicalDisks', 'Services', 'CleanupSizes', 'StoreApps')
 )
 
 $Blob.PrefetchScript = {
-    param($CleanupTargets, $IsAdmin, $Names)
+    param($CleanupTargets, $IsAdmin, $Names, $StoreFn, $StoreProtected)
     $r = @{}
     function Try-Get([string]$Name, [scriptblock]$Block) {
         if ($Names -notcontains $Name) { return }
@@ -67,6 +67,10 @@ $Blob.PrefetchScript = {
         foreach ($d in @(Get-DnsClientServerAddress -AddressFamily IPv4 -ErrorAction Stop)) { $h[[int]$d.InterfaceIndex] = @($d.ServerAddresses) }
         $h
     }
+    if ($Names -contains 'StoreApps' -and $StoreFn) {
+        . ([scriptblock]::Create("function Get-BlobStoreAppsLive {`n$StoreFn`n}"))
+        Try-Get 'StoreApps' { @(Get-BlobStoreAppsLive -Protected $StoreProtected) }
+    }
     Try-Get 'CleanupSizes' {
         $sizes = @{}
         foreach ($t in $CleanupTargets) {
@@ -106,7 +110,7 @@ function Start-BlobPrefetch {
             $rs.Open()
             $ps = [powershell]::Create()
             $ps.Runspace = $rs
-            [void]$ps.AddScript($Blob.PrefetchScript.ToString()).AddArgument($Blob.CleanupTargets).AddArgument($Blob.IsAdmin).AddArgument([string[]]$names)
+            [void]$ps.AddScript($Blob.PrefetchScript.ToString()).AddArgument($Blob.CleanupTargets).AddArgument($Blob.IsAdmin).AddArgument([string[]]$names).AddArgument(${function:Get-BlobStoreAppsLive}.ToString()).AddArgument([string[]]$Blob.StoreProtected)
             [void]$jobs.Add(@{ PS = $ps; RS = $rs; Handle = $ps.BeginInvoke() })
         }
         $Blob.PrefetchJob = @{ Jobs = $jobs; Started = Get-Date }

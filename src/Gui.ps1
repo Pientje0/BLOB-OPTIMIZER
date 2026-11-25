@@ -429,10 +429,10 @@ function Start-BlobGuiTask {
 # page and restored when the page is shown, so pages never share state.
 $Blob.GuiPageState = @('P', 'CardGrid', 'CardCount', 'ApplySelBtn', 'SearchHint', 'PendingActions')
 # Pages that show setting / journal state: refreshed in the background after any change.
-$Blob.GuiVolatilePages = @('dashboard', 'presets', 'optimize', 'services', 'startup', 'power', 'restore')
+$Blob.GuiVolatilePages = @('dashboard', 'presets', 'optimize', 'services', 'startup', 'apps', 'power', 'restore')
 # Preload order, and pages that wait for the background data snapshot on their first build.
-$Blob.GuiPreloadOrder = @('optimize', 'presets', 'startup', 'power', 'restore', 'tools', 'services', 'cleanup', 'network', 'sysinfo', 'dashboard')
-$Blob.GuiHeavyPages = @('services', 'cleanup', 'network', 'sysinfo', 'dashboard')
+$Blob.GuiPreloadOrder = @('optimize', 'presets', 'startup', 'power', 'restore', 'tools', 'services', 'apps', 'cleanup', 'network', 'sysinfo', 'dashboard')
+$Blob.GuiHeavyPages = @('services', 'apps', 'cleanup', 'network', 'sysinfo', 'dashboard')
 
 function Set-BlobGuiPageActions {
     param([array]$Buttons = @())

@@ -2,6 +2,17 @@
 
 All notable changes to BLOB OPTIMIZER are documented here. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [2.1.0] - 2026-11-25
+
+### Added
+- **Apps page: complete app removal.** It lists all installed programs (from the three Uninstall registry locations) and Microsoft Store apps, with size, install date, type, search and sorting (name, largest, newest).
+  - **Uninstall** runs the app's own uninstaller (MSI products via `msiexec /X`), or removes Store apps with their data through Windows.
+  - Once Windows no longer lists the program, a **leftover scan** looks for exact-name folders, registry keys, shortcuts and startup entries. You pick what to remove: folders and shortcuts go to the Recycle Bin, registry keys are exported to .reg first (a new restorable `RegKeyDelete` journal entry), and startup entries use the undo journal.
+  - Shared folders are never touched, Windows-critical apps are protected, and shared runtimes are flagged.
+  - If the uninstaller is cancelled, nothing is scanned or removed.
+- Store apps are listed on the background data thread, so the Apps page preloads like the others.
+- Overview: *Remove an app completely* in Start here.
+
 ## [2.0.0] - 2026-11-25
 
 ### Changed - complete visual redesign

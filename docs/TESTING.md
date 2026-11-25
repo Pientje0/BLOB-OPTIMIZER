@@ -55,6 +55,14 @@ Run this on a test VM or a spare PC before tagging a release. Test **Windows Pow
 - [ ] `BLOB.cmd` next to `BLOB.ps1` starts it from cmd / double-click
 - [ ] `-Tui` opens the terminal UI instead. `T` on its dashboard opens External Tools
 
+## 3b. Apps
+
+- [ ] Apps lists programs and Store apps. Type / sort filters and search work. Protected apps show *Protected*, and shared runtimes show *Shared component*
+- [ ] Uninstall a small test program: its own uninstaller opens. After it finishes, the leftover dialog lists exact-name folders, keys and shortcuts with checkboxes
+- [ ] Removed folders and shortcuts appear in the Recycle Bin. Removed registry keys appear in Restore and restoring them works
+- [ ] Cancelling the uninstaller shows *still installed*, and *Stop* removes nothing
+- [ ] Uninstall a Store app: it disappears and Windows removes its data
+
 ## 4. Terminal UI
 
 - [ ] Arrow keys, Enter, Esc, Space, Tab, PgUp/PgDn, Home/End work in menus

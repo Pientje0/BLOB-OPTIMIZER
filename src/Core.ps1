@@ -8,7 +8,7 @@
 # Single state object shared by every module. It is created inside the
 # release script block, so it disappears when the tool exits.
 $Blob = @{
-    Version   = '2.0.0'
+    Version   = '2.1.0'
     Tweaks    = New-Object System.Collections.ArrayList
     Changes   = New-Object System.Collections.ArrayList
     LogBuffer = New-Object System.Collections.ArrayList
@@ -422,6 +422,7 @@ function Restore-BlobChange {
             'PowerTimeout'     { Restore-BlobPowerChange $Record }
             'Hibernate'        { Restore-BlobPowerChange $Record }
             'Dns'              { Restore-BlobDnsChange $Record }
+            'RegKeyDelete'     { if (-not $Blob.IsAdmin -and $Record.Data.Path -like 'HKLM:*') { throw 'Administrator rights required.' }; Restore-BlobRegKeyDelete $Record }
             default { throw "Unknown change kind '$($Record.Kind)'." }
         }
         $Record.Status = 'Restored'

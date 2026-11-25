@@ -19,28 +19,28 @@ Open **PowerShell**, **Windows Terminal** or plain **cmd**. It does not need to 
 PowerShell / Windows Terminal:
 
 ```powershell
-irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.0.0/BLOB.ps1 | iex
+irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.1.0/BLOB.ps1 | iex
 ```
 
 cmd.exe:
 
 ```cmd
-powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.0.0/BLOB.ps1 | iex"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.1.0/BLOB.ps1 | iex"
 ```
 
 **Terminal-only interface** (keyboard UI inside PowerShell):
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.0.0/BLOB.ps1))) -Tui
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.1.0/BLOB.ps1))) -Tui
 ```
 
 **Dry run** shows every change it would make without modifying anything:
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.0.0/BLOB.ps1))) -DryRun
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Pientje0/BLOB-OPTIMIZER/v2.1.0/BLOB.ps1))) -DryRun
 ```
 
-> Pinning a version tag (`v2.0.0`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
+> Pinning a version tag (`v2.1.0`) means the code you run is exactly the code you can read in that tag. Each new release gets a new tag and URL.
 
 **Administrator rights.** BLOB OPTIMIZER requests administrator rights at start-up through the standard Windows UAC prompt. It never bypasses or suppresses that prompt. If you choose *No*, it continues in read-only mode: you can browse everything and apply per-user settings. Add `-NoElevate` (or set `$env:BLOB_NOELEVATE = '1'`) to skip the prompt.
 
@@ -62,6 +62,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\BLOB.ps1 -Tui     # termin
 
 **Tweaks.** All 55 tweaks as dense ruled rows, grouped by area (FPS & Latency, Performance, Network, Quality of Life, Privacy & Security) and filterable by area, **risk level** (Low, Medium, High, Preference) and search. Each row has an on/off switch, the name and a one-line description, a three-bar **risk meter** (HIGH in orange), the current state and a **?** with the full explanation.
 - **Choose first, apply after.** A switch only records what you want. The row turns orange with *→ ON* or *→ OFF*, and a black bar appears at the bottom: "2 to activate, 1 to deactivate. Nothing has been changed yet." **Review and apply** opens one dialog listing every exact change, with the restore-point option. **Discard** forgets your choices, and closing the window with choices waiting asks first.
+
+**Apps: complete removal.** Every installed program (86 on a typical PC) and Microsoft Store app, with size, install date, search and sorting. **Uninstall** removes an app completely, in three steps:
+1. **Its own uninstaller runs first.** The program undoes its own drivers, services and file associations the way its maker intended. Store apps are removed by Windows together with their app data.
+2. **Leftover scan.** Only once Windows no longer lists the program, BLOB looks for folders (Program Files, AppData, ProgramData), registry keys, Start menu and desktop shortcuts and startup entries that carry its exact name. If the uninstaller was cancelled, nothing is scanned or removed.
+3. **You choose.** Everything found is listed with a checkbox. Folders and shortcuts go to the **Recycle Bin**. Registry keys are **exported to .reg** before removal and can be restored from Restore. Startup entries go through the normal undo journal.
+
+Shared folders (`Microsoft`, `Common Files`, `WindowsApps`, `Packages` …) are never removed. Components Windows needs (Edge, WebView2, Microsoft Store, App Installer, Windows Security) are protected, and shared runtimes (Visual C++, .NET, drivers) are flagged *Shared component* with a warning.
 
 **Instant pages.** Every page preloads in the background a few seconds after the window opens, so switching is instant. Slow system information (network, disks, security status, services, cleanup sizes) is collected on three parallel background threads inside the same PowerShell process, and these threads are closed when the window closes. After you change something, the current page refreshes immediately and other affected pages refresh quietly in the background.
 

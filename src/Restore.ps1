@@ -34,6 +34,7 @@ function Get-BlobChangeDetail {
         'PowerTimeout' { $lines += "{Gray}Original    {White}$(Format-BlobMinutes $d.Old)"; $lines += "{Gray}Changed to  {White}$(Format-BlobMinutes $d.New)" }
         'Hibernate'    { $lines += "{Gray}Original    {White}$(if ($d.Old) { 'On' } else { 'Off' })" }
         'Dns'          { $lines += "{Gray}Original    {White}$(if ($d.OldStatic) { @($d.OldServers) -join ', ' } else { 'automatic (DHCP)' })" }
+        'RegKeyDelete' { $lines += "{Gray}Backup      {White}$($d.BackupFile)"; $lines += '{Gray}Restoring imports this .reg file, putting the whole key back.' }
         'Action'       { if ($d.Detail) { $lines += "{Gray}Detail      {White}$($d.Detail)" } }
     }
     if ($R.Error) { $lines += "{Red}Error       $($R.Error)" }
