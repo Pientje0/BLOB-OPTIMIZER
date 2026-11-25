@@ -2,6 +2,21 @@
 
 All notable changes to BLOB OPTIMIZER are documented here. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [2.3.0] - 2026-11-25
+
+### Added
+- **Drift detection.** On start, BLOB compares every change it still owns with the PC and shows an orange bar on Overview and Restore when Windows (or Settings) changed values back. *Details*, *Re-apply* (writes the value again and verifies it) and *Keep Windows' values*. Re-applying keeps the original backup, so undo still returns to the pre-BLOB value.
+- **Undo everything** on the Restore page: restores every restorable change, with a restore-point option first.
+- **Install page:** 49 popular apps in 10 groups, installed with winget from the official winget repository. Installed apps are detected, *Update all apps* runs `winget upgrade --all`, and every install is recorded in the journal. Without winget the page links to App Installer.
+- **Measure page:** boot times from Windows' boot performance log, plus snapshots (memory, processes, services, startup programs, tweaks, free space) with a plain-language first-vs-latest comparison. Stored in `measurements.json`.
+- **Search everything (`Ctrl+K`):** pages, tweaks, privacy settings (including O&O IDs), installed apps and apps to install; Enter opens the right page with the filter set.
+- **What changed:** after every apply, undo, install or re-apply, a summary of what changed, what was already set and what failed, which can be saved as a text file.
+- **Optional code signing** in `build/Build-Release.ps1` (`-CertThumbprint`, `-TimestampServer`): Authenticode SHA-256 with timestamp, verified before the checksum is written.
+- Self-test: drift check and install catalogue check (duplicate IDs, winget availability).
+
+### Changed
+- The window now has 15 pages. Privacy counts on the Overview are calculated from the catalogue.
+
 ## [2.2.1] - 2026-11-25
 
 ### Removed

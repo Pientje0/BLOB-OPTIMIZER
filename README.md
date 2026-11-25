@@ -56,12 +56,18 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\BLOB.ps1 -Tui     # termin
 
 **Design.** BLOB looks like an engineering spec sheet rather than a "gamer app": warm paper background, near-black ink, and one signal colour (international orange) used only for what needs your attention, such as pending changes, higher-risk tweaks and the active page. Bahnschrift, the DIN-style typeface built into Windows, sets the structure and numbers; Segoe UI is for reading; a monospace face is used only for technical values. Hairline rules instead of boxes, no gradients, no shadows, almost no rounding.
 
-**Window (default).** A numbered table of contents on the left (01 Overview, 02 Presets, 03 Tweaks, Services, Startup, Cleanup, Network, Power, Restore, External tools, System), large page titles, ruled tables and a log drawer at the bottom that shows the last action and opens on demand.
+**Window (default).** A numbered table of contents on the left (01 Overview, 02 Presets, 03 Tweaks, Privacy, Services, Startup, Apps, Install, Cleanup, Network, Power, Measure, Restore, External tools, System), large page titles, ruled tables and a log drawer at the bottom that shows the last action and opens on demand.
 
 **Overview.** Four large readouts (tweaks on, memory, free disk, restorable changes), a *This PC* spec table, and a *Start here* list of the next useful actions.
 
+**Search everything (`Ctrl+K`).** One box that finds pages, tweaks, privacy settings (also by O&O ID, such as `U008`), installed apps and apps to install. Enter opens the right page with the filter already set.
+
+**Did Windows undo my settings?** Feature updates, or a change in Settings, can quietly put values back. On every start BLOB compares each change it still owns with the PC. When something was changed back, an orange bar on the Overview and Restore pages says how many, with **Details**, **Re-apply** (writes the value again and checks it sticks) and **Keep Windows' values** (BLOB stops counting that change as its own). Re-applying keeps the original backup, so undo still returns the PC to how it was before BLOB.
+
+**What changed.** After every apply, undo, install or re-apply, a summary lists exactly what changed, what was already set and what failed. **Save as text file** keeps it for later or for someone helping you.
+
 **Tweaks.** All 55 tweaks as dense ruled rows, grouped by area (FPS & Latency, Performance, Network, Quality of Life, Privacy & Security) and filterable by area, **risk level** (Low, Medium, High, Preference) and search. Each row has an on/off switch, the name and a one-line description, a three-bar **risk meter** (HIGH in orange), the current state and a **?** with the full explanation.
-- **Choose first, apply after.** A switch only records what you want. The row turns orange with *→ ON* or *→ OFF*, and a black bar appears at the bottom: "2 to activate, 1 to deactivate. Nothing has been changed yet." **Review and apply** opens one dialog listing every exact change, with the restore-point option. **Discard** forgets your choices, and closing the window with choices waiting asks first.
+- **Choose first, apply after.** A switch only records what you want. The row turns orange with *→ ON* or *→ OFF*, and a black bar appears at the bottom: "2 to switch on, 1 to switch off. Nothing has been changed yet." **Review and apply** opens one dialog listing every exact change, with the restore-point option. **Discard** forgets your choices, and closing the window with choices waiting asks first.
 
 **Privacy: 156 settings in 20 sections, every one switchable.** Privacy, telemetry, app permissions, Cortana and input, location, search, settings sync, security, Windows Update, Edge, Office and Microsoft 365, Explorer, the lock screen, the taskbar, activity and clipboard, Copilot and Windows AI, mobile devices, miscellaneous and gaming. Every setting comes with:
 - a plain explanation of what it does and what Windows or Microsoft can collect;
@@ -77,6 +83,12 @@ Filter by section, by advice and by search (including O&O IDs). **Choose all rec
 3. **You choose.** Everything found is listed with a checkbox. Folders and shortcuts go to the **Recycle Bin**. Registry keys are **exported to .reg** before removal and can be restored from Restore. Startup entries go through the normal undo journal.
 
 Shared folders (`Microsoft`, `Common Files`, `WindowsApps`, `Packages` …) are never removed. Components Windows needs (Edge, WebView2, Microsoft Store, App Installer, Windows Security) are protected, and shared runtimes (Visual C++, .NET, drivers) are flagged *Shared component* with a warning.
+
+**Install: popular apps with winget.** 49 well-known apps in 10 groups (browsers, gaming, communication, media, utilities, hardware info, passwords, documents, development, runtimes). Tick what you want and choose **Install selected**. Apps already on the PC are marked *Installed*. **Update all apps** runs `winget upgrade --all`. Packages come from the official winget repository through winget, which is built into Windows 10/11 (App Installer); BLOB itself downloads nothing. Without winget the page links to App Installer in the Microsoft Store. Remove installed apps on the Apps page.
+
+**Measure: honest before/after numbers.** Boot times come from Windows' own boot performance log (last boot and the average of the last 5; reading it needs administrator rights). **Take a snapshot** records memory in use, processes, running services, startup programs, tweaks on and free space. Take one before a preset and one after a restart, and BLOB compares the first and the latest in plain words; differences under 5% are called *about the same*. No numbers are invented and no gains are promised.
+
+**Undo everything.** One button on the Restore page that returns every restorable change BLOB ever made, with a restore-point option first.
 
 **Instant pages.** Every page preloads in the background a few seconds after the window opens, so switching is instant. Slow system information (network, disks, security status, services, cleanup sizes) is collected on three parallel background threads inside the same PowerShell process, and these threads are closed when the window closes. After you change something, the current page refreshes immediately and other affected pages refresh quietly in the background.
 
@@ -134,6 +146,7 @@ Files are created only after you make your first real change. Dry runs and brows
   changes.json          change journal (originals for restore)
   logs\session-*.log    operation logs
   registry-backups\     .reg snapshots taken before each batch
+  measurements.json     snapshots from the Measure page
 ```
 
 Delete that folder at any time to remove all traces. Configuration exports go wherever you choose (Documents by default).
@@ -181,10 +194,18 @@ BLOB-OPTIMIZER/
 │   ├── Restore.ps1          history, snapshots, restore points, export/import
 │   ├── TweakDetails.ps1     risk levels and detailed per-setting explanations
 │   ├── ExternalTools.ps1    WinUtil / ShutUp10++ launchers with signature check
+│   ├── PrivacyCenter.ps1  PrivacyData1-3.ps1   privacy page engine and catalogue
+│   ├── Apps.ps1             complete app removal and leftover scan
+│   ├── Drift.ps1            detects settings Windows changed back, re-applies them
+│   ├── Measure.ps1          boot times and before/after snapshots
+│   ├── Winget.ps1           app catalogue and winget install/upgrade
+│   ├── Prefetch.ps1         parallel background data collection
 │   ├── GuiXaml.ps1          window markup and dark theme (WPF XAML)
 │   ├── Gui.ps1              window shell, navigation, dialogs, activity log
 │   ├── GuiPages.ps1         dashboard, presets, tweak sections, system info
 │   ├── GuiSystem.ps1        services, startup, cleanup, network, power, restore
+│   ├── GuiApps.ps1  GuiPrivacy.ps1   apps and privacy pages
+│   ├── GuiExtras.ps1        install, measure, drift bar, Ctrl+K search, change summary
 │   └── Main.ps1             entry point, interface choice, self-test
 ├── config/presets.json      preset definitions (embedded at build time)
 ├── build/Build-Release.ps1  concatenates src/ into BLOB.ps1
@@ -201,9 +222,17 @@ powershell -NoProfile -File .\build\Build-Release.ps1 -Repository Pientje0/BLOB-
 
 The build wraps every module in one script block, so no functions or variables leak into the user's session. It embeds `presets.json`, fails if the output contains non-ASCII characters or syntax errors, and writes the SHA-256 file.
 
+**Optional code signing.** Pass the thumbprint of a code-signing certificate (in `Cert:\CurrentUser\My` or `Cert:\LocalMachine\My`) and the build signs `BLOB.ps1` with Authenticode (SHA-256, timestamped), checks that the signature is valid and only then writes the checksum. Without `-CertThumbprint` the build is unchanged.
+
+```powershell
+powershell -NoProfile -File .\build\Build-Release.ps1 -CertThumbprint <thumbprint>
+```
+
+`-TimestampServer` picks another RFC 3161 server (default `http://timestamp.digicert.com`). A signed script lets people check who built it with `Get-AuthenticodeSignature .\BLOB.ps1`; note that `irm | iex` runs the text and does not check signatures.
+
 Add a tweak by calling `Register-BlobTweak` in the section file with an `Id`, a `Risk` level and its `Registry` or `Services` operations. State detection, preview, backup, undo and presets work for it automatically.
 
-Requirements: Windows 10/11 and Windows PowerShell 5.1 or PowerShell 7+. The window interface uses WPF, which is built into Windows. No modules, packages or external tools are needed. It only uses built-in commands such as `reg.exe`, `sc.exe`, `powercfg.exe`, `netsh.exe` and `ipconfig.exe`.
+Requirements: Windows 10/11 and Windows PowerShell 5.1 or PowerShell 7+. The window interface uses WPF, which is built into Windows. No modules, packages or external tools are needed (the Install page uses winget when Windows has it). It only uses built-in commands such as `reg.exe`, `sc.exe`, `powercfg.exe`, `netsh.exe` and `ipconfig.exe`.
 
 ## Disclaimer
 

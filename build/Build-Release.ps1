@@ -12,19 +12,27 @@
     - Writes BLOB.ps1 and BLOB.ps1.sha256 to the repository root.
 
 .EXAMPLE
+    powershell -NoProfile -File .uild\Build-Release.ps1 -CertThumbprint 0123ABCD...
+    Builds and signs BLOB.ps1 with that code-signing certificate.
+
+.EXAMPLE
     powershell -NoProfile -File .\build\Build-Release.ps1
 #>
 [CmdletBinding()]
 param(
-    [string]$Repository = 'Pientje0/BLOB-OPTIMIZER'
+    [string]$Repository = 'Pientje0/BLOB-OPTIMIZER',
+    # Optional Authenticode signing: thumbprint of a code-signing certificate
+    # in Cert:\CurrentUser\My or Cert:\LocalMachine\My.
+    [string]$CertThumbprint,
+    [string]$TimestampServer = 'http://timestamp.digicert.com'
 )
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Path $PSScriptRoot -Parent
 $src = Join-Path $root 'src'
 $order = @('Core', 'UI', 'Engine', 'Performance', 'Gaming', 'Tweaks', 'Privacy', 'Services',
-           'Startup', 'Cleanup', 'Network', 'Power', 'Restore', 'TweakDetails', 'PrivacyCenter', 'PrivacyData1', 'PrivacyData2', 'PrivacyData3', 'ExternalTools', 'Apps', 'Prefetch', 'Dashboard',
-           'GuiXaml', 'Gui', 'GuiPages', 'GuiSystem', 'GuiApps', 'GuiPrivacy', 'Main')
+           'Startup', 'Cleanup', 'Network', 'Power', 'Restore', 'TweakDetails', 'PrivacyCenter', 'PrivacyData1', 'PrivacyData2', 'PrivacyData3', 'ExternalTools', 'Apps', 'Drift', 'Measure', 'Winget', 'Prefetch', 'Dashboard',
+           'GuiXaml', 'Gui', 'GuiPages', 'GuiSystem', 'GuiApps', 'GuiPrivacy', 'GuiExtras', 'Main')
 
 $core = Get-Content -LiteralPath (Join-Path $src 'Core.ps1') -Raw
 if ($core -notmatch "Version\s*=\s*'([^']+)'") { throw 'Could not read the version from src\Core.ps1' }
@@ -102,6 +110,15 @@ if ($errors.Count -gt 0) {
 
 $out = Join-Path $root 'BLOB.ps1'
 [IO.File]::WriteAllText($out, $text, (New-Object System.Text.UTF8Encoding($false)))
+
+if ($CertThumbprint) {
+    $tp = $CertThumbprint -replace '\s', ''
+    $cert = @(Get-ChildItem -Path "Cert:\CurrentUser\My\$tp", "Cert:\LocalMachine\My\$tp" -CodeSigningCert -ErrorAction SilentlyContinue) | Select-Object -First 1
+    if (-not $cert) { throw "No code-signing certificate with thumbprint $tp was found in CurrentUser\My or LocalMachine\My." }
+    $sig = Set-AuthenticodeSignature -FilePath $out -Certificate $cert -TimestampServer $TimestampServer -HashAlgorithm SHA256
+    if ($sig.Status -ne 'Valid') { throw "Signing failed: $($sig.Status) $($sig.StatusMessage)" }
+    Write-Host "Signed by $($cert.Subject) (timestamp: $TimestampServer)" -ForegroundColor Green
+}
 $hash = (Get-FileHash -LiteralPath $out -Algorithm SHA256).Hash
 [IO.File]::WriteAllText("$out.sha256", "$hash  BLOB.ps1`r`n", (New-Object System.Text.UTF8Encoding($false)))
 

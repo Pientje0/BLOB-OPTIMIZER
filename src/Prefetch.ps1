@@ -11,7 +11,8 @@
 $Blob.PrefetchGroups = @(
     @('Adapters', 'IPConfig', 'Profiles', 'Dns'),
     @('Firewall', 'Defender', 'PhysicalDisks', 'Video', 'BIOS', 'Board', 'Memory'),
-    @('OS', 'CPU', 'CS', 'LogicalDisks', 'Services', 'CleanupSizes', 'StoreApps')
+    @('OS', 'CPU', 'CS', 'LogicalDisks', 'Services', 'CleanupSizes', 'StoreApps'),
+    @('WingetList')
 )
 
 $Blob.PrefetchScript = {
@@ -70,6 +71,9 @@ $Blob.PrefetchScript = {
     if ($Names -contains 'StoreApps' -and $StoreFn) {
         . ([scriptblock]::Create("function Get-BlobStoreAppsLive {`n$StoreFn`n}"))
         Try-Get 'StoreApps' { @(Get-BlobStoreAppsLive -Protected $StoreProtected) }
+    }
+    Try-Get 'WingetList' {
+        if (Get-Command winget.exe -ErrorAction SilentlyContinue) { ((& winget.exe list --accept-source-agreements --disable-interactivity 2>$null) | Out-String) } else { $null }
     }
     Try-Get 'CleanupSizes' {
         $sizes = @{}

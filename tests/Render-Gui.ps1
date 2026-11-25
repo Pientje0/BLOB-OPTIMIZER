@@ -15,7 +15,7 @@ New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
 & {
     param($srcDir, $OutDir)
     foreach ($m in 'Core', 'UI', 'Engine', 'Performance', 'Gaming', 'Tweaks', 'Privacy', 'Services', 'Startup',
-                   'Cleanup', 'Network', 'Power', 'Restore', 'TweakDetails', 'PrivacyCenter', 'PrivacyData1', 'PrivacyData2', 'PrivacyData3', 'ExternalTools', 'Apps', 'Prefetch', 'Dashboard', 'GuiXaml', 'Gui', 'GuiPages', 'GuiSystem', 'GuiApps', 'GuiPrivacy', 'Main') {
+                   'Cleanup', 'Network', 'Power', 'Restore', 'TweakDetails', 'PrivacyCenter', 'PrivacyData1', 'PrivacyData2', 'PrivacyData3', 'ExternalTools', 'Apps', 'Drift', 'Measure', 'Winget', 'Prefetch', 'Dashboard', 'GuiXaml', 'Gui', 'GuiPages', 'GuiSystem', 'GuiApps', 'GuiPrivacy', 'GuiExtras', 'Main') {
         . (Join-Path $srcDir "$m.ps1")
     }
     $Blob.SourceRoot = Split-Path $srcDir -Parent

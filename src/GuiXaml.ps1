@@ -326,6 +326,21 @@ $Blob.GuiTheme = @'
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="BorderThickness" Value="0"/>
   </Style>
+  <Style TargetType="ListBoxItem">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ListBoxItem">
+          <Border x:Name="Bd" Background="Transparent" BorderBrush="{StaticResource Rule}" BorderThickness="0,0,0,1" Padding="{TemplateBinding Padding}">
+            <ContentPresenter/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="#E8E4DC"/></Trigger>
+            <Trigger Property="IsSelected" Value="True"><Setter TargetName="Bd" Property="Background" Value="{StaticResource SignalSoft}"/></Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
 
   <!-- Tables: hairline rows, small-caps header, soft signal selection -->
   <Style TargetType="DataGrid">
@@ -435,6 +450,9 @@ $Blob.GuiXaml = @'
             <TextBlock x:Name="TitleVersion" FontFamily="{StaticResource Mono}" FontSize="11" Foreground="#8A867E" Margin="12,5,0,0" VerticalAlignment="Center"/>
           </StackPanel>
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="BtnSearch" Style="{StaticResource ChipButton}" WindowChrome.IsHitTestVisibleInChrome="True" Margin="0,0,22,0" VerticalAlignment="Center" ToolTip="Search everything (Ctrl+K)">
+              <TextBlock><Run Text="Search"/><Run Text="  Ctrl+K" Foreground="#8A867E" FontFamily="Cascadia Mono, Consolas" FontSize="11"/></TextBlock>
+            </Button>
             <Border x:Name="DryRunBadge" BorderBrush="#B83A00" BorderThickness="1" Padding="7,1" Margin="0,0,10,0" VerticalAlignment="Center" Visibility="Collapsed">
               <TextBlock Text="DRY RUN" FontFamily="{StaticResource Display}" FontSize="11.5" Foreground="#B83A00"/>
             </Border>

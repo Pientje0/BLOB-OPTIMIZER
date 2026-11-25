@@ -8,7 +8,7 @@ Run this on a test VM or a spare PC before tagging a release. Test **Windows Pow
 - [ ] `powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\Test-Engine.ps1` prints **All engine tests passed**
 - [ ] Self-test passes in PS 5.1: `$env:BLOB_SELFTEST='1'; Get-Content -Raw .\BLOB.ps1 | iex`
 - [ ] Self-test passes in PS 7: `$env:BLOB_SELFTEST='1'; pwsh -NoProfile -Command "Get-Content -Raw .\BLOB.ps1 | iex"`
-- [ ] The self-test line `Window UI - XAML ok, 13/13 pages built` appears
+- [ ] The self-test line `Window UI - XAML ok, 15/15 pages built` appears
 - [ ] `powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\Render-Gui.ps1 -OutDir .\screens` prints **All pages rendered**. Review the PNGs
 - [ ] After the run, `Get-Command *-Blob*` returns nothing and `$Blob` is undefined, so nothing leaked into the session
 - [ ] `%LOCALAPPDATA%\BLOB-OPTIMIZER` was **not** created by the self-test or a dry run
@@ -69,6 +69,18 @@ Run this on a test VM or a spare PC before tagging a release. Test **Windows Pow
 - [ ] Hovering **?** shows what it does, what is collected, the benefit, what you lose, possible problems, the recommendation, the impact, the O&O ID and the exact change
 - [ ] *Choose all recommended* marks only DISABLE items. *Review and apply* shows every change with the restore-point option, and undo works from Restore
 - [ ] `tests/Export-PrivacyReference.ps1` regenerates `docs/PRIVACY-SETTINGS.md` with 156 entries
+
+## 3d. Install, Measure, drift, search
+
+- [ ] Install lists 49 apps in 10 groups and marks installed ones. Install one small app (for example 7-Zip): it installs, shows in *What changed* and in Restore as an action, and appears on the Apps page
+- [ ] Without winget (or with App Installer removed) the page shows the App Installer link instead
+- [ ] *Update all apps* runs and reports how many packages were updated
+- [ ] Measure as administrator shows the last boot and the average; as a standard user it shows the administrator note. Take a snapshot, restart, take another: the comparison appears
+- [ ] Apply a tweak, change the same value back in Settings or regedit, restart BLOB: the orange bar shows 1 changed back. *Re-apply* fixes it; *Keep Windows' values* removes it from the bar; undo still returns the original value
+- [ ] *Undo everything* restores every restorable change after confirmation
+- [ ] `Ctrl+K` opens search; `U008`, `firefox` and an installed app name find results; Enter opens the page filtered
+- [ ] After an apply, *What changed* appears and *Save as text file* writes the list
+- [ ] Build with `-CertThumbprint` (a test code-signing certificate works): `Get-AuthenticodeSignature .\BLOB.ps1` reports Valid and the checksum matches the signed file
 
 ## 4. Terminal UI
 

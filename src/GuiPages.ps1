@@ -13,9 +13,11 @@ function Get-BlobGuiPages {
         @{ Key = 'services'; Label = 'Services'; Subtitle = 'Startup types only. Nothing is deleted, and services Windows depends on are locked.'; Build = { New-BlobGuiServices } }
         @{ Key = 'startup'; Label = 'Startup'; Subtitle = 'Programs that start when you sign in. Disabled the same way Task Manager does it.'; Build = { New-BlobGuiStartup } }
         @{ Key = 'apps'; Label = 'Apps'; Subtitle = 'Remove programs completely: their own uninstaller first, then the leftovers you choose.'; Build = { New-BlobGuiApps } }
+        @{ Key = 'install'; Label = 'Install'; Subtitle = 'Popular apps, installed with winget from the official winget repository.'; Build = { New-BlobGuiInstall } }
         @{ Key = 'cleanup'; Label = 'Cleanup'; Subtitle = 'Temporary files and caches. Sizes are measured first; deleted files are gone for good.'; Build = { New-BlobGuiCleanup } }
         @{ Key = 'network'; Label = 'Network'; Subtitle = 'Adapters, DNS, diagnostics and the last-resort resets.'; Build = { New-BlobGuiNetwork } }
         @{ Key = 'power'; Label = 'Power'; Subtitle = 'Power plans, screen and sleep timers, hibernation.'; Build = { New-BlobGuiPower } }
+        @{ Key = 'measure'; Label = 'Measure'; Subtitle = 'Real numbers: boot times from Windows and snapshots you can compare.'; Build = { New-BlobGuiMeasure } }
         @{ Key = 'restore'; Label = 'Restore'; Subtitle = 'Everything BLOB has changed, and the way back.'; Build = { New-BlobGuiRestore } }
         @{ Key = 'tools'; Label = 'External tools'; Subtitle = 'Two well-known third-party utilities, started on request.'; Build = { New-BlobGuiTools } }
         @{ Key = 'sysinfo'; Label = 'System'; Subtitle = 'Hardware and Windows details. Read-only.'; Build = { New-BlobGuiSysInfo } }
@@ -41,8 +43,10 @@ function Invoke-BlobGuiApply {
     if (-not $ok) { return $false }
     if ($Blob.Gui.DialogCheck) { Invoke-BlobGuiRestorePointStep "BLOB OPTIMIZER - before $Tag" }
     Start-BlobGuiTask ("Applying {0} optimization(s)" -f $Tweaks.Count)
-    $out = Invoke-BlobTweakCore -Tweaks $Tweaks -Tag $Tag -Log { param($m) Add-BlobGuiLog $m }
+    $Blob.Gui.Collected = New-Object System.Collections.ArrayList
+    $out = Invoke-BlobTweakCore -Tweaks $Tweaks -Tag $Tag -Log $Blob.GuiShared.LogCollect
     Add-BlobGuiLog "{Cyan}$($out.Summary)"
+    Show-BlobGuiChangeSummary 'What changed'
     if ($out.NeedsExplorer) {
         if (Show-BlobGuiDialog -Title 'Restart Windows Explorer now?' -OkText 'Restart Explorer' -CancelText 'Later' -Lines @(
                 '{Gray}Some changes appear only after Explorer restarts.',
@@ -144,6 +148,9 @@ function New-BlobGuiDashboard {
     $applied = @($core | Where-Object { (Get-BlobTweakState $_) -eq 'Applied' }).Count
     $restorable = @(Get-BlobAppliedChanges).Count
 
+    $drift = @(Get-BlobDrift)
+    if ($drift.Count) { [void]$root.Children.Add((New-BlobDriftBar $drift)) }
+
     # Readouts
     $row = [Windows.Controls.Grid]::new()
     $row.Margin = '0,4,0,34'
@@ -193,6 +200,8 @@ function New-BlobGuiDashboard {
     [void]$start.Children.Add((New-BlobActionRow 'Pick individual tweaks' "$($core.Count) settings, sorted by what they affect and how risky they are." { Show-BlobGuiPage 'optimize' }))
     [void]$start.Children.Add((New-BlobActionRow 'Review your privacy' "$(@(Get-BlobPrivacyItems).Count) privacy settings in $($Blob.PrivacyGroups.Count) sections, each explained with a clear recommendation." { Show-BlobGuiPage 'privacy' }))
     [void]$start.Children.Add((New-BlobActionRow 'Remove an app completely' 'Its own uninstaller, then the folders and keys it leaves behind.' { Show-BlobGuiPage 'apps' }))
+    [void]$start.Children.Add((New-BlobActionRow 'Install apps' 'Popular apps in one go with winget, which is built into Windows.' { Show-BlobGuiPage 'install' }))
+    [void]$start.Children.Add((New-BlobActionRow 'Measure before and after' 'Boot times from Windows itself, plus snapshots to compare.' { Show-BlobGuiPage 'measure' }))
     [void]$start.Children.Add((New-BlobActionRow 'Clear temporary files' 'Measures caches and temp folders first, then asks.' { Show-BlobGuiPage 'cleanup' }))
     [void]$start.Children.Add((New-BlobActionRow 'Make a restore point' 'A Windows-level safety net before you change anything big.' { Invoke-BlobGuiRestorePoint }))
     [void]$start.Children.Add((New-BlobActionRow 'Review or undo changes' 'Every change BLOB made, with its original value.' { Show-BlobGuiPage 'restore' }))
@@ -481,19 +490,21 @@ function Invoke-BlobGuiApplyPending {
     if (-not $ok) { return }
     if ($Blob.Gui.DialogCheck) { Invoke-BlobGuiRestorePointStep 'BLOB OPTIMIZER - before applying changes' }
     $needsExplorer = $false
+    $Blob.Gui.Collected = New-Object System.Collections.ArrayList
     if ($on.Count) {
         Start-BlobGuiTask "Activating $($on.Count) setting(s)"
-        $out = Invoke-BlobTweakCore -Tweaks $on -Tag 'changes' -Log { param($m) Add-BlobGuiLog $m }
+        $out = Invoke-BlobTweakCore -Tweaks $on -Tag 'changes' -Log $Blob.GuiShared.LogCollect
         Add-BlobGuiLog "{Cyan}$($out.Summary)"
         $needsExplorer = $out.NeedsExplorer
     }
     if ($undo -and $undo.Records.Count) {
         Start-BlobGuiTask "Deactivating $($off.Count) setting(s)"
-        $a, $b = Invoke-BlobRestoreCore -Records $undo.Records -Log { param($m) Add-BlobGuiLog $m }
+        $a, $b = Invoke-BlobRestoreCore -Records $undo.Records -Log $Blob.GuiShared.LogCollect
         Add-BlobGuiLog ("{Cyan}Deactivated: {0} value(s) restored, {1} not restored." -f $a, $b)
         if (@($off | Where-Object { $_.RestartExplorer }).Count) { $needsExplorer = $true }
     }
     $Blob.Gui.Pending.Clear()
+    Show-BlobGuiChangeSummary 'What changed'
     if ($needsExplorer -and -not $Blob.DryRun) {
         if (Show-BlobGuiDialog -Title 'Restart Windows Explorer now?' -OkText 'Restart Explorer' -CancelText 'Later' -Lines @(
                 '{Gray}Some changes appear only after Explorer restarts.',

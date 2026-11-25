@@ -429,10 +429,10 @@ function Start-BlobGuiTask {
 # page and restored when the page is shown, so pages never share state.
 $Blob.GuiPageState = @('P', 'CardGrid', 'CardCount', 'ApplySelBtn', 'SearchHint', 'PendingActions')
 # Pages that show setting / journal state: refreshed in the background after any change.
-$Blob.GuiVolatilePages = @('dashboard', 'presets', 'optimize', 'privacy', 'services', 'startup', 'apps', 'power', 'restore')
+$Blob.GuiVolatilePages = @('dashboard', 'presets', 'optimize', 'privacy', 'services', 'startup', 'apps', 'power', 'restore', 'measure')
 # Preload order, and pages that wait for the background data snapshot on their first build.
-$Blob.GuiPreloadOrder = @('optimize', 'privacy', 'presets', 'startup', 'power', 'restore', 'tools', 'services', 'apps', 'cleanup', 'network', 'sysinfo', 'dashboard')
-$Blob.GuiHeavyPages = @('services', 'apps', 'cleanup', 'network', 'sysinfo', 'dashboard')
+$Blob.GuiPreloadOrder = @('optimize', 'privacy', 'presets', 'startup', 'power', 'restore', 'tools', 'measure', 'services', 'apps', 'cleanup', 'network', 'sysinfo', 'install', 'dashboard')
+$Blob.GuiHeavyPages = @('services', 'apps', 'cleanup', 'network', 'sysinfo', 'install', 'dashboard')
 
 function Set-BlobGuiPageActions {
     param([array]$Buttons = @())
@@ -600,7 +600,7 @@ function Initialize-BlobGuiWindow {
     foreach ($n in @('TitleVersion', 'AdminBadge', 'AdminBadgeText', 'DryRunBadge', 'BtnMin', 'BtnMax', 'BtnClose', 'CloseGlyph', 'NavPanel',
                      'PageActions', 'PageNumber', 'PageTitle', 'PageSubtitle', 'PageScroll', 'PageHost', 'BtnToggleLog', 'BtnClearLog',
                      'LogScroll', 'LogPanel', 'LogLast', 'StatusText', 'StatusRight', 'RootBorder',
-                     'PendingBar', 'PendingText', 'PendingDiscard', 'PendingApply')) {
+                     'PendingBar', 'PendingText', 'PendingDiscard', 'PendingApply', 'BtnSearch')) {
         $Blob.Gui[$n] = $w.FindName($n)
     }
     # Fit the window to the screen (taller when there is room, so the whole sidebar shows).
@@ -666,6 +666,14 @@ function Initialize-BlobGuiWindow {
     $Blob.Gui.CardCache = @{}
     if (-not $Blob.Gui.OptFilter) { $Blob.Gui.OptFilter = 'All' }
     Register-BlobClick $Blob.Gui.PendingApply { Invoke-BlobGuiApplyPending }
+    Register-BlobClick $Blob.Gui.BtnSearch { Show-BlobGuiSearch }
+    $w.Add_PreviewKeyDown({
+            param($s, $e)
+            if ($e.Key -eq 'K' -and ([Windows.Input.Keyboard]::Modifiers -band [Windows.Input.ModifierKeys]::Control)) {
+                $e.Handled = $true
+                if (-not $Blob.Gui.Busy) { Invoke-BlobGuiAction { Show-BlobGuiSearch } }
+            }
+        })
     Register-BlobClick $Blob.Gui.PendingDiscard {
         $Blob.Gui.Pending.Clear()
         if ($Blob.Gui.Current -in @('optimize', 'privacy')) { Update-BlobGuiCardGrid }

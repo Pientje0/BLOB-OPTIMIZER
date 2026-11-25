@@ -30,6 +30,8 @@ function Invoke-BlobSelfTest {
         if ($noop) { throw "settings without a switch: $(($noop | ForEach-Object Id) -join ', ')" }
         "- $($pc.Count) settings in $($Blob.PrivacyGroups.Count) sections, every one switchable"
     }
+    & $check 'Drift check'     { "- $(@(Get-BlobDrift).Count) setting(s) changed back since BLOB set them" }
+    & $check 'Install catalog' { $dup = @($Blob.WingetCatalog | Group-Object { $_.Id } | Where-Object Count -gt 1); if ($dup) { throw "duplicate ids: $($dup.Name -join ', ')" }; "- $($Blob.WingetCatalog.Count) apps, winget $(if (Test-BlobWinget) { 'available' } else { 'not available' })" }
     & $check 'Tweak states'    { $st = @($Blob.Tweaks | ForEach-Object { Get-BlobTweakState $_ }); "- $(@($st | Where-Object { $_ -eq 'Applied' }).Count) applied" }
     & $check 'Presets'         { $p = @(Get-BlobPresets); foreach ($x in $p) { foreach ($id in $x.Ids) { if (-not (Get-BlobTweak $id)) { throw "preset $($x.Name) references unknown tweak '$id'" } } }; "- $(($p | ForEach-Object { "$($_.Name)=$($_.Ids.Count)" }) -join ' ')" }
     & $check 'Preset safety'   { foreach ($x in @(Get-BlobPresets)) { foreach ($id in $x.Ids) { if ((Get-BlobTweak $id).Risk -eq 'Optional') { throw "optional tweak '$id' in preset $($x.Name)" } } }; '' }

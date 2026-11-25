@@ -491,6 +491,8 @@ function New-BlobGuiRestore {
     $P = @{}
     $Blob.Gui.P = $P
     $root = New-BlobStack
+    $drift = @(Get-BlobDrift)
+    if ($drift.Count) { [void]$root.Children.Add((New-BlobDriftBar $drift)) }
     $recs = @($Blob.Changes.ToArray()); [array]::Reverse($recs)
     $rows = foreach ($r in $recs) {
         [pscustomobject]@{ Time = $r.Time; Change = $r.Label; Target = $r.Target; Status = $r.Status
@@ -537,6 +539,7 @@ function New-BlobGuiRestore {
     [void]$root.Children.Add((New-BlobCard $b))
 
     Set-BlobGuiPageActions @(
+        (New-BlobButton 'Undo everything' { Invoke-BlobGuiUndoEverything } 'Danger' -ToolTip 'Put back every original value BLOB saved'),
         (New-BlobButton 'Details' { Show-BlobGuiChangeDetail }),
         (New-BlobButton 'Restore selected' { Restore-BlobGuiSelected } 'Accent' -Margin '0'))
     return $root
