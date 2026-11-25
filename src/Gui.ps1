@@ -429,9 +429,9 @@ function Start-BlobGuiTask {
 # page and restored when the page is shown, so pages never share state.
 $Blob.GuiPageState = @('P', 'CardGrid', 'CardCount', 'ApplySelBtn', 'SearchHint', 'PendingActions')
 # Pages that show setting / journal state: refreshed in the background after any change.
-$Blob.GuiVolatilePages = @('dashboard', 'presets', 'optimize', 'services', 'startup', 'apps', 'power', 'restore')
+$Blob.GuiVolatilePages = @('dashboard', 'presets', 'optimize', 'privacy', 'services', 'startup', 'apps', 'power', 'restore')
 # Preload order, and pages that wait for the background data snapshot on their first build.
-$Blob.GuiPreloadOrder = @('optimize', 'presets', 'startup', 'power', 'restore', 'tools', 'services', 'apps', 'cleanup', 'network', 'sysinfo', 'dashboard')
+$Blob.GuiPreloadOrder = @('optimize', 'privacy', 'presets', 'startup', 'power', 'restore', 'tools', 'services', 'apps', 'cleanup', 'network', 'sysinfo', 'dashboard')
 $Blob.GuiHeavyPages = @('services', 'apps', 'cleanup', 'network', 'sysinfo', 'dashboard')
 
 function Set-BlobGuiPageActions {
@@ -586,8 +586,8 @@ function Update-BlobGuiPendingBar {
         $on = @($Blob.Gui.Pending.Values | Where-Object { $_ -eq 'On' }).Count
         $off = $n - $on
         $parts = @()
-        if ($on) { $parts += "$on to activate" }
-        if ($off) { $parts += "$off to deactivate" }
+        if ($on) { $parts += "$on to switch on" }
+        if ($off) { $parts += "$off to switch off" }
         $Blob.Gui.PendingText.Text = "$($parts -join ', ').  Nothing has been changed yet."
         $Blob.Gui.PendingApply.Content = "Review and apply $n"
         $Blob.Gui.PendingBar.Visibility = 'Visible'
@@ -668,8 +668,8 @@ function Initialize-BlobGuiWindow {
     Register-BlobClick $Blob.Gui.PendingApply { Invoke-BlobGuiApplyPending }
     Register-BlobClick $Blob.Gui.PendingDiscard {
         $Blob.Gui.Pending.Clear()
-        if ($Blob.Gui.Current -eq 'optimize') { Update-BlobGuiCardGrid }
-        elseif ($Blob.Gui.Cache.ContainsKey('optimize')) { $Blob.Gui.Cache['optimize'].Stale = $true }
+        if ($Blob.Gui.Current -in @('optimize', 'privacy')) { Update-BlobGuiCardGrid }
+        foreach ($k in @('optimize', 'privacy')) { if ($k -ne $Blob.Gui.Current -and $Blob.Gui.Cache.ContainsKey($k)) { $Blob.Gui.Cache[$k].Stale = $true } }
         Update-BlobGuiPendingBar
     }
 

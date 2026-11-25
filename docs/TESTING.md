@@ -63,6 +63,14 @@ Run this on a test VM or a spare PC before tagging a release. Test **Windows Pow
 - [ ] Cancelling the uninstaller shows *still installed*, and *Stop* removes nothing
 - [ ] Uninstall a Store app: it disappears and Windows removes its data
 
+## 3c. Privacy
+
+- [ ] The Privacy page shows 22 numbered sections. The section drop-down, advice filter and search (try `U008`) work
+- [ ] Hovering **?** shows what it does, what is collected, the benefit, what you lose, possible problems, the recommendation, the impact, the O&O ID and the exact change
+- [ ] Information-only rows (Defender, automatic updates, activation, Bluetooth pairing) have no switch
+- [ ] *Choose all recommended* marks only DISABLE items. *Review and apply* shows every change with the restore-point option, and undo works from Restore
+- [ ] `tests/Export-PrivacyReference.ps1` regenerates `docs/PRIVACY-SETTINGS.md` with 179 entries
+
 ## 4. Terminal UI
 
 - [ ] Arrow keys, Enter, Esc, Space, Tab, PgUp/PgDn, Home/End work in menus

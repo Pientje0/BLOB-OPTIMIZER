@@ -9,6 +9,7 @@ function Get-BlobGuiPages {
         @{ Key = 'dashboard'; Label = 'Overview'; Subtitle = 'Where this PC stands, and where to start.'; Build = { New-BlobGuiDashboard } }
         @{ Key = 'presets'; Label = 'Presets'; Subtitle = 'Three tested bundles. Each one lists every value it changes before anything happens.'; Build = { New-BlobGuiPresets } }
         @{ Key = 'optimize'; Label = 'Tweaks'; Subtitle = 'Switch what you want on or off. Nothing is changed until you review and apply.'; Build = { New-BlobGuiOptimizations } }
+        @{ Key = 'privacy'; Label = 'Privacy'; Subtitle = "$(@(Get-BlobPrivacyItems).Count) privacy settings in 22 sections. Every one explained, rated and recommended. Nothing changes until you review and apply."; Build = { New-BlobGuiPrivacy } }
         @{ Key = 'services'; Label = 'Services'; Subtitle = 'Startup types only. Nothing is deleted, and services Windows depends on are locked.'; Build = { New-BlobGuiServices } }
         @{ Key = 'startup'; Label = 'Startup'; Subtitle = 'Programs that start when you sign in. Disabled the same way Task Manager does it.'; Build = { New-BlobGuiStartup } }
         @{ Key = 'apps'; Label = 'Apps'; Subtitle = 'Remove programs completely: their own uninstaller first, then the leftovers you choose.'; Build = { New-BlobGuiApps } }
@@ -139,7 +140,8 @@ function New-BlobActionRow {
 function New-BlobGuiDashboard {
     $root = New-BlobStack
     $si = $Blob.SysInfo
-    $applied = @($Blob.Tweaks | Where-Object { (Get-BlobTweakState $_) -eq 'Applied' }).Count
+    $core = @(Get-BlobCoreTweaks)
+    $applied = @($core | Where-Object { (Get-BlobTweakState $_) -eq 'Applied' }).Count
     $restorable = @(Get-BlobAppliedChanges).Count
 
     # Readouts
@@ -147,7 +149,7 @@ function New-BlobGuiDashboard {
     $row.Margin = '0,4,0,34'
     for ($i = 0; $i -lt 4; $i++) { $cd = [Windows.Controls.ColumnDefinition]::new(); $cd.Width = '*'; $row.ColumnDefinitions.Add($cd) }
     $cells = @()
-    $cells += New-BlobReadout 'Tweaks on' "$applied/$($Blob.Tweaks.Count)" 'detected from current settings' $true
+    $cells += New-BlobReadout 'Tweaks on' "$applied/$($core.Count)" 'detected from current settings' $true
     $memNote = ''; $memVal = '-'
     try {
         $os = Get-BlobPrefetch 'OS'
@@ -188,7 +190,8 @@ function New-BlobGuiDashboard {
     $start = New-BlobStack
     [void]$start.Children.Add((New-BlobHeading 'Start here' '0,0,0,2'))
     [void]$start.Children.Add((New-BlobActionRow 'Apply a preset' 'Minimal, Standard or Advanced. Every value is shown before it changes.' { Show-BlobGuiPage 'presets' }))
-    [void]$start.Children.Add((New-BlobActionRow 'Pick individual tweaks' "$($Blob.Tweaks.Count) settings, sorted by what they affect and how risky they are." { Show-BlobGuiPage 'optimize' }))
+    [void]$start.Children.Add((New-BlobActionRow 'Pick individual tweaks' "$($core.Count) settings, sorted by what they affect and how risky they are." { Show-BlobGuiPage 'optimize' }))
+    [void]$start.Children.Add((New-BlobActionRow 'Review your privacy' "$(@(Get-BlobPrivacyItems).Count) privacy settings in 22 sections, each explained with a clear recommendation." { Show-BlobGuiPage 'privacy' }))
     [void]$start.Children.Add((New-BlobActionRow 'Remove an app completely' 'Its own uninstaller, then the folders and keys it leaves behind.' { Show-BlobGuiPage 'apps' }))
     [void]$start.Children.Add((New-BlobActionRow 'Clear temporary files' 'Measures caches and temp folders first, then asks.' { Show-BlobGuiPage 'cleanup' }))
     [void]$start.Children.Add((New-BlobActionRow 'Make a restore point' 'A Windows-level safety net before you change anything big.' { Invoke-BlobGuiRestorePoint }))
@@ -283,7 +286,7 @@ $Blob.GuiCategories = @('All', 'FPS & Latency', 'Performance', 'Network', 'Quali
 $Blob.GuiRiskFilters = [ordered]@{ All = 'All'; Minimal = 'Low risk'; Standard = 'Medium risk'; Advanced = 'High risk'; Optional = 'Preference' }
 
 function Get-BlobGuiFilteredTweaks {
-    $list = @($Blob.Tweaks)
+    $list = @(Get-BlobCoreTweaks)
     if ($Blob.Gui.OptFilter -and $Blob.Gui.OptFilter -ne 'All') { $list = @($list | Where-Object { $_.Category -eq $Blob.Gui.OptFilter }) }
     if ($Blob.Gui.OptRisk -and $Blob.Gui.OptRisk -ne 'All') { $list = @($list | Where-Object { $_.Risk -eq $Blob.Gui.OptRisk }) }
     $q = [string]$Blob.Gui.OptSearch
@@ -383,7 +386,8 @@ function Get-BlobGuiCard {
     $pend = [string]$Blob.Gui.Pending[$Tweak.Id]
     $c = $Blob.Gui.CardCache[$Tweak.Id]
     if (-not ($c -and $c.State -eq $State -and $c.Pending -eq $pend)) {
-        $c = @{ Element = (New-BlobTweakCard $Tweak $State $pend); State = $State; Pending = $pend }
+        $el0 = if ($Tweak.Section -eq 'PrivacyCenter') { New-BlobPrivacyRow $Tweak $State $pend } else { New-BlobTweakCard $Tweak $State $pend }
+        $c = @{ Element = $el0; State = $State; Pending = $pend }
         $Blob.Gui.CardCache[$Tweak.Id] = $c
     }
     $el = $c.Element
@@ -409,10 +413,11 @@ function New-BlobGroupHeader {
 function Update-BlobGuiCardGrid {
     $g = $Blob.Gui.CardGrid
     if (-not $g) { return }
+    if ($Blob.Gui.Current -eq 'privacy') { Update-BlobGuiPrivacyList; return }
     $offset = $Blob.Gui.PageScroll.VerticalOffset
     $g.Children.Clear()
     $states = @{}
-    foreach ($t in $Blob.Tweaks) { $states[$t.Id] = Get-BlobTweakState $t }
+    foreach ($t in (Get-BlobCoreTweaks)) { $states[$t.Id] = Get-BlobTweakState $t }
     $list = @(Get-BlobGuiFilteredTweaks)
     foreach ($cat in @($Blob.GuiCategories | Where-Object { $_ -ne 'All' })) {
         $inCat = @($list | Where-Object { $_.Category -eq $cat })
@@ -425,7 +430,7 @@ function Update-BlobGuiCardGrid {
     $active = @($states.Values | Where-Object { $_ -eq 'Applied' }).Count
     $n = $Blob.Gui.Pending.Count
     $dot = [string][char]0x00B7
-    $Blob.Gui.CardCount.Text = "$($list.Count) shown  $dot  $active of $($Blob.Tweaks.Count) on  $dot  $n waiting"
+    $Blob.Gui.CardCount.Text = "$($list.Count) shown  $dot  $active of $($states.Count) on  $dot  $n waiting"
     Update-BlobGuiPendingBar
     $Blob.Gui.PageScroll.UpdateLayout(); $Blob.Gui.PageScroll.ScrollToVerticalOffset($offset)
 }
@@ -549,14 +554,14 @@ function New-BlobGuiOptimizations {
     $filters = New-BlobStack
     $cats = [Windows.Controls.WrapPanel]::new()
     foreach ($c in $Blob.GuiCategories) {
-        $count = if ($c -eq 'All') { $Blob.Tweaks.Count } else { @($Blob.Tweaks | Where-Object { $_.Category -eq $c }).Count }
+        $count = if ($c -eq 'All') { @(Get-BlobCoreTweaks).Count } else { @(Get-BlobCoreTweaks | Where-Object { $_.Category -eq $c }).Count }
         [void]$cats.Children.Add((New-BlobGuiFilterChip "$c $count" ($Blob.Gui.OptFilter -eq $c) ([scriptblock]::Create("`$Blob.Gui.OptFilter = '$c'; Show-BlobGuiPage 'optimize' -Rebuild"))))
     }
     [void]$filters.Children.Add((New-BlobFilterRow 'Area' $cats))
     if (-not $Blob.Gui.OptRisk) { $Blob.Gui.OptRisk = 'All' }
     $risks = [Windows.Controls.WrapPanel]::new()
     foreach ($k in $Blob.GuiRiskFilters.Keys) {
-        $count = if ($k -eq 'All') { $Blob.Tweaks.Count } else { @($Blob.Tweaks | Where-Object { $_.Risk -eq $k }).Count }
+        $count = if ($k -eq 'All') { @(Get-BlobCoreTweaks).Count } else { @(Get-BlobCoreTweaks | Where-Object { $_.Risk -eq $k }).Count }
         [void]$risks.Children.Add((New-BlobGuiFilterChip "$($Blob.GuiRiskFilters[$k]) $count" ($Blob.Gui.OptRisk -eq $k) ([scriptblock]::Create("`$Blob.Gui.OptRisk = '$k'; Show-BlobGuiPage 'optimize' -Rebuild"))))
     }
     [void]$filters.Children.Add((New-BlobFilterRow 'Risk' $risks))

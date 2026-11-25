@@ -23,8 +23,8 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Path $PSScriptRoot -Parent
 $src = Join-Path $root 'src'
 $order = @('Core', 'UI', 'Engine', 'Performance', 'Gaming', 'Tweaks', 'Privacy', 'Services',
-           'Startup', 'Cleanup', 'Network', 'Power', 'Restore', 'TweakDetails', 'ExternalTools', 'Apps', 'Prefetch', 'Dashboard',
-           'GuiXaml', 'Gui', 'GuiPages', 'GuiSystem', 'GuiApps', 'Main')
+           'Startup', 'Cleanup', 'Network', 'Power', 'Restore', 'TweakDetails', 'PrivacyCenter', 'PrivacyData1', 'PrivacyData2', 'PrivacyData3', 'ExternalTools', 'Apps', 'Prefetch', 'Dashboard',
+           'GuiXaml', 'Gui', 'GuiPages', 'GuiSystem', 'GuiApps', 'GuiPrivacy', 'Main')
 
 $core = Get-Content -LiteralPath (Join-Path $src 'Core.ps1') -Raw
 if ($core -notmatch "Version\s*=\s*'([^']+)'") { throw 'Could not read the version from src\Core.ps1' }

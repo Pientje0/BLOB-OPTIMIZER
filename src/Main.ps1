@@ -18,6 +18,16 @@ function Invoke-BlobSelfTest {
     Write-Host "BLOB OPTIMIZER $($Blob.Version) self-test (read-only)" -ForegroundColor Cyan
     & $check 'System summary'  { $s = Get-BlobSystemSummary; "- $($s.OS)" }
     & $check 'Tweak catalogue' { $bad = @($Blob.Tweaks | Group-Object { $_.Id } | Where-Object { $_.Count -gt 1 }); if ($bad) { throw "duplicate ids: $($bad.Name -join ',')" }; "- $($Blob.Tweaks.Count) tweaks" }
+    & $check 'Privacy catalogue' {
+        $pc = @(Get-BlobPrivacyItems)
+        $missing = @($Blob.PrivacyGroups | Where-Object { $g = $_; -not @($pc | Where-Object { $_.Group -eq $g }).Count })
+        if ($missing) { throw "sections without items: $($missing -join ', ')" }
+        foreach ($t in $pc) {
+            foreach ($op in $t.Registry) { if ($op.Path -notmatch '^(HKCU|HKLM):\\') { throw "bad path in $($t.Id): $($op.Path)" } }
+            foreach ($f in 'Does', 'Data', 'Benefit', 'Lose', 'Issues') { if (-not $t.Privacy[$f]) { throw "$($t.Id) has no '$f' text" } }
+        }
+        "- $($pc.Count) settings in $($Blob.PrivacyGroups.Count) sections, $(@($pc | Where-Object InfoOnly).Count) information only"
+    }
     & $check 'Tweak states'    { $st = @($Blob.Tweaks | ForEach-Object { Get-BlobTweakState $_ }); "- $(@($st | Where-Object { $_ -eq 'Applied' }).Count) applied" }
     & $check 'Presets'         { $p = @(Get-BlobPresets); foreach ($x in $p) { foreach ($id in $x.Ids) { if (-not (Get-BlobTweak $id)) { throw "preset $($x.Name) references unknown tweak '$id'" } } }; "- $(($p | ForEach-Object { "$($_.Name)=$($_.Ids.Count)" }) -join ' ')" }
     & $check 'Preset safety'   { foreach ($x in @(Get-BlobPresets)) { foreach ($id in $x.Ids) { if ((Get-BlobTweak $id).Risk -eq 'Optional') { throw "optional tweak '$id' in preset $($x.Name)" } } }; '' }

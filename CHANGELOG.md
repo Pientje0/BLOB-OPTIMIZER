@@ -2,6 +2,21 @@
 
 All notable changes to BLOB OPTIMIZER are documented here. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [2.2.0] - 2026-11-25
+
+### Added
+- **Privacy page:** 179 privacy settings in 22 sections, from Privacy and Telemetry through App Privacy, Location, Search, Sync, Windows Update, Edge, Office / Microsoft 365, Explorer, the lock screen, the taskbar, activity and clipboard, Copilot and Windows AI, mobile devices and gaming.
+  - Each setting explains what it does, what can be collected, the benefit of turning it off, what you lose and possible problems. It also has a recommendation (DISABLE / OPTIONAL / KEEP ENABLED) and a privacy impact rating (Low / Medium / High).
+  - O&O ShutUp10++ IDs are shown where they were provided.
+  - Filters: section, advice and search. *Choose all recommended* marks every DISABLE item. The page uses the same choose-then-apply, backup and undo flow as Tweaks.
+  - 23 items are information only: Defender/SpyNet, automatic security updates, activation, Bluetooth pairing and items without a reliable switch. Edge Legacy items are marked *not applicable*.
+- `docs/PRIVACY-SETTINGS.md`, generated from the catalogue by `tests/Export-PrivacyReference.ps1`.
+- Terminal UI: *Privacy center* (`V`) on the dashboard.
+- Self-test: checks that every section has items, that every switch uses a valid registry path, and that every explanation is complete.
+
+### Changed
+- The pending bar now reads "N to switch on, M to switch off", so it means the same thing on both the Tweaks and Privacy pages.
+
 ## [2.1.0] - 2026-11-25
 
 ### Added
