@@ -2,6 +2,15 @@
 
 All notable changes to BLOB OPTIMIZER are documented here. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [2.4.1] - 2026-11-25
+
+### Fixed
+- **Tweaks page could fail to load** ("You cannot call a method on a null-valued expression") after applying changes on the Appearance page. Pages that are rebuilt in the background now refresh their own list instead of the list of the page on screen.
+- The same mistake could fill the Tweaks page with privacy rows after applying on the Privacy page.
+
+### Changed
+- The side menu is now black, with white text for the open page and its number in signal orange.
+
 ## [2.4.0] - 2026-11-25
 
 ### Added

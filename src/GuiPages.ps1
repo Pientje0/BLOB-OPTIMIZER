@@ -424,8 +424,10 @@ function New-BlobGroupHeader {
 function Update-BlobGuiCardGrid {
     $g = $Blob.Gui.CardGrid
     if (-not $g) { return }
-    if ($Blob.Gui.Current -eq 'privacy') { Update-BlobGuiPrivacyList; return }
-    if ($Blob.Gui.Current -eq 'appearance') { Update-BlobGuiAppearanceList; return }
+    # Route by the page this list belongs to, not the page on screen: pages are
+    # also built and refreshed in the background while another one is shown.
+    if ($Blob.Gui.GridKind -eq 'privacy') { Update-BlobGuiPrivacyList; return }
+    if ($Blob.Gui.GridKind -eq 'appearance') { Update-BlobGuiAppearanceList; return }
     $offset = $Blob.Gui.PageScroll.VerticalOffset
     $g.Children.Clear()
     $states = @{}
@@ -607,7 +609,7 @@ function New-BlobGuiOptimizations {
     [void]$root.Children.Add($info)
 
     $list = New-BlobStack
-    $Blob.Gui.CardGrid = $list
+    $Blob.Gui.CardGrid = $list; $Blob.Gui.GridKind = 'optimize'
     [void]$root.Children.Add($list)
 
     [void]$root.Children.Add((New-BlobHeading 'Related tools' '0,36,0,4'))

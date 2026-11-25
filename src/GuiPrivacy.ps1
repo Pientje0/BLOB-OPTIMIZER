@@ -241,7 +241,7 @@ function New-BlobGuiPrivacy {
     [void]$root.Children.Add($head)
 
     $list = New-BlobStack
-    $Blob.Gui.CardGrid = $list
+    $Blob.Gui.CardGrid = $list; $Blob.Gui.GridKind = 'privacy'
     [void]$root.Children.Add($list)
     [void]$root.Children.Add((New-BlobText 'Every switch uses a documented Windows, Edge or Office policy or setting. Microsoft Defender, security updates and Windows activation are never changed. O&O ShutUp10++ IDs are shown where known.' 12 'Ink3' 'Normal' '0,24,0,0'))
 

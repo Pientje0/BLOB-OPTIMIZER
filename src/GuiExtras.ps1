@@ -478,6 +478,7 @@ function Update-BlobGuiAppearanceList {
     if (-not $g) { return }
     $offset = $Blob.Gui.PageScroll.VerticalOffset
     # Theme tiles follow the switches, including choices not applied yet.
+    if (-not $Blob.Gui.P -or -not $Blob.Gui.P.Tiles) { return }
     $tiles = $Blob.Gui.P.Tiles
     $tiles.Children.Clear()
     $apps = Test-BlobGuiWantsOn 'app.darkapps'; $sys = Test-BlobGuiWantsOn 'app.darksystem'
@@ -517,7 +518,7 @@ function New-BlobGuiAppearance {
     $Blob.Gui.CardCount = New-BlobText '' 12 'Ink3' 'Normal' '0,22,0,0' -Mono
     [void]$root.Children.Add($Blob.Gui.CardCount)
     $list = New-BlobStack
-    $Blob.Gui.CardGrid = $list
+    $Blob.Gui.CardGrid = $list; $Blob.Gui.GridKind = 'appearance'
     [void]$root.Children.Add($list)
 
     [void]$root.Children.Add((New-BlobHeading 'More in Windows Settings' '0,36,0,4'))

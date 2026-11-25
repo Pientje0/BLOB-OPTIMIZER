@@ -19,6 +19,7 @@ $Blob.GuiShared = @{
 $Blob.GuiColors = @{
     Paper = '#EFECE6'; Surface = '#F7F5F1'; Hover = '#E4E0D8'; Rule = '#D6D2CA'
     Ink = '#141414'; Ink2 = '#57544E'; Ink3 = '#8A867E'; Ghost = '#B8B3A9'
+    NavBg = '#141414'; NavText = '#BDB8AF'; NavNum = '#6F6B64'; NavActive = '#FFFFFF'
     Signal = '#FF4F00'; SignalText = '#B83A00'; SignalSoft = '#FBE4D7'; Error = '#B3261E'
     Cyan = '#B83A00'; DarkCyan = '#D6D2CA'; White = '#141414'; Gray = '#57544E'; DarkGray = '#8A867E'
     Green = '#141414'; Yellow = '#B83A00'; Red = '#B3261E'; DarkYellow = '#8A867E'; Magenta = '#B83A00'; Black = '#141414'
@@ -427,7 +428,7 @@ function Start-BlobGuiTask {
 # ---------------------------------------------------------------------------
 # Per-page state that builders put on $Blob.Gui. It is saved with each cached
 # page and restored when the page is shown, so pages never share state.
-$Blob.GuiPageState = @('P', 'CardGrid', 'CardCount', 'ApplySelBtn', 'SearchHint', 'PendingActions')
+$Blob.GuiPageState = @('P', 'CardGrid', 'GridKind', 'CardCount', 'ApplySelBtn', 'SearchHint', 'PendingActions')
 # Pages that show setting / journal state: refreshed in the background after any change.
 $Blob.GuiVolatilePages = @('dashboard', 'presets', 'optimize', 'privacy', 'appearance', 'services', 'startup', 'apps', 'power', 'restore', 'measure')
 # Preload order, and pages that wait for the background data snapshot on their first build.
@@ -481,12 +482,12 @@ function Show-BlobGuiPage {
         $p = $Blob.Gui.Pages[$i]
         $btn = $Blob.Gui.Nav[$p.Key]
         if ($p.Key -eq $Key) {
-            $btn.Foreground = Get-BlobBrush 'Ink'; $btn.BorderBrush = Get-BlobBrush 'Signal'; $btn.FontWeight = 'SemiBold'
-            $Blob.Gui.NavNum[$p.Key].Foreground = Get-BlobBrush 'SignalText'
+            $btn.Foreground = Get-BlobBrush 'NavActive'; $btn.BorderBrush = Get-BlobBrush 'Signal'; $btn.FontWeight = 'SemiBold'
+            $Blob.Gui.NavNum[$p.Key].Foreground = Get-BlobBrush 'Signal'
             $Blob.Gui.PageNumber.Text = '{0:D2}' -f ($i + 1)
         } else {
-            $btn.Foreground = Get-BlobBrush 'Ink2'; $btn.BorderBrush = [Windows.Media.Brushes]::Transparent; $btn.FontWeight = 'Normal'
-            $Blob.Gui.NavNum[$p.Key].Foreground = Get-BlobBrush 'Ink3'
+            $btn.Foreground = Get-BlobBrush 'NavText'; $btn.BorderBrush = [Windows.Media.Brushes]::Transparent; $btn.FontWeight = 'Normal'
+            $Blob.Gui.NavNum[$p.Key].Foreground = Get-BlobBrush 'NavNum'
         }
     }
     $Blob.Gui.PageTitle.Text = $page.Label
@@ -641,7 +642,7 @@ function Initialize-BlobGuiWindow {
         $btn = [Windows.Controls.Button]::new()
         $btn.Style = $w.FindResource('NavButton')
         $sp = New-BlobStack 'Horizontal'
-        $num = New-BlobText ('{0:D2}' -f ($Blob.Gui.Pages.IndexOf($p) + 1)) 13 'Ink3' 'Normal' '0,1,12,0' -Display
+        $num = New-BlobText ('{0:D2}' -f ($Blob.Gui.Pages.IndexOf($p) + 1)) 13 'NavNum' 'Normal' '0,1,12,0' -Display
         $num.Width = 22; $num.VerticalAlignment = 'Center'
         $Blob.Gui.NavNum[$p.Key] = $num
         $label = [Windows.Controls.TextBlock]::new()

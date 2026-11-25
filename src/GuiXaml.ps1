@@ -121,7 +121,7 @@ $Blob.GuiTheme = @'
   </Style>
   <!-- Table-of-contents navigation item; BorderBrush paints the marker bar -->
   <Style x:Key="NavButton" TargetType="Button">
-    <Setter Property="Foreground" Value="{StaticResource Ink2}"/>
+    <Setter Property="Foreground" Value="#BDB8AF"/>
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="BorderBrush" Value="Transparent"/>
     <Setter Property="FontFamily" Value="{StaticResource Display}"/>
@@ -139,7 +139,7 @@ $Blob.GuiTheme = @'
             </Border>
           </Grid>
           <ControlTemplate.Triggers>
-            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="#E4E0D8"/></Trigger>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="#262626"/></Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
       </Setter.Value>
@@ -480,12 +480,12 @@ $Blob.GuiXaml = @'
         </Grid.ColumnDefinitions>
 
         <!-- Table of contents -->
-        <Border Grid.Column="0" BorderBrush="#141414" BorderThickness="0,0,1.5,0">
+        <Border Grid.Column="0" Background="#141414">
           <DockPanel>
-            <TextBlock DockPanel.Dock="Top" Text="CONTENTS" FontFamily="{StaticResource Display}" FontSize="11.5" Foreground="#8A867E" Margin="22,22,0,10"/>
+            <TextBlock DockPanel.Dock="Top" Text="CONTENTS" FontFamily="{StaticResource Display}" FontSize="11.5" Foreground="#8F8A82" Margin="22,22,0,10"/>
             <StackPanel DockPanel.Dock="Bottom" Margin="22,10,16,18">
-              <TextBlock Text="Portable. Nothing installed." FontSize="11.5" Foreground="#8A867E"/>
-              <TextBlock Text="Every change can be undone." FontSize="11.5" Foreground="#8A867E" Margin="0,2,0,0"/>
+              <TextBlock Text="Portable. Nothing installed." FontSize="11.5" Foreground="#8F8A82"/>
+              <TextBlock Text="Every change can be undone." FontSize="11.5" Foreground="#8F8A82" Margin="0,2,0,0"/>
             </StackPanel>
             <ScrollViewer VerticalScrollBarVisibility="Auto">
               <StackPanel x:Name="NavPanel"/>
